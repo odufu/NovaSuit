@@ -120,6 +120,7 @@ class OrderModel extends Equatable {
   final DateTime? cancellationFollowUpAt;
 
   final String paymentStatus;
+  final bool crmTagged;
   final String? proofOfDeliveryUrl;
   final String? deliveryNotes;
   final DateTime? scheduledCallbackAt;
@@ -157,6 +158,7 @@ class OrderModel extends Equatable {
     this.cancellationReason,
     this.cancellationFollowUpAt,
     required this.paymentStatus,
+    this.crmTagged = true,
     this.proofOfDeliveryUrl,
     this.deliveryNotes,
     this.scheduledCallbackAt,
@@ -187,20 +189,21 @@ class OrderModel extends Equatable {
       upsellAmount: (map['upsell_amount'] as num?)?.toDouble() ?? 0.0,
       downsellDiscount: (map['downsell_discount'] as num?)?.toDouble() ?? 0.0,
       totalAmount: (map['total_amount'] as num?)?.toDouble() ?? 0.0,
-      upsellQuantity: (map['upsell_quantity'] as num?)?.toInt() ?? 0,
+      upsellQuantity: map['upsell_quantity'] ?? 0,
       upsellUnitPrice: (map['upsell_unit_price'] as num?)?.toDouble() ?? 0.0,
       upsellStatus: UpsellStatus.fromDbValue(map['upsell_status'] ?? 'none'),
       upsellNotes: map['upsell_notes'],
       approvedBySupervisorId: map['approved_by_supervisor_id'],
       cancellationReason: CancellationReason.fromDbValue(map['cancellation_reason']),
-      cancellationFollowUpAt: map['cancellation_followup_at'] != null ? DateTime.tryParse(map['cancellation_followup_at']) : null,
+      cancellationFollowUpAt: map['cancellation_follow_up_at'] != null ? DateTime.parse(map['cancellation_follow_up_at']) : null,
       paymentStatus: map['payment_status'] ?? 'pending',
+      crmTagged: map['crm_tagged'] ?? true,
       proofOfDeliveryUrl: map['proof_of_delivery_url'],
       deliveryNotes: map['delivery_notes'],
-      scheduledCallbackAt: map['scheduled_callback_at'] != null ? DateTime.tryParse(map['scheduled_callback_at']) : null,
+      scheduledCallbackAt: map['scheduled_callback_at'] != null ? DateTime.parse(map['scheduled_callback_at']) : null,
       rescheduleNote: map['reschedule_note'],
-      createdAt: DateTime.parse(map['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(map['updated_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(map['created_at']),
+      updatedAt: DateTime.parse(map['updated_at']),
     );
   }
 
@@ -232,8 +235,9 @@ class OrderModel extends Equatable {
       'upsell_notes': upsellNotes,
       'approved_by_supervisor_id': approvedBySupervisorId,
       'cancellation_reason': cancellationReason?.dbValue,
-      'cancellation_followup_at': cancellationFollowUpAt?.toIso8601String(),
+      'cancellation_follow_up_at': cancellationFollowUpAt?.toIso8601String(),
       'payment_status': paymentStatus,
+      'crm_tagged': crmTagged,
       'proof_of_delivery_url': proofOfDeliveryUrl,
       'delivery_notes': deliveryNotes,
       'scheduled_callback_at': scheduledCallbackAt?.toIso8601String(),
@@ -273,6 +277,7 @@ class OrderModel extends Equatable {
         cancellationReason,
         cancellationFollowUpAt,
         paymentStatus,
+        crmTagged,
         proofOfDeliveryUrl,
         deliveryNotes,
         scheduledCallbackAt,

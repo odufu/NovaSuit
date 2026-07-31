@@ -25,6 +25,7 @@ class SupervisorDataSeeder {
       required double amount,
       String? repId,
       DateTime? created,
+      bool crmTagged = true,
     }) {
       return OrderModel(
         id: id,
@@ -45,6 +46,7 @@ class SupervisorDataSeeder {
         totalAmount: amount,
         upsellStatus: UpsellStatus.none,
         paymentStatus: 'pending',
+        crmTagged: crmTagged,
         createdAt: created ?? july27,
         updatedAt: july27,
       );
@@ -60,6 +62,7 @@ class SupervisorDataSeeder {
         product: i % 2 == 0 ? 'GRAZER HERBAL DETOX TEA' : 'HERBAL SHAMPOO & VITALITY BOOSTER',
         status: OrderStatus.delivered,
         amount: 25000.0,
+        crmTagged: i <= 9, // 6 untagged CRM orders (15 - 9 = 6 untagged)
       ));
     }
 
@@ -150,5 +153,18 @@ class SupervisorDataSeeder {
     ));
 
     return seededOrders;
+  }
+
+  /// Upserts all 35 operational report orders directly into Supabase 'orders' database table
+  Future<bool> seedToSupabaseDatabase({required String companyId}) async {
+    try {
+      final orders = await seedJuly27ReportData(companyId: companyId);
+      final maps = orders.map((o) => o.toMap()).toList();
+
+      await _client.from('orders').upsert(maps, onConflict: 'order_number');
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
