@@ -45,13 +45,6 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 700;
 
-    final totalRevenue = widget.squad.fold<double>(0.0, (sum, sup) => sum + sup.codRevenueToday);
-    final totalConfirmed = widget.squad.fold<int>(0, (sum, sup) => sum + sup.confirmedOrdersToday);
-    final totalCalls = widget.squad.fold<int>(0, (sum, sup) => sum + sup.callsPlacedToday);
-    final totalActiveLeads = widget.squad.fold<int>(0, (sum, sup) => sum + sup.activeLeadCount);
-
-    final avgRate = totalCalls > 0 ? (totalConfirmed / totalCalls) * 100 : 0.0;
-
     // Filter squad based on search query and product filter
     final filteredSquad = widget.squad.where((agent) {
       final matchesSearch = agent.user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -61,9 +54,9 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
       return matchesSearch && matchesProduct;
     }).toList();
 
-    // Top Performer logic
-    final bestPerformer = widget.squad.isNotEmpty
-        ? widget.squad.reduce((curr, next) => curr.codRevenueToday >= next.codRevenueToday ? curr : next)
+    // Identify top performer by highest COD revenue
+    final String? topPerformerId = widget.squad.isNotEmpty
+        ? widget.squad.reduce((curr, next) => curr.codRevenueToday >= next.codRevenueToday ? curr : next).user.id
         : null;
 
     final showCards = isMobile || _isCardViewMode;
@@ -73,245 +66,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Header Title Bar (Responsive)
-          if (isMobile) ...[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '📊 Squad Team Performance Overview',
-                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Real-time operational metrics for Monday 27th July, 2026.',
-                  style: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                ),
-                const SizedBox(height: 10),
-                _buildTimeframeBar(isDark, theme, borderColor, textMuted),
-              ],
-            ),
-          ] else ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '📊 Squad Team Performance Overview',
-                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Real-time operational metrics across your supervisee squad for Monday 27th July, 2026.',
-                        style: GoogleFonts.inter(fontSize: 13, color: textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildTimeframeBar(isDark, theme, borderColor, textMuted),
-              ],
-            ),
-          ],
-
-          const SizedBox(height: 20),
-
-          // KPI Summary Cards Grid (Responsive Mobile / Desktop Layout)
-          if (isMobile) ...[
-            _buildKpiCard('Squad COD Revenue', '₦${(totalRevenue / 1000).toStringAsFixed(0)}k', Icons.payments_rounded, theme.primaryColor, isDark, cardBg, borderColor),
-            const SizedBox(height: 12),
-            _buildKpiCard('Confirmation Rate', '${avgRate.toStringAsFixed(1)}%', Icons.insights_rounded, Colors.amber, isDark, cardBg, borderColor),
-            const SizedBox(height: 12),
-            _buildKpiCard('Total Confirmed', '$totalConfirmed Orders', Icons.check_circle_rounded, const Color(0xFF10B981), isDark, cardBg, borderColor),
-            const SizedBox(height: 12),
-            _buildKpiCard('Active Squad Queue', '$totalActiveLeads Leads', Icons.queue_rounded, Colors.blue, isDark, cardBg, borderColor),
-          ] else ...[
-            Row(
-              children: [
-                Expanded(child: _buildKpiCard('Squad COD Revenue', '₦${(totalRevenue / 1000).toStringAsFixed(0)}k', Icons.payments_rounded, theme.primaryColor, isDark, cardBg, borderColor)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildKpiCard('Confirmation Rate', '${avgRate.toStringAsFixed(1)}%', Icons.insights_rounded, Colors.amber, isDark, cardBg, borderColor)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildKpiCard('Total Confirmed', '$totalConfirmed Orders', Icons.check_circle_rounded, const Color(0xFF10B981), isDark, cardBg, borderColor)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildKpiCard('Active Squad Queue', '$totalActiveLeads Leads', Icons.queue_rounded, Colors.blue, isDark, cardBg, borderColor)),
-              ],
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // 🥇 Best Performer Spotlight Section (Responsive Mobile Vertical Stack / Desktop Row)
-          if (bestPerformer != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDark
-                      ? [const Color(0xFF1E3A2B), const Color(0xFF0C1F17)]
-                      : [const Color(0xFFECFDF5), Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.5), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: isMobile
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.amber, width: 1.5),
-                              ),
-                              child: const Text('👑', style: TextStyle(fontSize: 22)),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
-                                ),
-                                child: Text(
-                                  '🥇 TOP PERFORMER SPOTLIGHT',
-                                  style: GoogleFonts.jetBrainsMono(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.amber),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '${bestPerformer.user.fullName} (Ext 102)',
-                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Revenue: ₦${bestPerformer.codRevenueToday.toStringAsFixed(0)} • ${bestPerformer.confirmedOrdersToday} Confirmed (${bestPerformer.confirmationRateToday.toStringAsFixed(1)}% Conv) • ${bestPerformer.deliveredCount} Delivered',
-                          style: GoogleFonts.inter(fontSize: 11.5, color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857), fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AgentProfileModal(
-                                  supervisee: bestPerformer,
-                                  activeTheme: theme,
-                                  isDarkMode: isDark,
-                                  onSave: widget.onUpdateSupervisee,
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.stars, size: 16),
-                            label: Text('View Profile', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.amber, width: 1.5),
-                          ),
-                          child: const Text('👑', style: TextStyle(fontSize: 28)),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
-                                    ),
-                                    child: Text(
-                                      '🥇 TOP PERFORMER SPOTLIGHT',
-                                      style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'Monday 27th July, 2026',
-                                    style: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '${bestPerformer.user.fullName} (Ext 102)',
-                                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Top COD Revenue: ₦${bestPerformer.codRevenueToday.toStringAsFixed(0)} • ${bestPerformer.confirmedOrdersToday} Confirmed Orders (${bestPerformer.confirmationRateToday.toStringAsFixed(1)}% Conv Rate) • ${bestPerformer.deliveredCount} Delivered',
-                                style: GoogleFonts.inter(fontSize: 12.5, color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857), fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AgentProfileModal(
-                                supervisee: bestPerformer,
-                                activeTheme: theme,
-                                isDarkMode: isDark,
-                                onSave: widget.onUpdateSupervisee,
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.stars, size: 16),
-                          label: Text('View Profile', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
-                        ),
-                      ],
-                    ),
-            ),
-
-          // Leaderboard Main Container
+          // Leaderboard Container & Controls
           Container(
             decoration: BoxDecoration(
               color: cardBg,
@@ -321,32 +76,124 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Container Header Controls (Responsive Mobile Stack / Desktop Row)
+                // Header & Control Bar (Search + Product Filter + Timeframe + View Switcher)
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: isMobile
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '🏆 Supervisee Leaderboard & Daily Report',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: isMobile ? 16 : 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Monday 27th July, 2026',
+                                  style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _buildTimeframeBar(isDark, theme, borderColor, textMuted),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Search + Product Filter + Cards/Table Switcher
+                      if (isMobile) ...[
+                        TextField(
+                          onChanged: (val) => setState(() => _searchQuery = val),
+                          style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+                          decoration: InputDecoration(
+                            hintText: 'Search rep name...',
+                            hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                            prefixIcon: const Icon(Icons.search, size: 18),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
                           children: [
-                            TextField(
-                              onChanged: (val) => setState(() => _searchQuery = val),
-                              style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
-                              decoration: InputDecoration(
-                                hintText: 'Search rep name...',
-                                hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                                prefixIcon: const Icon(Icons.search, size: 18),
-                                filled: true,
-                                fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                border: OutlineInputBorder(
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide(color: borderColor),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedProductFilter,
+                                    isExpanded: true,
+                                    dropdownColor: cardBg,
+                                    style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
+                                    items: _availableProducts.map((p) {
+                                      return DropdownMenuItem<String>(
+                                        value: p,
+                                        child: Text(p, overflow: TextOverflow.ellipsis),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        setState(() => _selectedProductFilter = val);
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(width: 8),
+                            _buildViewSwitcher(isDark, borderColor, textMuted),
+                          ],
+                        ),
+                      ] else ...[
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 240,
+                              child: TextField(
+                                onChanged: (val) => setState(() => _searchQuery = val),
+                                style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+                                decoration: InputDecoration(
+                                  hintText: 'Search rep name...',
+                                  hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                                  prefixIcon: const Icon(Icons.search, size: 18),
+                                  filled: true,
+                                  fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide(color: borderColor),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
                             Container(
-                              width: double.infinity,
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                               decoration: BoxDecoration(
                                 color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
@@ -356,7 +203,6 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _selectedProductFilter,
-                                  isExpanded: true,
                                   dropdownColor: cardBg,
                                   style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
                                   items: _availableProducts.map((p) {
@@ -373,118 +219,13 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                 ),
                               ),
                             ),
-                          ],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 240,
-                                    child: TextField(
-                                      onChanged: (val) => setState(() => _searchQuery = val),
-                                      style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
-                                      decoration: InputDecoration(
-                                        hintText: 'Search rep name...',
-                                        hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                                        prefixIcon: const Icon(Icons.search, size: 18),
-                                        filled: true,
-                                        fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(color: borderColor),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-
-                                  // Product Filter Dropdown
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: borderColor),
-                                    ),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<String>(
-                                        value: _selectedProductFilter,
-                                        dropdownColor: cardBg,
-                                        style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
-                                        items: _availableProducts.map((p) {
-                                          return DropdownMenuItem<String>(
-                                            value: p,
-                                            child: Text(p),
-                                          );
-                                        }).toList(),
-                                        onChanged: (val) {
-                                          if (val != null) {
-                                            setState(() => _selectedProductFilter = val);
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Cards vs Table View Mode Switcher
-                            Container(
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: borderColor),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  InkWell(
-                                    onTap: () => setState(() => _isCardViewMode = true),
-                                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: _isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
-                                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.grid_view_rounded, size: 14, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted),
-                                          const SizedBox(width: 4),
-                                          Text('Cards', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Container(width: 1, height: 18, color: borderColor),
-                                  InkWell(
-                                    onTap: () => setState(() => _isCardViewMode = false),
-                                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: !_isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
-                                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.table_chart_rounded, size: 14, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted),
-                                          const SizedBox(width: 4),
-                                          Text('Table', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            const Spacer(),
+                            _buildViewSwitcher(isDark, borderColor, textMuted),
                           ],
                         ),
+                      ],
+                    ],
+                  ),
                 ),
                 Divider(height: 1, color: borderColor),
 
@@ -498,9 +239,12 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                   )
                 else if (showCards)
                   Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     child: Column(
-                      children: filteredSquad.map((agent) => _buildMobileSuperviseeCard(agent, isDark, theme, borderColor, textPrimary, textMuted)).toList(),
+                      children: filteredSquad.map((agent) {
+                        final isTop = agent.user.id == topPerformerId;
+                        return _buildMobileSuperviseeCard(agent, isTop, isDark, theme, borderColor, textPrimary, textMuted);
+                      }).toList(),
                     ),
                   )
                 else
@@ -521,57 +265,94 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                             border: TableBorder(
                               horizontalInside: BorderSide(color: borderColor, width: 1),
                             ),
+
+                            // Clean uppercase text-only column headers without icons
                             columns: [
-                              DataColumn(label: Text('👤 Agent', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('📦 Assigned', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('✅ Confirmed', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('🚚 Delivered', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('📅 Today/Prev', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('⏰ Rescheduled', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('📞 In-Progress', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('📴 Switched-Off', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('🚫 Unanswered', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('❌ Cancelled', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('⏸️ Pending', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                              DataColumn(label: Text('⚙️ Action', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                              DataColumn(label: Text('AGENT', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('ASSIGNED', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('CONFIRMED', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('DELIVERED', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('TODAY/PREV', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('RESCHEDULED', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('IN-PROGRESS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('SWITCHED-OFF', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('UNANSWERED', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('CANCELLED', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('PENDING', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
+                              DataColumn(label: Text('ACTION', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted, letterSpacing: 0.5))),
                             ],
                             rows: filteredSquad.asMap().entries.map((entry) {
                               final index = entry.key;
                               final agent = entry.value;
+                              final isTopPerformer = agent.user.id == topPerformerId;
 
                               return DataRow(
                                 color: WidgetStateProperty.resolveWith<Color?>((states) {
+                                  if (isTopPerformer) {
+                                    return isDark ? const Color(0xFF1E3A2B) : const Color(0xFFECFDF5);
+                                  }
                                   if (states.contains(WidgetState.hovered)) {
                                     return isDark ? const Color(0xFF13362A) : const Color(0xFFF1F5F9);
                                   }
                                   return Colors.transparent;
                                 }),
                                 cells: [
-                                  // 1. Agent Name & Ext
+                                  // 1. Agent Name, Ext, and Top Performer Crown Badge
                                   DataCell(
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        CircleAvatar(
-                                          radius: 14,
-                                          backgroundColor: theme.primaryColor.withValues(alpha: 0.2),
-                                          child: Text(
-                                            agent.user.fullName[0].toUpperCase(),
-                                            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
-                                          ),
+                                        Stack(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 14,
+                                              backgroundColor: isTopPerformer ? Colors.amber.withValues(alpha: 0.3) : theme.primaryColor.withValues(alpha: 0.2),
+                                              child: Text(
+                                                agent.user.fullName[0].toUpperCase(),
+                                                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: isTopPerformer ? Colors.amber : theme.primaryColor),
+                                              ),
+                                            ),
+                                            if (isTopPerformer)
+                                              const Positioned(
+                                                right: -2,
+                                                top: -2,
+                                                child: Text('👑', style: TextStyle(fontSize: 10)),
+                                              ),
+                                          ],
                                         ),
                                         const SizedBox(width: 8),
                                         Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Text(
-                                              agent.user.fullName,
-                                              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  agent.user.fullName,
+                                                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                ),
+                                                if (isTopPerformer) ...[
+                                                  const SizedBox(width: 4),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.amber.withValues(alpha: 0.2),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                                    ),
+                                                    child: Text('TOP', style: GoogleFonts.jetBrainsMono(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.amber)),
+                                                  ),
+                                                ],
+                                              ],
                                             ),
                                             Text(
                                               'Ext 10${index + 1}',
                                               style: GoogleFonts.jetBrainsMono(fontSize: 10.5, color: textMuted),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
                                             ),
                                           ],
                                         ),
@@ -679,10 +460,10 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
   Widget _buildTimeframeBar(bool isDark, TenantTheme theme, Color borderColor, Color textMuted) {
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor),
       ),
       child: Row(
@@ -692,15 +473,15 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
           return GestureDetector(
             onTap: () => setState(() => _selectedTimeframe = tf),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? theme.primaryColor : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 tf,
                 style: GoogleFonts.inter(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.bold,
                   color: isSelected ? Colors.white : textMuted,
                 ),
@@ -712,8 +493,61 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     );
   }
 
+  Widget _buildViewSwitcher(bool isDark, Color borderColor, Color textMuted) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _isCardViewMode = true),
+            borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: _isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.grid_view_rounded, size: 13, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted),
+                  const SizedBox(width: 4),
+                  Text('Cards', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted)),
+                ],
+              ),
+            ),
+          ),
+          Container(width: 1, height: 16, color: borderColor),
+          InkWell(
+            onTap: () => setState(() => _isCardViewMode = false),
+            borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: !_isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.table_chart_rounded, size: 13, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted),
+                  const SizedBox(width: 4),
+                  Text('Table', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMobileSuperviseeCard(
     SuperviseePerformanceModel agent,
+    bool isTopPerformer,
     bool isDark,
     TenantTheme theme,
     Color borderColor,
@@ -723,12 +557,17 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     final products = agent.assignedProducts.join(', ');
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+        color: isTopPerformer
+            ? (isDark ? const Color(0xFF1E3A2B) : const Color(0xFFECFDF5))
+            : (isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC)),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
+        border: Border.all(
+          color: isTopPerformer ? Colors.amber : borderColor,
+          width: isTopPerformer ? 1.5 : 1.0,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -739,23 +578,45 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
               Expanded(
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: theme.primaryColor.withValues(alpha: 0.2),
-                      child: Text(
-                        agent.user.fullName[0].toUpperCase(),
-                        style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: theme.primaryColor),
-                      ),
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: isTopPerformer ? Colors.amber.withValues(alpha: 0.3) : theme.primaryColor.withValues(alpha: 0.2),
+                          child: Text(
+                            agent.user.fullName[0].toUpperCase(),
+                            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: isTopPerformer ? Colors.amber : theme.primaryColor),
+                          ),
+                        ),
+                        if (isTopPerformer)
+                          const Positioned(right: -2, top: -2, child: Text('👑', style: TextStyle(fontSize: 10))),
+                      ],
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            agent.user.fullName,
-                            style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.bold, color: textPrimary),
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  agent.user.fullName,
+                                  style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.bold, color: textPrimary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isTopPerformer)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                  ),
+                                  child: Text('TOP', style: GoogleFonts.jetBrainsMono(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.amber)),
+                                ),
+                            ],
                           ),
                           Text(
                             'Ext 102 • ${products.isEmpty ? "GRAZER, SHAMPOO" : products}',
@@ -784,7 +645,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           Wrap(
             spacing: 6,
@@ -844,50 +705,6 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
       child: Text(
         text,
         style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold, color: color),
-      ),
-    );
-  }
-
-  Widget _buildKpiCard(String title, String value, IconData icon, Color iconColor, bool isDark, Color cardBg, Color borderColor) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
