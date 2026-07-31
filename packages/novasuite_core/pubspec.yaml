@@ -1,0 +1,27 @@
+name: novasuite_core
+description: Core models, Supabase client repositories, and whitelabel dynamic theme engine for NovaSuite CRM & NovaExpress Logistics.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.0.0
+  equatable: ^2.0.5
+  sip_ua: ^0.5.5
+  web_socket_channel: ^3.0.3
+  flutter_webrtc: ^0.12.0
+  crypto: ^3.0.7
+
+dependency_overrides:
+  flutter_webrtc: ^0.12.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:

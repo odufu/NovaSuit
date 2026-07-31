@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Light Mode Tokens */
+    --background: #F8FAFC;
+    --foreground: #0F172A;
+
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+
+    --popover: #FFFFFF;
+    --popover-foreground: #0F172A;
+
+    --primary: #0A2E23;
+    --primary-foreground: #FFFFFF;
+
+    --secondary: #F1F5F9;
+    --secondary-foreground: #0F172A;
+
+    --muted: #F8FAFC;
+    --muted-foreground: #64748B;
+
+    --accent: #E8F5E9;
+    --accent-foreground: #2E7D32;
+
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+
+    --border: #E2E8F0;
+    --input: #E2E8F0;
+    --ring: #0A2E23;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* OLED Dark Mode Tokens */
+    --background: #020617;
+    --foreground: #F8FAFC;
+
+    --card: #0F172A;
+    --card-foreground: #F8FAFC;
+
+    --popover: #0F172A;
+    --popover-foreground: #F8FAFC;
+
+    --primary: #10B981;
+    --primary-foreground: #020617;
+
+    --secondary: #1E293B;
+    --secondary-foreground: #F8FAFC;
+
+    --muted: #0F172A;
+    --muted-foreground: #94A3B8;
+
+    --accent: #091A14;
+    --accent-foreground: #34D399;
+
+    --destructive: #F87171;
+    --destructive-foreground: #020617;
+
+    --border: #1E293B;
+    --input: #1E293B;
+    --ring: #10B981;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
