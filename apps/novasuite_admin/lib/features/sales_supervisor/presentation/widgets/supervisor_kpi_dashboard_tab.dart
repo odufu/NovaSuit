@@ -43,7 +43,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
     final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 950;
+    final isMobile = screenWidth < 700;
 
     final totalRevenue = widget.squad.fold<double>(0.0, (sum, sup) => sum + sup.codRevenueToday);
     final totalConfirmed = widget.squad.fold<int>(0, (sum, sup) => sum + sup.confirmedOrdersToday);
@@ -69,64 +69,56 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     final showCards = isMobile || _isCardViewMode;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Header Title Bar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '📊 Squad Team Performance Overview',
-                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Real-time operational metrics across your supervisee squad for Monday 27th July, 2026.',
-                    style: GoogleFonts.inter(fontSize: 13, color: textMuted),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: borderColor),
+          // Top Header Title Bar (Responsive)
+          if (isMobile) ...[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '📊 Squad Team Performance Overview',
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
                 ),
-                child: Row(
-                  children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
-                    final isSelected = _selectedTimeframe == tf;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedTimeframe = tf),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: isSelected ? theme.primaryColor : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          tf,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : textMuted,
-                          ),
-                        ),
+                const SizedBox(height: 4),
+                Text(
+                  'Real-time operational metrics for Monday 27th July, 2026.',
+                  style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                ),
+                const SizedBox(height: 10),
+                _buildTimeframeBar(isDark, theme, borderColor, textMuted),
+              ],
+            ),
+          ] else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📊 Squad Team Performance Overview',
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
                       ),
-                    );
-                  }).toList(),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Real-time operational metrics across your supervisee squad for Monday 27th July, 2026.',
+                        style: GoogleFonts.inter(fontSize: 13, color: textMuted),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+                _buildTimeframeBar(isDark, theme, borderColor, textMuted),
+              ],
+            ),
+          ],
 
           const SizedBox(height: 20),
 
-          // KPI Summary Cards Grid
+          // KPI Summary Cards Grid (Responsive Mobile / Desktop Layout)
           if (isMobile) ...[
             _buildKpiCard('Squad COD Revenue', '₦${(totalRevenue / 1000).toStringAsFixed(0)}k', Icons.payments_rounded, theme.primaryColor, isDark, cardBg, borderColor),
             const SizedBox(height: 12),
@@ -151,11 +143,11 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
           const SizedBox(height: 24),
 
-          // 🥇 Best Performer Spotlight Section
+          // 🥇 Best Performer Spotlight Section (Responsive Mobile Vertical Stack / Desktop Row)
           if (bestPerformer != null)
             Container(
               margin: const EdgeInsets.only(bottom: 24),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isDark
@@ -174,79 +166,149 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                   ),
                 ],
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.amber, width: 1.5),
-                    ),
-                    child: const Text('👑', style: TextStyle(fontSize: 28)),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
+              child: isMobile
+                  ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: Colors.amber.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.amber, width: 1.5),
                               ),
-                              child: Text(
-                                '🥇 TOP PERFORMER SPOTLIGHT',
-                                style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
-                              ),
+                              child: const Text('👑', style: TextStyle(fontSize: 22)),
                             ),
                             const SizedBox(width: 10),
-                            Text(
-                              'Monday 27th July, 2026',
-                              style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  '🥇 TOP PERFORMER SPOTLIGHT',
+                                  style: GoogleFonts.jetBrainsMono(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.amber),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 10),
                         Text(
                           '${bestPerformer.user.fullName} (Ext 102)',
-                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
+                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
-                          'Top COD Revenue: ₦${bestPerformer.codRevenueToday.toStringAsFixed(0)} • ${bestPerformer.confirmedOrdersToday} Confirmed Orders (60.0% Conv Rate) • 17 Delivered',
-                          style: GoogleFonts.inter(fontSize: 12.5, color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857), fontWeight: FontWeight.w600),
+                          'Revenue: ₦${bestPerformer.codRevenueToday.toStringAsFixed(0)} • ${bestPerformer.confirmedOrdersToday} Confirmed (${bestPerformer.confirmationRateToday.toStringAsFixed(1)}% Conv) • ${bestPerformer.deliveredCount} Delivered',
+                          style: GoogleFonts.inter(fontSize: 11.5, color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857), fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AgentProfileModal(
+                                  supervisee: bestPerformer,
+                                  activeTheme: theme,
+                                  isDarkMode: isDark,
+                                  onSave: widget.onUpdateSupervisee,
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.stars, size: 16),
+                            label: Text('View Profile', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.amber, width: 1.5),
+                          ),
+                          child: const Text('👑', style: TextStyle(fontSize: 28)),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                    ),
+                                    child: Text(
+                                      '🥇 TOP PERFORMER SPOTLIGHT',
+                                      style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Monday 27th July, 2026',
+                                    style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${bestPerformer.user.fullName} (Ext 102)',
+                                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Top COD Revenue: ₦${bestPerformer.codRevenueToday.toStringAsFixed(0)} • ${bestPerformer.confirmedOrdersToday} Confirmed Orders (${bestPerformer.confirmationRateToday.toStringAsFixed(1)}% Conv Rate) • ${bestPerformer.deliveredCount} Delivered',
+                                style: GoogleFonts.inter(fontSize: 12.5, color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857), fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AgentProfileModal(
+                                supervisee: bestPerformer,
+                                activeTheme: theme,
+                                isDarkMode: isDark,
+                                onSave: widget.onUpdateSupervisee,
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.stars, size: 16),
+                          label: Text('View Profile', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       ],
                     ),
-                  ),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AgentProfileModal(
-                          supervisee: bestPerformer,
-                          activeTheme: theme,
-                          isDarkMode: isDark,
-                          onSave: widget.onUpdateSupervisee,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.stars, size: 16),
-                    label: Text('View Profile', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
-                ],
-              ),
             ),
 
           // Leaderboard Main Container
@@ -259,38 +321,32 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Container Header Controls (Search + Product Filter + View Switcher)
+                // Container Header Controls (Responsive Mobile Stack / Desktop Row)
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
+                  child: isMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 240,
-                              child: TextField(
-                                onChanged: (val) => setState(() => _searchQuery = val),
-                                style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
-                                decoration: InputDecoration(
-                                  hintText: 'Search rep name...',
-                                  hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                                  prefixIcon: const Icon(Icons.search, size: 18),
-                                  filled: true,
-                                  fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: borderColor),
-                                  ),
+                            TextField(
+                              onChanged: (val) => setState(() => _searchQuery = val),
+                              style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+                              decoration: InputDecoration(
+                                hintText: 'Search rep name...',
+                                hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                                prefixIcon: const Icon(Icons.search, size: 18),
+                                filled: true,
+                                fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: borderColor),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-
-                            // Product Filter Dropdown
+                            const SizedBox(height: 10),
                             Container(
+                              width: double.infinity,
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                               decoration: BoxDecoration(
                                 color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
@@ -300,6 +356,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _selectedProductFilter,
+                                  isExpanded: true,
                                   dropdownColor: cardBg,
                                   style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
                                   items: _availableProducts.map((p) {
@@ -317,62 +374,117 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                               ),
                             ),
                           ],
-                        ),
-                      ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 240,
+                                    child: TextField(
+                                      onChanged: (val) => setState(() => _searchQuery = val),
+                                      style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+                                      decoration: InputDecoration(
+                                        hintText: 'Search rep name...',
+                                        hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                                        prefixIcon: const Icon(Icons.search, size: 18),
+                                        filled: true,
+                                        fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: borderColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
 
-                      // Cards vs Table View Mode Switcher
-                      if (!isMobile)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: borderColor),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              InkWell(
-                                onTap: () => setState(() => _isCardViewMode = true),
-                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: _isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                                  // Product Filter Dropdown
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: borderColor),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedProductFilter,
+                                        dropdownColor: cardBg,
+                                        style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
+                                        items: _availableProducts.map((p) {
+                                          return DropdownMenuItem<String>(
+                                            value: p,
+                                            child: Text(p),
+                                          );
+                                        }).toList(),
+                                        onChanged: (val) {
+                                          if (val != null) {
+                                            setState(() => _selectedProductFilter = val);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Cards vs Table View Mode Switcher
+                            Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: borderColor),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  InkWell(
+                                    onTap: () => setState(() => _isCardViewMode = true),
                                     borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: _isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.grid_view_rounded, size: 14, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted),
+                                          const SizedBox(width: 4),
+                                          Text('Cards', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted)),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.grid_view_rounded, size: 14, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted),
-                                      const SizedBox(width: 4),
-                                      Text('Cards', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Container(width: 1, height: 18, color: borderColor),
-                              InkWell(
-                                onTap: () => setState(() => _isCardViewMode = false),
-                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: !_isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                                  Container(width: 1, height: 18, color: borderColor),
+                                  InkWell(
+                                    onTap: () => setState(() => _isCardViewMode = false),
                                     borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: !_isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.table_chart_rounded, size: 14, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted),
+                                          const SizedBox(width: 4),
+                                          Text('Table', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted)),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.table_chart_rounded, size: 14, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted),
-                                      const SizedBox(width: 4),
-                                      Text('Table', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted)),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                    ],
-                  ),
                 ),
                 Divider(height: 1, color: borderColor),
 
@@ -469,12 +581,12 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
                                   // 2. Assigned
                                   DataCell(
-                                    Text('35', style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary)),
+                                    Text('${agent.assignedCount}', style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary)),
                                   ),
 
                                   // 3. Confirmed
                                   DataCell(
-                                    Text('21', style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                    Text('${agent.confirmedOrdersToday}', style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
                                   ),
 
                                   // 4. Delivered + untagged CRM note
@@ -482,7 +594,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text('17', style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                                        Text('${agent.deliveredCount}', style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                                         const SizedBox(width: 6),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
@@ -490,7 +602,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                             color: Colors.amber.withValues(alpha: 0.15),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
-                                          child: Text('6 untagged', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.amber)),
+                                          child: Text('${agent.untaggedOnCrm} untagged', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.amber)),
                                         ),
                                       ],
                                     ),
@@ -498,37 +610,37 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
                                   // 5. Today / Prev
                                   DataCell(
-                                    Text('15 / 2', style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
+                                    Text('${agent.deliveredTodayAssigned} / ${agent.deliveredPreviousDays}', style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
                                   ),
 
                                   // 6. Rescheduled
                                   DataCell(
-                                    Text('7', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.purple)),
+                                    Text('${agent.rescheduledCount}', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.purple)),
                                   ),
 
                                   // 7. In Progress
                                   DataCell(
-                                    Text('6', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.amber)),
+                                    Text('${agent.inProgressCount}', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.amber)),
                                   ),
 
                                   // 8. Switched Off
                                   DataCell(
-                                    Text('2', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.deepOrange)),
+                                    Text('${agent.switchedOffCount}', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.deepOrange)),
                                   ),
 
                                   // 9. Unanswered (Not Picking)
                                   DataCell(
-                                    Text('4', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.redAccent)),
+                                    Text('${agent.notPickingCount}', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.redAccent)),
                                   ),
 
                                   // 10. Cancelled
                                   DataCell(
-                                    Text('0', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.grey)),
+                                    Text('${agent.cancelledCount}', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.grey)),
                                   ),
 
                                   // 11. Pending (Not Ready)
                                   DataCell(
-                                    Text('1', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.teal)),
+                                    Text('${agent.notReadyCount}', style: GoogleFonts.jetBrainsMono(fontSize: 12.5, color: Colors.teal)),
                                   ),
 
                                   // 12. Actions
@@ -565,6 +677,41 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     );
   }
 
+  Widget _buildTimeframeBar(bool isDark, TenantTheme theme, Color borderColor, Color textMuted) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
+          final isSelected = _selectedTimeframe == tf;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedTimeframe = tf),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: isSelected ? theme.primaryColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                tf,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : textMuted,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildMobileSuperviseeCard(
     SuperviseePerformanceModel agent,
     bool isDark,
@@ -573,9 +720,11 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     Color textPrimary,
     Color textMuted,
   ) {
+    final products = agent.assignedProducts.join(', ');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
@@ -587,42 +736,49 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: theme.primaryColor.withValues(alpha: 0.2),
-                    child: Text(
-                      agent.user.fullName[0].toUpperCase(),
-                      style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: theme.primaryColor),
+              Expanded(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: theme.primaryColor.withValues(alpha: 0.2),
+                      child: Text(
+                        agent.user.fullName[0].toUpperCase(),
+                        style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: theme.primaryColor),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        agent.user.fullName,
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: textPrimary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            agent.user.fullName,
+                            style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.bold, color: textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Ext 102 • ${products.isEmpty ? "GRAZER, SHAMPOO" : products}',
+                            style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w500, color: textMuted),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Ext 102',
-                        style: GoogleFonts.jetBrainsMono(fontSize: 11, color: textMuted),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: isDark ? const Color(0xFF10B981) : const Color(0xFF86EFAC)),
                 ),
                 child: Text(
-                  '35 Total Assigned',
-                  style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold, color: isDark ? const Color(0xFF34D399) : const Color(0xFF15803D), fontSize: 11),
+                  '${agent.assignedCount} Assigned',
+                  style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold, color: isDark ? const Color(0xFF34D399) : const Color(0xFF15803D), fontSize: 10.5),
                 ),
               ),
             ],
@@ -634,19 +790,19 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _buildBadge('✅ 21 Confirmed', const Color(0xFF10B981), isDark),
-              _buildBadge('🚚 17 Delivered (6 untagged CRM)', const Color(0xFF059669), isDark),
-              _buildBadge('📅 15 today / 2 prev', Colors.blue, isDark),
-              _buildBadge('⏰ 7 Rescheduled', Colors.purple, isDark),
-              _buildBadge('📞 6 In progress', Colors.amber, isDark),
-              _buildBadge('📴 2 Switched off', Colors.deepOrange, isDark),
-              _buildBadge('🚫 4 Not picking', Colors.redAccent, isDark),
-              _buildBadge('❌ 0 Cancelled', Colors.grey, isDark),
-              _buildBadge('⏸️ 1 Not ready', Colors.teal, isDark),
+              _buildBadge('✅ ${agent.confirmedOrdersToday} Confirmed', const Color(0xFF10B981), isDark),
+              _buildBadge('🚚 ${agent.deliveredCount} Delivered (${agent.untaggedOnCrm} untagged)', const Color(0xFF059669), isDark),
+              _buildBadge('📅 ${agent.deliveredTodayAssigned} / ${agent.deliveredPreviousDays} Prev', Colors.blue, isDark),
+              _buildBadge('⏰ ${agent.rescheduledCount} Rescheduled', Colors.purple, isDark),
+              _buildBadge('📞 ${agent.inProgressCount} In progress', Colors.amber, isDark),
+              _buildBadge('📴 ${agent.switchedOffCount} Switched off', Colors.deepOrange, isDark),
+              _buildBadge('🚫 ${agent.notPickingCount} Unanswered', Colors.redAccent, isDark),
+              _buildBadge('❌ ${agent.cancelledCount} Cancelled', Colors.grey, isDark),
+              _buildBadge('⏸️ ${agent.notReadyCount} Pending', Colors.teal, isDark),
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           Align(
             alignment: Alignment.centerRight,
@@ -654,6 +810,8 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: theme.primaryColor),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                visualDensity: VisualDensity.compact,
               ),
               onPressed: () {
                 showDialog(

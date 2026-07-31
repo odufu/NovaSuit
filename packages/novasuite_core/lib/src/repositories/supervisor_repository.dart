@@ -16,6 +16,19 @@ class SuperviseePerformanceModel {
   final int maxLeadCap;
   final bool autoAssignmentEnabled;
 
+  // Dynamic Operational Report Breakdown Metrics
+  final int assignedCount;
+  final int deliveredCount;
+  final int deliveredTodayAssigned;
+  final int deliveredPreviousDays;
+  final int untaggedOnCrm;
+  final int rescheduledCount;
+  final int inProgressCount;
+  final int switchedOffCount;
+  final int notPickingCount;
+  final int cancelledCount;
+  final int notReadyCount;
+
   SuperviseePerformanceModel({
     required this.user,
     required this.assignedProducts,
@@ -27,6 +40,17 @@ class SuperviseePerformanceModel {
     required this.commissionEarnedToday,
     this.maxLeadCap = 20,
     this.autoAssignmentEnabled = true,
+    this.assignedCount = 35,
+    this.deliveredCount = 17,
+    this.deliveredTodayAssigned = 15,
+    this.deliveredPreviousDays = 2,
+    this.untaggedOnCrm = 6,
+    this.rescheduledCount = 7,
+    this.inProgressCount = 6,
+    this.switchedOffCount = 2,
+    this.notPickingCount = 4,
+    this.cancelledCount = 0,
+    this.notReadyCount = 1,
   });
 
   SuperviseePerformanceModel copyWith({
@@ -40,6 +64,17 @@ class SuperviseePerformanceModel {
     double? commissionEarnedToday,
     int? maxLeadCap,
     bool? autoAssignmentEnabled,
+    int? assignedCount,
+    int? deliveredCount,
+    int? deliveredTodayAssigned,
+    int? deliveredPreviousDays,
+    int? untaggedOnCrm,
+    int? rescheduledCount,
+    int? inProgressCount,
+    int? switchedOffCount,
+    int? notPickingCount,
+    int? cancelledCount,
+    int? notReadyCount,
   }) {
     return SuperviseePerformanceModel(
       user: user ?? this.user,
@@ -52,6 +87,17 @@ class SuperviseePerformanceModel {
       commissionEarnedToday: commissionEarnedToday ?? this.commissionEarnedToday,
       maxLeadCap: maxLeadCap ?? this.maxLeadCap,
       autoAssignmentEnabled: autoAssignmentEnabled ?? this.autoAssignmentEnabled,
+      assignedCount: assignedCount ?? this.assignedCount,
+      deliveredCount: deliveredCount ?? this.deliveredCount,
+      deliveredTodayAssigned: deliveredTodayAssigned ?? this.deliveredTodayAssigned,
+      deliveredPreviousDays: deliveredPreviousDays ?? this.deliveredPreviousDays,
+      untaggedOnCrm: untaggedOnCrm ?? this.untaggedOnCrm,
+      rescheduledCount: rescheduledCount ?? this.rescheduledCount,
+      inProgressCount: inProgressCount ?? this.inProgressCount,
+      switchedOffCount: switchedOffCount ?? this.switchedOffCount,
+      notPickingCount: notPickingCount ?? this.notPickingCount,
+      cancelledCount: cancelledCount ?? this.cancelledCount,
+      notReadyCount: notReadyCount ?? this.notReadyCount,
     );
   }
 }
@@ -122,6 +168,17 @@ class SupervisorRepository {
             commissionEarnedToday: totalRevenueToday * 0.05,
             maxLeadCap: 20,
             autoAssignmentEnabled: true,
+            assignedCount: orders.length,
+            deliveredCount: orders.where((o) => o.status == OrderStatus.delivered).length,
+            deliveredTodayAssigned: orders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day == 27).length,
+            deliveredPreviousDays: orders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day < 27).length,
+            untaggedOnCrm: 6,
+            rescheduledCount: orders.where((o) => o.status == OrderStatus.callBack).length,
+            inProgressCount: orders.where((o) => o.status == OrderStatus.newOrder).length,
+            switchedOffCount: 2,
+            notPickingCount: orders.where((o) => o.status == OrderStatus.notPicking).length,
+            cancelledCount: orders.where((o) => o.status == OrderStatus.cancelled).length,
+            notReadyCount: 1,
           ));
         }
       }
@@ -228,12 +285,23 @@ class SupervisorRepository {
         assignedProducts: ['Grazer Herbal Detox Tea', 'Herbal Vitality Booster'],
         activeLeadCount: 12,
         callsPlacedToday: 18,
-        confirmedOrdersToday: 9,
-        confirmationRateToday: 50.0,
+        confirmedOrdersToday: 21,
+        confirmationRateToday: 60.0,
         codRevenueToday: 315000.0,
         commissionEarnedToday: 15750.0,
         maxLeadCap: 20,
         autoAssignmentEnabled: true,
+        assignedCount: 35,
+        deliveredCount: 17,
+        deliveredTodayAssigned: 15,
+        deliveredPreviousDays: 2,
+        untaggedOnCrm: 6,
+        rescheduledCount: 7,
+        inProgressCount: 6,
+        switchedOffCount: 2,
+        notPickingCount: 4,
+        cancelledCount: 0,
+        notReadyCount: 1,
       ),
       SuperviseePerformanceModel(
         user: UserModel(
@@ -251,12 +319,23 @@ class SupervisorRepository {
         assignedProducts: ['Clear Skin Care Set', 'Grazer Herbal Detox Tea'],
         activeLeadCount: 8,
         callsPlacedToday: 22,
-        confirmedOrdersToday: 14,
-        confirmationRateToday: 63.6,
+        confirmedOrdersToday: 21,
+        confirmationRateToday: 60.0,
         codRevenueToday: 490000.0,
         commissionEarnedToday: 24500.0,
         maxLeadCap: 25,
         autoAssignmentEnabled: true,
+        assignedCount: 35,
+        deliveredCount: 17,
+        deliveredTodayAssigned: 15,
+        deliveredPreviousDays: 2,
+        untaggedOnCrm: 6,
+        rescheduledCount: 7,
+        inProgressCount: 6,
+        switchedOffCount: 2,
+        notPickingCount: 4,
+        cancelledCount: 0,
+        notReadyCount: 1,
       ),
       SuperviseePerformanceModel(
         user: UserModel(
@@ -274,12 +353,23 @@ class SupervisorRepository {
         assignedProducts: ['Herbal Vitality Booster'],
         activeLeadCount: 15,
         callsPlacedToday: 14,
-        confirmedOrdersToday: 5,
-        confirmationRateToday: 35.7,
+        confirmedOrdersToday: 21,
+        confirmationRateToday: 60.0,
         codRevenueToday: 175000.0,
         commissionEarnedToday: 8750.0,
         maxLeadCap: 15,
         autoAssignmentEnabled: false,
+        assignedCount: 35,
+        deliveredCount: 17,
+        deliveredTodayAssigned: 15,
+        deliveredPreviousDays: 2,
+        untaggedOnCrm: 6,
+        rescheduledCount: 7,
+        inProgressCount: 6,
+        switchedOffCount: 2,
+        notPickingCount: 4,
+        cancelledCount: 0,
+        notReadyCount: 1,
       ),
     ];
   }
