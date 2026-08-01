@@ -869,10 +869,10 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
           const SizedBox(height: 12),
 
-          // Balanced Medium KPI Cards Grid (5 cols desktop, 3 cols mobile with aspect ratio 1.35 for zero overflow)
+          // Balanced Medium KPI Cards Grid (5 cols desktop, 3 cols mobile with aspect ratio 1.05 / 1.65 for zero overflow)
           GridView.count(
             crossAxisCount: isMobile ? 3 : 5,
-            childAspectRatio: isMobile ? 1.35 : 2.4,
+            childAspectRatio: isMobile ? 1.05 : 1.65,
             crossAxisSpacing: isMobile ? 6 : 10,
             mainAxisSpacing: isMobile ? 6 : 10,
             shrinkWrap: true,
@@ -896,32 +896,34 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
   Widget _buildMediumKpiCard(String label, String count, Color color, bool isDark, Color borderColor, bool isMobile) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: isMobile ? 6 : 10),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 10, vertical: isMobile ? 4 : 6),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: isMobile ? 3 : 4,
-            height: double.infinity,
+            height: isMobile ? 24 : 28,
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          SizedBox(width: isMobile ? 6 : 10),
+          SizedBox(width: isMobile ? 6 : 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   label,
                   style: GoogleFonts.inter(
-                    fontSize: isMobile ? 10 : 11,
+                    fontSize: isMobile ? 9.5 : 11,
                     fontWeight: FontWeight.w600,
                     color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   ),
@@ -935,7 +937,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                   child: Text(
                     count,
                     style: GoogleFonts.outfit(
-                      fontSize: isMobile ? 16 : 18,
+                      fontSize: isMobile ? 15 : 18,
                       fontWeight: FontWeight.bold,
                       color: color,
                     ),
