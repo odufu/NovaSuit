@@ -22,6 +22,11 @@ import 'features/notifications/presentation/pages/notifications_suite_page.dart'
 import 'features/sales/presentation/widgets/nova_dialer_floating_bar.dart';
 import 'features/finance/presentation/widgets/verify_remittance_dialog.dart';
 
+import 'features/navigation/providers/app_navigation_provider.dart';
+import 'features/sales_supervisor/presentation/providers/supervisor_dashboard_provider.dart';
+import 'features/sales/presentation/providers/sales_call_center_provider.dart';
+import 'features/sales_supervisee/presentation/providers/call_rep_dashboard_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
@@ -35,6 +40,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => sl<SalesProvider>()),
         ChangeNotifierProvider(create: (_) => sl<LogisticsProvider>()),
         ChangeNotifierProvider(create: (_) => sl<MarketingProvider>()),
+        ChangeNotifierProvider(create: (_) => AppNavigationProvider()),
+        ChangeNotifierProvider(create: (_) => SupervisorDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => SalesCallCenterProvider()),
+        ChangeNotifierProvider(create: (_) => CallRepDashboardProvider()),
       ],
       child: const NovaSuiteAdminApp(),
     ),

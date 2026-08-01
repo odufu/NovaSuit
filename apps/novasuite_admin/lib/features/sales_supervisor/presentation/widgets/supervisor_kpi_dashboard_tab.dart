@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import 'package:intl/intl.dart';
+import '../providers/supervisor_dashboard_provider.dart';
 import 'agent_profile_modal.dart';
 
 class SupervisorKpiDashboardTab extends StatefulWidget {
@@ -31,11 +33,6 @@ class SupervisorKpiDashboardTab extends StatefulWidget {
 }
 
 class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
-  String _selectedTimeframe = 'Daily';
-  String _selectedProductFilter = 'All Products';
-  String _searchQuery = '';
-  bool _isCardViewMode = false;
-
   final List<String> _availableProducts = [
     'All Products',
     'Grazer Herbal Detox Tea',
@@ -54,21 +51,21 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 700;
 
-    // Filter squad based on search query and product filter
-    final filteredSquad = widget.squad.where((agent) {
-      final matchesSearch = agent.user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          agent.user.email.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesProduct = _selectedProductFilter == 'All Products' ||
-          agent.assignedProducts.contains(_selectedProductFilter);
+    final supervisorProvider = context.watch<SupervisorDashboardProvider>();
+    final squadList = supervisorProvider.squad.isNotEmpty ? supervisorProvider.squad : widget.squad;
+    final filteredSquad = squadList.where((agent) {
+      final matchesSearch = agent.user.fullName.toLowerCase().contains(supervisorProvider.searchQuery.toLowerCase()) ||
+          agent.user.email.toLowerCase().contains(supervisorProvider.searchQuery.toLowerCase());
+      final matchesProduct = supervisorProvider.selectedProductFilter == 'All Products' ||
+          agent.assignedProducts.contains(supervisorProvider.selectedProductFilter);
       return matchesSearch && matchesProduct;
     }).toList();
 
-    // Identify top performer by highest COD revenue
-    final String? topPerformerId = widget.squad.isNotEmpty
-        ? widget.squad.reduce((curr, next) => curr.codRevenueToday >= next.codRevenueToday ? curr : next).user.id
+    final String? topPerformerId = squadList.isNotEmpty
+        ? squadList.reduce((curr, next) => curr.codRevenueToday >= next.codRevenueToday ? curr : next).user.id
         : null;
 
-    final showCards = isMobile || _isCardViewMode;
+    final showCards = isMobile || supervisorProvider.isCardViewMode;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -165,7 +162,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                       // Search + Product Filter + Cards/Table Switcher
                       if (isMobile) ...[
                         TextField(
-                          onChanged: (val) => setState(() => _searchQuery = val),
+                          onChanged: (val) => context.read<SupervisorDashboardProvider>().setSearchQuery(val),
                           style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Search rep name...',
@@ -193,7 +190,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
-                                    value: _selectedProductFilter,
+                                    value: supervisorProvider.selectedProductFilter,
                                     isExpanded: true,
                                     dropdownColor: cardBg,
                                     style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
@@ -205,7 +202,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                     }).toList(),
                                     onChanged: (val) {
                                       if (val != null) {
-                                        setState(() => _selectedProductFilter = val);
+                                        context.read<SupervisorDashboardProvider>().setProductFilter(val);
                                       }
                                     },
                                   ),
@@ -222,7 +219,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                             SizedBox(
                               width: 240,
                               child: TextField(
-                                onChanged: (val) => setState(() => _searchQuery = val),
+                                onChanged: (val) => context.read<SupervisorDashboardProvider>().setSearchQuery(val),
                                 style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
                                 decoration: InputDecoration(
                                   hintText: 'Search rep name...',
@@ -248,7 +245,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
-                                  value: _selectedProductFilter,
+                                  value: supervisorProvider.selectedProductFilter,
                                   dropdownColor: cardBg,
                                   style: GoogleFonts.inter(fontSize: 12, color: textPrimary, fontWeight: FontWeight.w600),
                                   items: _availableProducts.map((p) {
@@ -259,7 +256,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                   }).toList(),
                                   onChanged: (val) {
                                     if (val != null) {
-                                      setState(() => _selectedProductFilter = val);
+                                      context.read<SupervisorDashboardProvider>().setProductFilter(val);
                                     }
                                   },
                                 ),
@@ -508,6 +505,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
   }
 
   Widget _buildTimeframeBar(bool isDark, TenantTheme theme, Color borderColor, Color textMuted) {
+    final provider = context.watch<SupervisorDashboardProvider>();
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
@@ -518,9 +516,9 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
-          final isSelected = _selectedTimeframe == tf;
+          final isSelected = provider.selectedTimeframe == tf;
           return GestureDetector(
-            onTap: () => setState(() => _selectedTimeframe = tf),
+            onTap: () => context.read<SupervisorDashboardProvider>().setTimeframe(tf),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -543,6 +541,8 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
   }
 
   Widget _buildViewSwitcher(bool isDark, Color borderColor, Color textMuted) {
+    final provider = context.watch<SupervisorDashboardProvider>();
+    final isCard = provider.isCardViewMode;
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
@@ -553,38 +553,38 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
         mainAxisSize: MainAxisSize.min,
         children: [
           InkWell(
-            onTap: () => setState(() => _isCardViewMode = true),
+            onTap: () => context.read<SupervisorDashboardProvider>().setCardViewMode(true),
             borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: _isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                color: isCard ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.grid_view_rounded, size: 13, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted),
+                  Icon(Icons.grid_view_rounded, size: 13, color: isCard ? const Color(0xFF10B981) : textMuted),
                   const SizedBox(width: 4),
-                  Text('Cards', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: _isCardViewMode ? const Color(0xFF10B981) : textMuted)),
+                  Text('Cards', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: isCard ? const Color(0xFF10B981) : textMuted)),
                 ],
               ),
             ),
           ),
           Container(width: 1, height: 16, color: borderColor),
           InkWell(
-            onTap: () => setState(() => _isCardViewMode = false),
+            onTap: () => context.read<SupervisorDashboardProvider>().setCardViewMode(false),
             borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: !_isCardViewMode ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
+                color: !isCard ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9)) : Colors.transparent,
                 borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.table_chart_rounded, size: 13, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted),
+                  Icon(Icons.table_chart_rounded, size: 13, color: !isCard ? const Color(0xFF10B981) : textMuted),
                   const SizedBox(width: 4),
-                  Text('Table', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: !_isCardViewMode ? const Color(0xFF10B981) : textMuted)),
+                  Text('Table', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: !isCard ? const Color(0xFF10B981) : textMuted)),
                 ],
               ),
             ),

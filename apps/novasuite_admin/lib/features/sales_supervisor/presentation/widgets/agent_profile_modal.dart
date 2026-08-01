@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:novasuite_core/novasuite_core.dart';
+import '../providers/supervisor_dashboard_provider.dart';
 
 class AgentProfileModal extends StatefulWidget {
   final SuperviseePerformanceModel supervisee;
@@ -565,13 +567,15 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
                       onPressed: () {
-                        widget.onSave(
-                          widget.supervisee.copyWith(
-                            assignedProducts: _assignedProducts,
-                            maxLeadCap: _maxLeadCap,
-                            autoAssignmentEnabled: _autoAssignEnabled,
-                          ),
+                        final updated = widget.supervisee.copyWith(
+                          assignedProducts: _assignedProducts,
+                          maxLeadCap: _maxLeadCap,
+                          autoAssignmentEnabled: _autoAssignEnabled,
                         );
+                        widget.onSave(updated);
+                        try {
+                          context.read<SupervisorDashboardProvider>().updateSupervisee(updated);
+                        } catch (_) {}
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
