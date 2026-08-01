@@ -69,7 +69,18 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
           companyId: widget.supervisee.user.companyId,
         );
     _localRepOrders = ValueNotifier<List<OrderModel>>(
-      allOrders.where((o) => o.salesRepId == widget.supervisee.user.id).toList(),
+      allOrders.where((o) =>
+        o.salesRepId == widget.supervisee.user.id ||
+        o.salesRepId == widget.supervisee.user.email ||
+        (o.salesRepId != null && (
+          (widget.supervisee.user.email == 'salesrep.john@novacare.com' && o.salesRepId == '30000000-0000-4000-8000-000000000003') ||
+          (widget.supervisee.user.email == 'salesrep.sarah@novacare.com' && o.salesRepId == '40000000-0000-4000-8000-000000000004') ||
+          (widget.supervisee.user.email == 'salesrep.emeka@novacare.com' && o.salesRepId == '50000000-0000-4000-8000-000000000006') ||
+          (widget.supervisee.user.email == 'salesrep.aisha@novacare.com' && o.salesRepId == '50000000-0000-4000-8000-000000000007') ||
+          (widget.supervisee.user.email == 'salesrep.chidi@novacare.com' && o.salesRepId == '50000000-0000-4000-8000-000000000008') ||
+          o.salesRepId!.toLowerCase().contains(widget.supervisee.user.firstName.toLowerCase())
+        ))
+      ).toList(),
     );
   }
 

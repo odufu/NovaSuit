@@ -3,6 +3,8 @@ import 'package:novasuite_core/novasuite_core.dart';
 
 class AgentProfileModal extends StatefulWidget {
   final SuperviseePerformanceModel supervisee;
+  final List<OrderModel>? squadOrders;
+  final List<SuperviseePerformanceModel>? squadReps;
   final TenantTheme activeTheme;
   final bool isDarkMode;
   final Function(SuperviseePerformanceModel updated) onSave;
@@ -10,6 +12,8 @@ class AgentProfileModal extends StatefulWidget {
   const AgentProfileModal({
     super.key,
     required this.supervisee,
+    this.squadOrders,
+    this.squadReps,
     required this.activeTheme,
     required this.isDarkMode,
     required this.onSave,

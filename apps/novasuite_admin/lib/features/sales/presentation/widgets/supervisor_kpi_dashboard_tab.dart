@@ -4,6 +4,7 @@ import 'agent_profile_modal.dart';
 
 class SupervisorKpiDashboardTab extends StatefulWidget {
   final List<SuperviseePerformanceModel> squad;
+  final List<OrderModel>? squadOrders;
   final TenantTheme activeTheme;
   final bool isDarkMode;
   final Function(SuperviseePerformanceModel) onUpdateSupervisee;
@@ -11,6 +12,7 @@ class SupervisorKpiDashboardTab extends StatefulWidget {
   const SupervisorKpiDashboardTab({
     super.key,
     required this.squad,
+    this.squadOrders,
     required this.activeTheme,
     required this.isDarkMode,
     required this.onUpdateSupervisee,
@@ -268,6 +270,8 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                     context: context,
                                     builder: (ctx) => AgentProfileModal(
                                       supervisee: agent,
+                                      squadOrders: widget.squadOrders,
+                                      squadReps: widget.squad,
                                       activeTheme: theme,
                                       isDarkMode: isDark,
                                       onSave: widget.onUpdateSupervisee,

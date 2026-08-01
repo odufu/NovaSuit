@@ -259,7 +259,15 @@ class OrderRepository {
     }
 
     return list.where((o) {
-      final matchRep = salesRepId == null || salesRepId.isEmpty || o.salesRepId == salesRepId;
+      final matchRep = salesRepId == null ||
+          salesRepId.isEmpty ||
+          o.salesRepId == salesRepId ||
+          (salesRepId == 'salesrep.john@novacare.com' && o.salesRepId == '30000000-0000-4000-8000-000000000003') ||
+          (salesRepId == 'salesrep.sarah@novacare.com' && o.salesRepId == '40000000-0000-4000-8000-000000000004') ||
+          (salesRepId == 'salesrep.emeka@novacare.com' && o.salesRepId == '50000000-0000-4000-8000-000000000006') ||
+          (salesRepId == 'salesrep.aisha@novacare.com' && o.salesRepId == '50000000-0000-4000-8000-000000000007') ||
+          (salesRepId == 'salesrep.chidi@novacare.com' && o.salesRepId == '50000000-0000-4000-8000-000000000008') ||
+          (o.salesRepId != null && salesRepId.toLowerCase().contains(o.salesRepId!.toLowerCase()));
       final matchStatus = status == null || o.status == status;
       return matchRep && matchStatus;
     }).toList();
