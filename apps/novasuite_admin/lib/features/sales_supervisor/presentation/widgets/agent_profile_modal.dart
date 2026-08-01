@@ -30,19 +30,18 @@ class AgentProfileModal extends StatefulWidget {
 }
 
 class _AgentProfileModalState extends State<AgentProfileModal> {
-  late List<String> _assignedProducts;
-  late int _maxLeadCap;
-  late bool _autoAssignEnabled;
+  late ValueNotifier<List<String>> _assignedProducts;
+  late ValueNotifier<int> _maxLeadCap;
+  late ValueNotifier<bool> _autoAssignEnabled;
 
-  String _selectedTimeframe = 'Daily';
-  int _selectedTabIndex = 0;
+  late ValueNotifier<String> _selectedTimeframe;
+  late ValueNotifier<int> _selectedTabIndex;
 
-  // Rep Orders Tab State (Search, Date Filter, Sorting, Selection & Local List)
-  String _orderSearchQuery = '';
-  String _orderDateFilter = 'All Time';
-  String _orderSortOption = 'Newest First';
-  final Set<String> _selectedOrderIds = {};
-  late List<OrderModel> _localRepOrders;
+  late ValueNotifier<String> _orderSearchQuery;
+  late ValueNotifier<String> _orderDateFilter;
+  late ValueNotifier<String> _orderSortOption;
+  late ValueNotifier<Set<String>> _selectedOrderIds;
+  late ValueNotifier<List<OrderModel>> _localRepOrders;
 
   final List<String> _allAvailableProducts = [
     'Grazer Herbal Detox Tea',
@@ -53,17 +52,40 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
   @override
   void initState() {
     super.initState();
-    _assignedProducts = List.from(widget.supervisee.assignedProducts);
-    _maxLeadCap = widget.supervisee.maxLeadCap;
-    _autoAssignEnabled = widget.supervisee.autoAssignmentEnabled;
+    _assignedProducts = ValueNotifier<List<String>>(List.from(widget.supervisee.assignedProducts));
+    _maxLeadCap = ValueNotifier<int>(widget.supervisee.maxLeadCap);
+    _autoAssignEnabled = ValueNotifier<bool>(widget.supervisee.autoAssignmentEnabled);
+
+    _selectedTimeframe = ValueNotifier<String>('Daily');
+    _selectedTabIndex = ValueNotifier<int>(0);
+
+    _orderSearchQuery = ValueNotifier<String>('');
+    _orderDateFilter = ValueNotifier<String>('All Time');
+    _orderSortOption = ValueNotifier<String>('Newest First');
+    _selectedOrderIds = ValueNotifier<Set<String>>({});
 
     final allOrders = widget.squadOrders ??
         OrderRepository().generateHistoricalMockOrders(
           companyId: widget.supervisee.user.companyId,
         );
-    _localRepOrders = allOrders
-        .where((o) => o.salesRepId == widget.supervisee.user.id)
-        .toList();
+    _localRepOrders = ValueNotifier<List<OrderModel>>(
+      allOrders.where((o) => o.salesRepId == widget.supervisee.user.id).toList(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _assignedProducts.dispose();
+    _maxLeadCap.dispose();
+    _autoAssignEnabled.dispose();
+    _selectedTimeframe.dispose();
+    _selectedTabIndex.dispose();
+    _orderSearchQuery.dispose();
+    _orderDateFilter.dispose();
+    _orderSortOption.dispose();
+    _selectedOrderIds.dispose();
+    _localRepOrders.dispose();
+    super.dispose();
   }
 
   List<SuperviseePerformanceModel> _getAvailableTargetReps() {
@@ -72,7 +94,6 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
           .where((r) => r.user.id != widget.supervisee.user.id)
           .toList();
     }
-    // Default fallback squad reps if none provided
     return [
       SuperviseePerformanceModel(
         user: UserModel(
@@ -134,66 +155,6 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
         maxLeadCap: 40,
         autoAssignmentEnabled: true,
       ),
-      SuperviseePerformanceModel(
-        user: UserModel(
-          id: '50000000-0000-4000-8000-000000000007',
-          companyId: widget.supervisee.user.companyId,
-          role: UserRole.salesCallRep,
-          firstName: 'Aisha',
-          lastName: 'SalesRep',
-          email: 'salesrep.aisha@novacare.com',
-          phone: '+2348036667788',
-          isActive: true,
-          createdAt: DateTime.now(),
-        ),
-        assignedProducts: const ['Grazer Herbal Detox Tea'],
-        activeLeadCount: 12,
-        callsPlacedToday: 32,
-        confirmedOrdersToday: 16,
-        confirmationRateToday: 50.0,
-        codRevenueToday: 380000,
-        commissionEarnedToday: 16000,
-        deliveredCount: 16,
-        rescheduledCount: 5,
-        inProgressCount: 3,
-        switchedOffCount: 2,
-        notPickingCount: 2,
-        cancelledCount: 0,
-        notReadyCount: 0,
-        assignedCount: 42,
-        maxLeadCap: 45,
-        autoAssignmentEnabled: true,
-      ),
-      SuperviseePerformanceModel(
-        user: UserModel(
-          id: '50000000-0000-4000-8000-000000000008',
-          companyId: widget.supervisee.user.companyId,
-          role: UserRole.salesCallRep,
-          firstName: 'Chidi',
-          lastName: 'Rep',
-          email: 'salesrep.chidi@novacare.com',
-          phone: '+2348037778899',
-          isActive: true,
-          createdAt: DateTime.now(),
-        ),
-        assignedProducts: const ['Herbal Vitality Booster'],
-        activeLeadCount: 11,
-        callsPlacedToday: 30,
-        confirmedOrdersToday: 15,
-        confirmationRateToday: 50.0,
-        codRevenueToday: 360000,
-        commissionEarnedToday: 15000,
-        deliveredCount: 15,
-        rescheduledCount: 4,
-        inProgressCount: 5,
-        switchedOffCount: 1,
-        notPickingCount: 3,
-        cancelledCount: 1,
-        notReadyCount: 0,
-        assignedCount: 41,
-        maxLeadCap: 45,
-        autoAssignmentEnabled: true,
-      ),
     ];
   }
 
@@ -215,10 +176,13 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
         .user
         .fullName;
 
-    setState(() {
-      _localRepOrders.removeWhere((o) => orderIds.contains(o.id));
-      _selectedOrderIds.removeAll(orderIds);
-    });
+    final currentOrders = List<OrderModel>.from(_localRepOrders.value);
+    currentOrders.removeWhere((o) => orderIds.contains(o.id));
+    _localRepOrders.value = currentOrders;
+
+    final currentSelected = Set<String>.from(_selectedOrderIds.value);
+    currentSelected.removeAll(orderIds);
+    _selectedOrderIds.value = currentSelected;
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -234,56 +198,58 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
     final availableReps = _getAvailableTargetReps();
     if (availableReps.isEmpty) return;
 
+    final selectedTarget = ValueNotifier<String>(availableReps.first.user.id);
+
     showDialog(
       context: context,
       builder: (ctx) {
-        String selectedTargetRepId = availableReps.first.user.id;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return AlertDialog(
-              backgroundColor: widget.isDarkMode ? const Color(0xFF132A22) : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Row(
-                children: [
-                  const Icon(Icons.swap_horiz_rounded, color: Color(0xFF10B981), size: 24),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Reassign ${orderIds.length} Order${orderIds.length > 1 ? 's' : ''}',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
-                        color: widget.isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                      ),
-                    ),
+        return AlertDialog(
+          backgroundColor: widget.isDarkMode ? const Color(0xFF132A22) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.swap_horiz_rounded, color: Color(0xFF10B981), size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Reassign ${orderIds.length} Order${orderIds.length > 1 ? 's' : ''}',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    color: widget.isDarkMode ? Colors.white : const Color(0xFF0F172A),
                   ),
-                ],
+                ),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Select a team call rep to receive ${orderIds.length} order(s) from ${widget.supervisee.user.fullName}:',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      color: widget.isDarkMode ? Colors.white70 : Colors.black87,
-                    ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select a team call rep to receive ${orderIds.length} order(s) from ${widget.supervisee.user.fullName}:',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: widget.isDarkMode ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: widget.isDarkMode ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: widget.isDarkMode ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0),
                   ),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: widget.isDarkMode ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: widget.isDarkMode ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0),
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: selectedTarget,
+                    builder: (context, targetVal, _) {
+                      return DropdownButton<String>(
                         isExpanded: true,
-                        value: selectedTargetRepId,
+                        value: targetVal,
                         dropdownColor: widget.isDarkMode ? const Color(0xFF132A22) : Colors.white,
                         style: GoogleFonts.inter(
                           fontSize: 13,
@@ -319,37 +285,37 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                           );
                         }).toList(),
                         onChanged: (val) {
-                          if (val != null) setModalState(() => selectedTargetRepId = val);
+                          if (val != null) selectedTarget.value = val;
                         },
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  ),
-                  onPressed: () async {
-                    Navigator.of(ctx).pop();
-                    await _executeReassignment(orderIds, selectedTargetRepId);
-                  },
-                  icon: const Icon(Icons.check, size: 16),
-                  label: Text(
-                    'Confirm Reassign',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            );
-          },
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _executeReassignment(orderIds, selectedTarget.value);
+              },
+              icon: const Icon(Icons.check, size: 16),
+              label: Text(
+                'Confirm Reassign',
+                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -365,53 +331,6 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
     final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 650;
-
-    // Filter & Sort rep's orders dynamically
-    final filteredRepOrders = _localRepOrders.where((o) {
-      final matchesQuery = o.orderNumber.toLowerCase().contains(_orderSearchQuery.toLowerCase()) ||
-          o.customerName.toLowerCase().contains(_orderSearchQuery.toLowerCase()) ||
-          o.customerPhone.toLowerCase().contains(_orderSearchQuery.toLowerCase()) ||
-          o.deliveryState.toLowerCase().contains(_orderSearchQuery.toLowerCase()) ||
-          (o.deliveryCity ?? '').toLowerCase().contains(_orderSearchQuery.toLowerCase()) ||
-          o.productId.toLowerCase().contains(_orderSearchQuery.toLowerCase());
-
-      if (!matchesQuery) return false;
-
-      final now = DateTime.now();
-      switch (_orderDateFilter) {
-        case 'Today':
-          return o.createdAt.year == now.year && o.createdAt.month == now.month && o.createdAt.day == now.day;
-        case 'This Week':
-          return o.createdAt.isAfter(now.subtract(const Duration(days: 7)));
-        case 'This Month':
-          return o.createdAt.year == now.year && o.createdAt.month == now.month;
-        case 'May 2026':
-          return o.createdAt.year == 2026 && o.createdAt.month == 5;
-        case 'June 2026':
-          return o.createdAt.year == 2026 && o.createdAt.month == 6;
-        case 'July 2026':
-          return o.createdAt.year == 2026 && o.createdAt.month == 7;
-        case 'All Time':
-        default:
-          return true;
-      }
-    }).toList();
-
-    filteredRepOrders.sort((a, b) {
-      switch (_orderSortOption) {
-        case 'Oldest First':
-          return a.createdAt.compareTo(b.createdAt);
-        case 'Highest Amount':
-          return b.totalAmount.compareTo(a.totalAmount);
-        case 'Lowest Amount':
-          return a.totalAmount.compareTo(b.totalAmount);
-        case 'Status':
-          return a.status.label.compareTo(b.status.label);
-        case 'Newest First':
-        default:
-          return b.createdAt.compareTo(a.createdAt);
-      }
-    });
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -516,80 +435,100 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
               ),
             ),
 
-            // Tab Selection Bar (Overview & Settings vs Rep Orders)
+            // Tab Selection Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: borderColor)),
               ),
-              child: Row(
-                children: [
-                  _buildTabButton(0, '⚙️ Overview & Settings', _selectedTabIndex == 0, theme, textPrimary, textMuted),
-                  const SizedBox(width: 16),
-                  _buildTabButton(
-                    1,
-                    '📋 Rep Orders (${_localRepOrders.length})',
-                    _selectedTabIndex == 1,
-                    theme,
-                    textPrimary,
-                    textMuted,
-                  ),
-                ],
+              child: ValueListenableBuilder<int>(
+                valueListenable: _selectedTabIndex,
+                builder: (context, tabIdx, _) {
+                  return ValueListenableBuilder<List<OrderModel>>(
+                    valueListenable: _localRepOrders,
+                    builder: (context, repOrdersVal, _) {
+                      return Row(
+                        children: [
+                          _buildTabButton(0, '⚙️ Overview & Settings', tabIdx == 0, theme, textPrimary, textMuted),
+                          const SizedBox(width: 16),
+                          _buildTabButton(
+                            1,
+                            '📋 Rep Orders (${repOrdersVal.length})',
+                            tabIdx == 1,
+                            theme,
+                            textPrimary,
+                            textMuted,
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
 
             // Modal Body Content
             Expanded(
-              child: _selectedTabIndex == 0
-                  ? _buildOverviewTab(isMobile, isDark, theme, textPrimary, textMuted, borderColor)
-                  : _buildRepOrdersTab(filteredRepOrders, isMobile, isDark, theme, textPrimary, textMuted, borderColor),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _selectedTabIndex,
+                builder: (context, tabIdx, _) {
+                  return tabIdx == 0
+                      ? _buildOverviewTab(isMobile, isDark, theme, textPrimary, textMuted, borderColor)
+                      : _buildRepOrdersTab(isMobile, isDark, theme, textPrimary, textMuted, borderColor);
+                },
+              ),
             ),
 
-            // Modal Footer (Save Button for Settings tab)
-            if (_selectedTabIndex == 0)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: borderColor)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Cancel', style: GoogleFonts.inter(color: textMuted)),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            // Modal Footer
+            ValueListenableBuilder<int>(
+              valueListenable: _selectedTabIndex,
+              builder: (context, tabIdx, _) {
+                if (tabIdx != 0) return const SizedBox.shrink();
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: borderColor)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Cancel', style: GoogleFonts.inter(color: textMuted)),
                       ),
-                      onPressed: () {
-                        final updated = widget.supervisee.copyWith(
-                          assignedProducts: _assignedProducts,
-                          maxLeadCap: _maxLeadCap,
-                          autoAssignmentEnabled: _autoAssignEnabled,
-                        );
-                        widget.onSave(updated);
-                        try {
-                          context.read<SupervisorDashboardProvider>().updateSupervisee(updated);
-                        } catch (_) {}
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: const Color(0xFF10B981),
-                            content: Text('Saved settings for ${widget.supervisee.user.fullName}!'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.check, size: 18),
-                      label: Text('Save Rep Configuration', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ),
+                      const SizedBox(width: 10),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                        onPressed: () {
+                          final updated = widget.supervisee.copyWith(
+                            assignedProducts: _assignedProducts.value,
+                            maxLeadCap: _maxLeadCap.value,
+                            autoAssignmentEnabled: _autoAssignEnabled.value,
+                          );
+                          widget.onSave(updated);
+                          try {
+                            context.read<SupervisorDashboardProvider>().updateSupervisee(updated);
+                          } catch (_) {}
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: const Color(0xFF10B981),
+                              content: Text('Saved settings for ${widget.supervisee.user.fullName}!'),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.check, size: 18),
+                        label: Text('Save Rep Configuration', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -598,7 +537,7 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
 
   Widget _buildTabButton(int index, String title, bool isSelected, TenantTheme theme, Color textPrimary, Color textMuted) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedTabIndex = index),
+      onTap: () => _selectedTabIndex.value = index,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
@@ -642,59 +581,64 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
           ),
           const SizedBox(height: 12),
 
-          Column(
-            children: _allAvailableProducts.map((prod) {
-              final isAssigned = _assignedProducts.contains(prod);
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isAssigned
-                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                      : isDark
-                          ? const Color(0xFF0C1F17)
-                          : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isAssigned ? const Color(0xFF10B981).withValues(alpha: 0.4) : borderColor,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isAssigned ? Icons.shopping_bag : Icons.shopping_bag_outlined,
-                      color: isAssigned ? const Color(0xFF10B981) : textMuted,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        prod,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+          ValueListenableBuilder<List<String>>(
+            valueListenable: _assignedProducts,
+            builder: (context, assignedList, _) {
+              return Column(
+                children: _allAvailableProducts.map((prod) {
+                  final isAssigned = assignedList.contains(prod);
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isAssigned
+                          ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                          : isDark
+                              ? const Color(0xFF0C1F17)
+                              : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isAssigned ? const Color(0xFF10B981).withValues(alpha: 0.4) : borderColor,
                       ),
                     ),
-                    Switch.adaptive(
-                      value: isAssigned,
-                      activeTrackColor: const Color(0xFF10B981),
-                      onChanged: (val) {
-                        setState(() {
-                          if (val) {
-                            _assignedProducts.add(prod);
-                          } else {
-                            _assignedProducts.remove(prod);
-                          }
-                        });
-                      },
+                    child: Row(
+                      children: [
+                        Icon(
+                          isAssigned ? Icons.shopping_bag : Icons.shopping_bag_outlined,
+                          color: isAssigned ? const Color(0xFF10B981) : textMuted,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            prod,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: isAssigned,
+                          activeTrackColor: const Color(0xFF10B981),
+                          onChanged: (val) {
+                            final list = List<String>.from(assignedList);
+                            if (val) {
+                              list.add(prod);
+                            } else {
+                              list.remove(prod);
+                            }
+                            _assignedProducts.value = list;
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           ),
 
           const SizedBox(height: 20),
@@ -722,36 +666,41 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildSectionHeader('📊 Performance Metrics', textPrimary),
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Row(
-                  children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
-                    final isSelected = _selectedTimeframe == tf;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedTimeframe = tf),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF10B981) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          tf,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : textMuted,
+              ValueListenableBuilder<String>(
+                valueListenable: _selectedTimeframe,
+                builder: (context, timeframeVal, _) {
+                  return Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
+                        final isSelected = timeframeVal == tf;
+                        return GestureDetector(
+                          onTap: () => _selectedTimeframe.value = tf,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFF10B981) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              tf,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : textMuted,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -792,7 +741,6 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
   }
 
   Widget _buildRepOrdersTab(
-    List<OrderModel> filteredOrders,
     bool isMobile,
     bool isDark,
     TenantTheme theme,
@@ -800,369 +748,444 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
     Color textMuted,
     Color borderColor,
   ) {
-    // Rep KPI Card Summary Computations
-    final totalCount = filteredOrders.length;
-    final confirmedDeliveredCount = filteredOrders.where((o) =>
-        o.status == OrderStatus.delivered ||
-        o.status == OrderStatus.accepted ||
-        o.status == OrderStatus.logisticsConfirmed).length;
-    final conversionRate = totalCount > 0 ? (confirmedDeliveredCount / totalCount * 100) : 0.0;
-    final pendingActionCount = filteredOrders.where((o) =>
-        o.status == OrderStatus.assignedToRep ||
-        o.status == OrderStatus.contacting ||
-        o.status == OrderStatus.callBack ||
-        o.status == OrderStatus.newOrder).length;
-
     final dateOptions = ['All Time', 'Today', 'This Week', 'This Month', 'May 2026', 'June 2026', 'July 2026'];
     final sortOptions = ['Newest First', 'Oldest First', 'Highest Amount', 'Lowest Amount', 'Status'];
 
-    return Padding(
-      padding: EdgeInsets.all(isMobile ? 10 : 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Rep Performance Summary KPI Cards
-          Container(
-            padding: const EdgeInsets.all(10),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: borderColor),
-            ),
-            child: isMobile
-                ? Column(
-                    children: [
-                      Row(
+    return ValueListenableBuilder<List<OrderModel>>(
+      valueListenable: _localRepOrders,
+      builder: (context, localOrdersVal, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: _orderSearchQuery,
+          builder: (context, searchQueryVal, _) {
+            return ValueListenableBuilder<String>(
+              valueListenable: _orderDateFilter,
+              builder: (context, dateFilterVal, _) {
+                return ValueListenableBuilder<String>(
+                  valueListenable: _orderSortOption,
+                  builder: (context, sortOptionVal, _) {
+                    final filteredOrders = localOrdersVal.where((o) {
+                      final matchesQuery = o.orderNumber.toLowerCase().contains(searchQueryVal.toLowerCase()) ||
+                          o.customerName.toLowerCase().contains(searchQueryVal.toLowerCase()) ||
+                          o.customerPhone.toLowerCase().contains(searchQueryVal.toLowerCase()) ||
+                          o.deliveryState.toLowerCase().contains(searchQueryVal.toLowerCase()) ||
+                          (o.deliveryCity ?? '').toLowerCase().contains(searchQueryVal.toLowerCase()) ||
+                          o.productId.toLowerCase().contains(searchQueryVal.toLowerCase());
+
+                      if (!matchesQuery) return false;
+
+                      final now = DateTime.now();
+                      switch (dateFilterVal) {
+                        case 'Today':
+                          return o.createdAt.year == now.year && o.createdAt.month == now.month && o.createdAt.day == now.day;
+                        case 'This Week':
+                          return o.createdAt.isAfter(now.subtract(const Duration(days: 7)));
+                        case 'This Month':
+                          return o.createdAt.year == now.year && o.createdAt.month == now.month;
+                        case 'May 2026':
+                          return o.createdAt.year == 2026 && o.createdAt.month == 5;
+                        case 'June 2026':
+                          return o.createdAt.year == 2026 && o.createdAt.month == 6;
+                        case 'July 2026':
+                          return o.createdAt.year == 2026 && o.createdAt.month == 7;
+                        case 'All Time':
+                        default:
+                          return true;
+                      }
+                    }).toList();
+
+                    filteredOrders.sort((a, b) {
+                      switch (sortOptionVal) {
+                        case 'Oldest First':
+                          return a.createdAt.compareTo(b.createdAt);
+                        case 'Highest Amount':
+                          return b.totalAmount.compareTo(a.totalAmount);
+                        case 'Lowest Amount':
+                          return a.totalAmount.compareTo(b.totalAmount);
+                        case 'Status':
+                          return a.status.label.compareTo(b.status.label);
+                        case 'Newest First':
+                        default:
+                          return b.createdAt.compareTo(a.createdAt);
+                      }
+                    });
+
+                    final totalCount = filteredOrders.length;
+                    final confirmedDeliveredCount = filteredOrders.where((o) =>
+                        o.status == OrderStatus.delivered ||
+                        o.status == OrderStatus.accepted ||
+                        o.status == OrderStatus.logisticsConfirmed).length;
+                    final conversionRate = totalCount > 0 ? (confirmedDeliveredCount / totalCount * 100) : 0.0;
+                    final pendingActionCount = filteredOrders.where((o) =>
+                        o.status == OrderStatus.assignedToRep ||
+                        o.status == OrderStatus.contacting ||
+                        o.status == OrderStatus.callBack ||
+                        o.status == OrderStatus.newOrder).length;
+
+                    return Padding(
+                      padding: EdgeInsets.all(isMobile ? 10 : 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: _buildRepMiniKpi('Total Orders', '$totalCount', Icons.assignment, Colors.blue, isDark)),
-                          const SizedBox(width: 8),
-                          Expanded(child: _buildRepMiniKpi('Confirmed / Deliv.', '$confirmedDeliveredCount (${conversionRate.toStringAsFixed(0)}%)', Icons.check_circle, const Color(0xFF10B981), isDark)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(child: _buildRepMiniKpi('Commission Earned', '₦${((confirmedDeliveredCount * 1000) / 1000).toStringAsFixed(0)}k', Icons.payments, const Color(0xFF10B981), isDark)),
-                          const SizedBox(width: 8),
-                          Expanded(child: _buildRepMiniKpi('Pending Calls', '$pendingActionCount', Icons.phone_callback, Colors.amber, isDark)),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Expanded(child: _buildRepMiniKpi('Total Orders', '$totalCount orders', Icons.assignment, Colors.blue, isDark)),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildRepMiniKpi('Confirmed / Deliv.', '$confirmedDeliveredCount (${conversionRate.toStringAsFixed(1)}%)', Icons.check_circle, const Color(0xFF10B981), isDark)),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildRepMiniKpi('Commission Earned', '₦${(confirmedDeliveredCount * 1000).toStringAsFixed(0)}', Icons.payments, const Color(0xFF10B981), isDark)),
-                      const SizedBox(width: 8),
-                      Expanded(child: _buildRepMiniKpi('Pending Calls', '$pendingActionCount pending', Icons.phone_callback, Colors.amber, isDark)),
-                    ],
-                  ),
-          ),
-
-          // 2. Search Bar + Date Filter + Sorting Controls Row
-          if (isMobile) ...[
-            TextField(
-              onChanged: (val) => setState(() => _orderSearchQuery = val),
-              style: GoogleFonts.inter(fontSize: 12.5, color: textPrimary),
-              decoration: InputDecoration(
-                hintText: "Search orders by #, customer, phone...",
-                hintStyle: GoogleFonts.inter(fontSize: 11.5, color: textMuted),
-                prefixIcon: const Icon(Icons.search, size: 18),
-                filled: true,
-                fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: borderColor),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _orderDateFilter,
-                        icon: const Icon(Icons.calendar_today, size: 13, color: Color(0xFF10B981)),
-                        dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary),
-                        items: dateOptions.map((d) => DropdownMenuItem(value: d, child: Text('📅 $d'))).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _orderDateFilter = val);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _orderSortOption,
-                        icon: const Icon(Icons.sort, size: 13, color: Color(0xFF10B981)),
-                        dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary),
-                        items: sortOptions.map((s) => DropdownMenuItem(value: s, child: Text('↕️ $s'))).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _orderSortOption = val);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ] else ...[
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    onChanged: (val) => setState(() => _orderSearchQuery = val),
-                    style: GoogleFonts.inter(fontSize: 12.5, color: textPrimary),
-                    decoration: InputDecoration(
-                      hintText: "Search orders by #, customer, phone, city...",
-                      hintStyle: GoogleFonts.inter(fontSize: 11.5, color: textMuted),
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      filled: true,
-                      fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _orderDateFilter,
-                      icon: const Icon(Icons.calendar_today, size: 13, color: Color(0xFF10B981)),
-                      dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: textPrimary),
-                      items: dateOptions.map((d) => DropdownMenuItem(value: d, child: Text('📅 $d'))).toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _orderDateFilter = val);
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _orderSortOption,
-                      icon: const Icon(Icons.sort, size: 13, color: Color(0xFF10B981)),
-                      dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: textPrimary),
-                      items: sortOptions.map((s) => DropdownMenuItem(value: s, child: Text('↕️ $s'))).toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _orderSortOption = val);
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          const SizedBox(height: 10),
-
-          // 3. Orders List with Individual Reassign Control
-          Expanded(
-            child: filteredOrders.isEmpty
-                ? Center(
-                    child: Text(
-                      'No orders found matching criteria for ${widget.supervisee.user.fullName}',
-                      style: GoogleFonts.inter(color: textMuted),
-                    ),
-                  )
-                : ListView.separated(
-                    itemCount: filteredOrders.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final order = filteredOrders[index];
-                      final isSelected = _selectedOrderIds.contains(order.id);
-
-                      return Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFF10B981) : borderColor,
-                            width: isSelected ? 1.5 : 1.0,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: isSelected,
-                              activeColor: const Color(0xFF10B981),
-                              onChanged: (val) {
-                                setState(() {
-                                  if (val == true) {
-                                    _selectedOrderIds.add(order.id);
-                                  } else {
-                                    _selectedOrderIds.remove(order.id);
-                                  }
-                                });
-                              },
+                          // Performance Summary KPI Cards
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: borderColor),
                             ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                            child: isMobile
+                                ? Column(
                                     children: [
-                                      Text(
-                                        order.orderNumber,
-                                        style: GoogleFonts.jetBrainsMono(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: theme.primaryColor,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Expanded(child: _buildRepMiniKpi('Total Orders', '$totalCount', Icons.assignment, Colors.blue, isDark)),
+                                          const SizedBox(width: 8),
+                                          Expanded(child: _buildRepMiniKpi('Confirmed / Deliv.', '$confirmedDeliveredCount (${conversionRate.toStringAsFixed(0)}%)', Icons.check_circle, const Color(0xFF10B981), isDark)),
+                                        ],
                                       ),
-                                      const SizedBox(width: 8),
-                                      _buildStatusBadge(order.status),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        DateFormat('d MMM').format(order.createdAt),
-                                        style: GoogleFonts.jetBrainsMono(fontSize: 10, color: textMuted),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Expanded(child: _buildRepMiniKpi('Commission Earned', '₦${((confirmedDeliveredCount * 1000) / 1000).toStringAsFixed(0)}k', Icons.payments, const Color(0xFF10B981), isDark)),
+                                          const SizedBox(width: 8),
+                                          Expanded(child: _buildRepMiniKpi('Pending Calls', '$pendingActionCount', Icons.phone_callback, Colors.amber, isDark)),
+                                        ],
                                       ),
                                     ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Expanded(child: _buildRepMiniKpi('Total Orders', '$totalCount orders', Icons.assignment, Colors.blue, isDark)),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: _buildRepMiniKpi('Confirmed / Deliv.', '$confirmedDeliveredCount (${conversionRate.toStringAsFixed(1)}%)', Icons.check_circle, const Color(0xFF10B981), isDark)),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: _buildRepMiniKpi('Commission Earned', '₦${(confirmedDeliveredCount * 1000).toStringAsFixed(0)}', Icons.payments, const Color(0xFF10B981), isDark)),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: _buildRepMiniKpi('Pending Calls', '$pendingActionCount pending', Icons.phone_callback, Colors.amber, isDark)),
+                                    ],
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    order.customerName,
-                                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
-                                  ),
-                                  Text(
-                                    '${order.customerPhone} • ${order.deliveryCity}, ${order.deliveryState}',
-                                    style: GoogleFonts.inter(fontSize: 11.5, color: textMuted),
-                                  ),
-                                ],
+                          ),
+
+                          // Search Bar + Date Filter + Sorting Controls Row
+                          if (isMobile) ...[
+                            TextField(
+                              onChanged: (val) => _orderSearchQuery.value = val,
+                              style: GoogleFonts.inter(fontSize: 12.5, color: textPrimary),
+                              decoration: InputDecoration(
+                                hintText: "Search orders by #, customer, phone...",
+                                hintStyle: GoogleFonts.inter(fontSize: 11.5, color: textMuted),
+                                prefixIcon: const Icon(Icons.search, size: 18),
+                                filled: true,
+                                fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: borderColor),
+                                ),
                               ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            const SizedBox(height: 8),
+                            Row(
                               children: [
-                                Text(
-                                  '₦${order.totalAmount.toStringAsFixed(0)}',
-                                  style: GoogleFonts.jetBrainsMono(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF10B981),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  order.productId,
-                                  style: GoogleFonts.inter(fontSize: 10.5, color: textMuted),
-                                ),
-                                const SizedBox(height: 6),
-                                OutlinedButton.icon(
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    side: BorderSide(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: borderColor),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        isExpanded: true,
+                                        value: dateFilterVal,
+                                        icon: const Icon(Icons.calendar_today, size: 13, color: Color(0xFF10B981)),
+                                        dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
+                                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary),
+                                        items: dateOptions.map((d) => DropdownMenuItem(value: d, child: Text('📅 $d'))).toList(),
+                                        onChanged: (val) {
+                                          if (val != null) _orderDateFilter.value = val;
+                                        },
+                                      ),
                                     ),
                                   ),
-                                  onPressed: () => _showReassignModal([order.id]),
-                                  icon: const Icon(Icons.swap_horiz_rounded, size: 14, color: Color(0xFF10B981)),
-                                  label: Text(
-                                    'Reassign',
-                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: borderColor),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        isExpanded: true,
+                                        value: sortOptionVal,
+                                        icon: const Icon(Icons.sort, size: 13, color: Color(0xFF10B981)),
+                                        dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
+                                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary),
+                                        items: sortOptions.map((s) => DropdownMenuItem(value: s, child: Text('↕️ $s'))).toList(),
+                                        onChanged: (val) {
+                                          if (val != null) _orderSortOption.value = val;
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: TextField(
+                                    onChanged: (val) => _orderSearchQuery.value = val,
+                                    style: GoogleFonts.inter(fontSize: 12.5, color: textPrimary),
+                                    decoration: InputDecoration(
+                                      hintText: "Search orders by #, customer, phone, city...",
+                                      hintStyle: GoogleFonts.inter(fontSize: 11.5, color: textMuted),
+                                      prefixIcon: const Icon(Icons.search, size: 18),
+                                      filled: true,
+                                      fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(color: borderColor),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: borderColor),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: dateFilterVal,
+                                      icon: const Icon(Icons.calendar_today, size: 13, color: Color(0xFF10B981)),
+                                      dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
+                                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: textPrimary),
+                                      items: dateOptions.map((d) => DropdownMenuItem(value: d, child: Text('📅 $d'))).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) _orderDateFilter.value = val;
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: borderColor),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: sortOptionVal,
+                                      icon: const Icon(Icons.sort, size: 13, color: Color(0xFF10B981)),
+                                      dropdownColor: isDark ? const Color(0xFF132A22) : Colors.white,
+                                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: textPrimary),
+                                      items: sortOptions.map((s) => DropdownMenuItem(value: s, child: Text('↕️ $s'))).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) _orderSortOption.value = val;
+                                      },
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ],
-                        ),
-                      );
-                    },
-                  ),
-          ),
 
-          // 4. Batch Reassignment Action Floating Bar
-          if (_selectedOrderIds.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.check_box_rounded, color: Color(0xFF10B981), size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${_selectedOrderIds.length} orders selected',
-                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
+                          const SizedBox(height: 10),
+
+                          // Orders List
+                          Expanded(
+                            child: ValueListenableBuilder<Set<String>>(
+                              valueListenable: _selectedOrderIds,
+                              builder: (context, selectedIdsVal, _) {
+                                return filteredOrders.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          'No orders found matching criteria for ${widget.supervisee.user.fullName}',
+                                          style: GoogleFonts.inter(color: textMuted),
+                                        ),
+                                      )
+                                    : ListView.separated(
+                                        itemCount: filteredOrders.length,
+                                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                        itemBuilder: (context, index) {
+                                          final order = filteredOrders[index];
+                                          final isSelected = selectedIdsVal.contains(order.id);
+
+                                          return Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: isSelected ? const Color(0xFF10B981) : borderColor,
+                                                width: isSelected ? 1.5 : 1.0,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Checkbox(
+                                                  value: isSelected,
+                                                  activeColor: const Color(0xFF10B981),
+                                                  onChanged: (val) {
+                                                    final copy = Set<String>.from(selectedIdsVal);
+                                                    if (val == true) {
+                                                      copy.add(order.id);
+                                                    } else {
+                                                      copy.remove(order.id);
+                                                    }
+                                                    _selectedOrderIds.value = copy;
+                                                  },
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Text(
+                                                            order.orderNumber,
+                                                            style: GoogleFonts.jetBrainsMono(
+                                                              fontSize: 12.5,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: theme.primaryColor,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          _buildStatusBadge(order.status),
+                                                          const SizedBox(width: 6),
+                                                          Text(
+                                                            DateFormat('d MMM').format(order.createdAt),
+                                                            style: GoogleFonts.jetBrainsMono(fontSize: 10, color: textMuted),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        order.customerName,
+                                                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
+                                                      ),
+                                                      Text(
+                                                        '${order.customerPhone} • ${order.deliveryCity}, ${order.deliveryState}',
+                                                        style: GoogleFonts.inter(fontSize: 11.5, color: textMuted),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    Text(
+                                                      '₦${order.totalAmount.toStringAsFixed(0)}',
+                                                      style: GoogleFonts.jetBrainsMono(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: const Color(0xFF10B981),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      order.productId,
+                                                      style: GoogleFonts.inter(fontSize: 10.5, color: textMuted),
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    OutlinedButton.icon(
+                                                      style: OutlinedButton.styleFrom(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                        minimumSize: Size.zero,
+                                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                        side: BorderSide(
+                                                          color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                                                        ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                      ),
+                                                      onPressed: () => _showReassignModal([order.id]),
+                                                      icon: const Icon(Icons.swap_horiz_rounded, size: 14, color: Color(0xFF10B981)),
+                                                      label: Text(
+                                                        'Reassign',
+                                                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      );
+                              },
+                            ),
+                          ),
+
+                          // Batch Reassignment Action Floating Bar
+                          ValueListenableBuilder<Set<String>>(
+                            valueListenable: _selectedOrderIds,
+                            builder: (context, selectedIdsVal, _) {
+                              if (selectedIdsVal.isEmpty) return const SizedBox.shrink();
+                              return Container(
+                                margin: const EdgeInsets.only(top: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.check_box_rounded, color: Color(0xFF10B981), size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${selectedIdsVal.length} orders selected',
+                                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
+                                        ),
+                                      ],
+                                    ),
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF10B981),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      ),
+                                      onPressed: () => _showReassignModal(selectedIdsVal.toList()),
+                                      icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                                      label: Text('Reassign Selected', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    ),
-                    onPressed: () => _showReassignModal(_selectedOrderIds.toList()),
-                    icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-                    label: Text('Reassign Selected', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1252,70 +1275,80 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
   }
 
   Widget _buildLeadCapBox(bool isDark, Color borderColor, Color textMuted) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ValueListenableBuilder<int>(
+      valueListenable: _maxLeadCap,
+      builder: (context, capVal, _) {
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Max Daily Lead Cap:', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text('$_maxLeadCap leads', style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Max Daily Lead Cap:', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text('$capVal leads', style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                  ),
+                ],
+              ),
+              Slider(
+                value: capVal.toDouble(),
+                min: 5,
+                max: 50,
+                divisions: 9,
+                activeColor: const Color(0xFF10B981),
+                onChanged: (val) => _maxLeadCap.value = val.toInt(),
               ),
             ],
           ),
-          Slider(
-            value: _maxLeadCap.toDouble(),
-            min: 5,
-            max: 50,
-            divisions: 9,
-            activeColor: const Color(0xFF10B981),
-            onChanged: (val) => setState(() => _maxLeadCap = val.toInt()),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildAutoAssignBox(bool isDark, Color borderColor, Color textPrimary, Color textMuted) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Round-Robin Distribution:', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: textPrimary)),
-                Text('Include in automatic lead routing', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
-              ],
-            ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: _autoAssignEnabled,
+      builder: (context, autoAssignVal, _) {
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
           ),
-          Switch.adaptive(
-            value: _autoAssignEnabled,
-            activeTrackColor: const Color(0xFF10B981),
-            onChanged: (val) => setState(() => _autoAssignEnabled = val),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Round-Robin Distribution:', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: textPrimary)),
+                    Text('Include in automatic lead routing', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: autoAssignVal,
+                activeTrackColor: const Color(0xFF10B981),
+                onChanged: (val) => _autoAssignEnabled.value = val,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

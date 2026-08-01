@@ -17,7 +17,21 @@ class FundMarketerDialog extends StatefulWidget {
 class _FundMarketerDialogState extends State<FundMarketerDialog> {
   final _amountController = TextEditingController(text: '500000');
   final _notesController = TextEditingController(text: 'Weekly Ad Campaign Budget Allocation');
-  String _selectedMarketer = 'marketer.david@novacare.com';
+  late ValueNotifier<String> _selectedMarketer;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMarketer = ValueNotifier<String>('marketer.david@novacare.com');
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _notesController.dispose();
+    _selectedMarketer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,19 +77,24 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
             // Select Marketer Account
             const Text('Digital Marketer Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 6),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedMarketer,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'marketer.david@novacare.com', child: Text('👤 David Marketer (FB & TikTok Ads)')),
-                DropdownMenuItem(value: 'marketer.alex@novacare.com', child: Text('👤 Alex Marketer (Google Ads)')),
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _selectedMarketer = val);
+            ValueListenableBuilder<String>(
+              valueListenable: _selectedMarketer,
+              builder: (context, marketerVal, _) {
+                return DropdownButtonFormField<String>(
+                  initialValue: marketerVal,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'marketer.david@novacare.com', child: Text('👤 David Marketer (FB & TikTok Ads)')),
+                    DropdownMenuItem(value: 'marketer.alex@novacare.com', child: Text('👤 Alex Marketer (Google Ads)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) _selectedMarketer.value = val;
+                  },
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -121,7 +140,7 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
           onPressed: () {
             final amount = double.tryParse(_amountController.text) ?? 0.0;
             Navigator.pop(context, {
-              'marketer_email': _selectedMarketer,
+              'marketer_email': _selectedMarketer.value,
               'amount': amount,
               'notes': _notesController.text,
             });

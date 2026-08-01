@@ -22,6 +22,19 @@ class NovaDialerFloatingBar extends StatefulWidget {
 
 class _NovaDialerFloatingBarState extends State<NovaDialerFloatingBar> {
   final NovaSipTelephonyService _telephonyService = NovaSipTelephonyService();
+  late ValueNotifier<bool> _isMutedNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _isMutedNotifier = ValueNotifier<bool>(_telephonyService.isMuted);
+  }
+
+  @override
+  void dispose() {
+    _isMutedNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,18 +113,22 @@ class _NovaDialerFloatingBarState extends State<NovaDialerFloatingBar> {
                   const SizedBox(width: 16),
 
                   // Mute Button
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _telephonyService.toggleMute();
-                      });
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _isMutedNotifier,
+                    builder: (context, isMutedVal, _) {
+                      return IconButton(
+                        onPressed: () {
+                          _telephonyService.toggleMute();
+                          _isMutedNotifier.value = _telephonyService.isMuted;
+                        },
+                        icon: Icon(
+                          isMutedVal ? Icons.mic_off_rounded : Icons.mic_rounded,
+                          color: isMutedVal ? Colors.redAccent : Colors.white70,
+                          size: 18,
+                        ),
+                        tooltip: isMutedVal ? 'Unmute' : 'Mute',
+                      );
                     },
-                    icon: Icon(
-                      _telephonyService.isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                      color: _telephonyService.isMuted ? Colors.redAccent : Colors.white70,
-                      size: 18,
-                    ),
-                    tooltip: _telephonyService.isMuted ? 'Unmute' : 'Mute',
                   ),
 
                   // Expand to Full Softphone Modal

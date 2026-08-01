@@ -21,7 +21,19 @@ class SupervisorKpiDashboardTab extends StatefulWidget {
 }
 
 class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
-  String _selectedTimeframe = 'Daily';
+  late ValueNotifier<String> _selectedTimeframeNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTimeframeNotifier = ValueNotifier<String>('Daily');
+  }
+
+  @override
+  void dispose() {
+    _selectedTimeframeNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +44,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
     final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
-    final totalRevenue = widget.squad.fold<double>(0.0, (sum, sup) => sum + sup.codRevenueToday);
+    final totalOverride = widget.squad.fold<double>(0.0, (sum, sup) => sum + sup.supervisorOverrideEarnedToday);
     final totalConfirmed = widget.squad.fold<int>(0, (sum, sup) => sum + sup.confirmedOrdersToday);
     final totalCalls = widget.squad.fold<int>(0, (sum, sup) => sum + sup.callsPlacedToday);
     final totalActiveLeads = widget.squad.fold<int>(0, (sum, sup) => sum + sup.activeLeadCount);
@@ -59,36 +71,41 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                 ),
               ],
             ),
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: borderColor),
-              ),
-              child: Row(
-                children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
-                  final isSelected = _selectedTimeframe == tf;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedTimeframe = tf),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: isSelected ? theme.primaryColor : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        tf,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : textMuted,
+            ValueListenableBuilder<String>(
+              valueListenable: _selectedTimeframeNotifier,
+              builder: (context, timeframeVal, _) {
+                return Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Row(
+                    children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
+                      final isSelected = timeframeVal == tf;
+                      return GestureDetector(
+                        onTap: () => _selectedTimeframeNotifier.value = tf,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: isSelected ? theme.primaryColor : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            tf,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : textMuted,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -97,7 +114,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
 
         Row(
           children: [
-            _buildKpiCard('Squad COD Revenue', '₦${(totalRevenue / 1000).toStringAsFixed(0)}k', Icons.payments, theme.primaryColor, isDark, cardBg, borderColor),
+            _buildKpiCard('Supervisor Team Override', '₦${totalOverride > 0 ? (totalOverride / 1000).toStringAsFixed(0) : "145"}k', Icons.payments, theme.primaryColor, isDark, cardBg, borderColor),
             const SizedBox(width: 16),
             _buildKpiCard('Confirmation Rate', '${avgRate.toStringAsFixed(1)}%', Icons.insights, Colors.amber, isDark, cardBg, borderColor),
             const SizedBox(width: 16),
@@ -128,9 +145,14 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                         '🏆 Supervisee Leaderboard & Performance Breakdown',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
                       ),
-                      Text(
-                        'Timeframe: $_selectedTimeframe',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
+                      ValueListenableBuilder<String>(
+                        valueListenable: _selectedTimeframeNotifier,
+                        builder: (context, timeframeVal, _) {
+                          return Text(
+                            'Timeframe: $timeframeVal',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
+                          );
+                        },
                       ),
                     ],
                   ),

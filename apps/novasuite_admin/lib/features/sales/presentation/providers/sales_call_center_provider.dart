@@ -14,7 +14,7 @@ class SalesCallCenterProvider extends ChangeNotifier {
 
   SalesCallCenterProvider({OrderRepository? repository})
       : _repository = repository ?? OrderRepository() {
-    fetchOrders();
+    _initSeedOrders();
   }
 
   List<OrderModel> get orders => _orders;
@@ -35,16 +35,188 @@ class SalesCallCenterProvider extends ChangeNotifier {
     }).toList();
   }
 
+  void _initSeedOrders() {
+    _orders = [
+      OrderModel(
+        id: 'ord-101',
+        orderNumber: 'ORD-849201',
+        companyId: 'tenant-novacare',
+        productId: 'prod-herbal-tea',
+        salesRepId: 'salesrep.john@novacare.com',
+        customerName: 'Amina Bello',
+        customerPhone: '08085040146',
+        deliveryState: 'Lagos',
+        deliveryCity: 'Ikeja',
+        deliveryAddress: '14 Allen Avenue, Ikeja, Lagos',
+        status: OrderStatus.upsellPending,
+        quantity: 2,
+        basePrice: 25000.0,
+        upsellAmount: 12000.0,
+        downsellDiscount: 0.0,
+        totalAmount: 62000.0,
+        upsellStatus: UpsellStatus.pending,
+        upsellNotes: 'Client requested 1 extra Herbal Detox Bottle',
+        paymentStatus: 'pending',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 25)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+      OrderModel(
+        id: 'ord-102',
+        orderNumber: 'ORD-849202',
+        companyId: 'tenant-novacare',
+        productId: 'prod-herbal-tea',
+        salesRepId: 'salesrep.sarah@novacare.com',
+        customerName: 'Chidi Okeke',
+        customerPhone: '08165119466',
+        deliveryState: 'Abuja',
+        deliveryCity: 'Maitama',
+        deliveryAddress: '8 Gana Street, Maitama, Abuja',
+        status: OrderStatus.accepted,
+        quantity: 1,
+        basePrice: 25000.0,
+        upsellAmount: 0.0,
+        downsellDiscount: 0.0,
+        totalAmount: 25000.0,
+        upsellStatus: UpsellStatus.none,
+        paymentStatus: 'pending',
+        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 40)),
+      ),
+      OrderModel(
+        id: 'ord-103',
+        orderNumber: 'ORD-849203',
+        companyId: 'tenant-novacare',
+        productId: 'prod-booster',
+        salesRepId: 'salesrep.john@novacare.com',
+        customerName: 'Emeka Nwosu',
+        customerPhone: '08085040146',
+        deliveryState: 'Rivers',
+        deliveryCity: 'Port Harcourt',
+        deliveryAddress: '42 GRA Phase 2, Port Harcourt',
+        status: OrderStatus.inTransit,
+        quantity: 3,
+        basePrice: 18000.0,
+        upsellAmount: 0.0,
+        downsellDiscount: 2000.0,
+        totalAmount: 52000.0,
+        upsellStatus: UpsellStatus.approved,
+        paymentStatus: 'pending',
+        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
+      ),
+      OrderModel(
+        id: 'ord-104',
+        orderNumber: 'ORD-2026-8901',
+        companyId: 'tenant-novacare',
+        productId: 'prod-herbal-tea',
+        salesRepId: null,
+        customerName: 'Chief Bartholomew Okonkwo',
+        customerPhone: '08085040146',
+        deliveryState: 'Lagos',
+        deliveryCity: 'Ikeja GRA',
+        deliveryAddress: '14 Isaac John Street',
+        status: OrderStatus.newOrder,
+        quantity: 2,
+        basePrice: 25000.0,
+        upsellAmount: 0.0,
+        downsellDiscount: 0.0,
+        totalAmount: 50000.0,
+        upsellStatus: UpsellStatus.none,
+        paymentStatus: 'pending',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 10)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 10)),
+      ),
+      OrderModel(
+        id: 'ord-105',
+        orderNumber: 'ORD-2026-8902',
+        companyId: 'tenant-novacare',
+        productId: 'prod-booster',
+        salesRepId: null,
+        customerName: 'Dr. Folake Adeleke',
+        customerPhone: '08165119466',
+        deliveryState: 'Abuja',
+        deliveryCity: 'Maitama',
+        deliveryAddress: 'Aso Drive Plot 402',
+        status: OrderStatus.callBack,
+        quantity: 1,
+        basePrice: 28000.0,
+        upsellAmount: 0.0,
+        downsellDiscount: 0.0,
+        totalAmount: 28000.0,
+        upsellStatus: UpsellStatus.none,
+        paymentStatus: 'pending',
+        scheduledCallbackAt: DateTime.now().add(const Duration(minutes: 5)),
+        createdAt: DateTime.now().subtract(const Duration(minutes: 25)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 25)),
+      ),
+      OrderModel(
+        id: 'ord-106',
+        orderNumber: 'ORD-2026-8903',
+        companyId: 'tenant-novacare',
+        productId: 'prod-herbal-tea',
+        salesRepId: null,
+        customerName: 'Alhaji Ibrahim Danladi',
+        customerPhone: '08085040146',
+        deliveryState: 'Kano',
+        deliveryCity: 'Nassarawa GRA',
+        deliveryAddress: '7 Lamido Road',
+        status: OrderStatus.newOrder,
+        quantity: 1,
+        basePrice: 22000.0,
+        upsellAmount: 0.0,
+        downsellDiscount: 0.0,
+        totalAmount: 22000.0,
+        upsellStatus: UpsellStatus.none,
+        paymentStatus: 'pending',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 40)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 40)),
+      ),
+      OrderModel(
+        id: 'ord-107',
+        orderNumber: 'ORD-2026-8904',
+        companyId: 'tenant-novacare',
+        productId: 'prod-booster',
+        salesRepId: null,
+        customerName: 'Engineer Chidi Nnamdi',
+        customerPhone: '08165119466',
+        deliveryState: 'Rivers',
+        deliveryCity: 'Port Harcourt',
+        deliveryAddress: '88 Aba Road, Garrison',
+        status: OrderStatus.newOrder,
+        quantity: 1,
+        basePrice: 25000.0,
+        upsellAmount: 0.0,
+        downsellDiscount: 0.0,
+        totalAmount: 25000.0,
+        upsellStatus: UpsellStatus.none,
+        paymentStatus: 'pending',
+        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
+      ),
+    ];
+  }
+
   Future<void> fetchOrders({String companyId = 'comp-101'}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _orders = await _repository.fetchOrders(companyId: companyId);
+      final fetched = await _repository.fetchOrders(companyId: companyId);
+      if (fetched.isNotEmpty) {
+        _orders = fetched;
+      }
     } catch (e) {
-      // Repository returns fallback seed data
+      // Retain seed data on error
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void updateOrder(OrderModel updatedOrder) {
+    final index = _orders.indexWhere((o) => o.id == updatedOrder.id);
+    if (index != -1) {
+      _orders[index] = updatedOrder;
       notifyListeners();
     }
   }

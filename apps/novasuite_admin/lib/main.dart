@@ -9,6 +9,7 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/sales/presentation/providers/sales_provider.dart';
 import 'features/logistics/presentation/providers/logistics_provider.dart';
 import 'features/marketing/presentation/providers/marketing_provider.dart';
+import 'features/finance/presentation/providers/finance_provider.dart';
 import 'features/auth/presentation/pages/login_screen.dart';
 import 'features/sales/presentation/widgets/request_upsell_dialog.dart';
 import 'features/sales/presentation/pages/sales_call_center_suite_page.dart';
@@ -26,6 +27,9 @@ import 'features/navigation/providers/app_navigation_provider.dart';
 import 'features/sales_supervisor/presentation/providers/supervisor_dashboard_provider.dart';
 import 'features/sales/presentation/providers/sales_call_center_provider.dart';
 import 'features/sales_supervisee/presentation/providers/call_rep_dashboard_provider.dart';
+import 'features/hr/presentation/providers/hr_provider.dart';
+import 'features/logistics/presentation/providers/inventory_provider.dart';
+import 'features/marketing/presentation/providers/campaign_form_builder_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,68 +44,54 @@ void main() async {
         ChangeNotifierProvider(create: (_) => sl<SalesProvider>()),
         ChangeNotifierProvider(create: (_) => sl<LogisticsProvider>()),
         ChangeNotifierProvider(create: (_) => sl<MarketingProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<FinanceProvider>()),
         ChangeNotifierProvider(create: (_) => AppNavigationProvider()),
         ChangeNotifierProvider(create: (_) => SupervisorDashboardProvider()),
         ChangeNotifierProvider(create: (_) => SalesCallCenterProvider()),
         ChangeNotifierProvider(create: (_) => CallRepDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => sl<HRProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<InventoryProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<CampaignFormBuilderProvider>()),
       ],
       child: const NovaSuiteAdminApp(),
     ),
   );
 }
 
-class NovaSuiteAdminApp extends StatefulWidget {
+class NovaSuiteAdminApp extends StatelessWidget {
   const NovaSuiteAdminApp({super.key});
 
   @override
-  State<NovaSuiteAdminApp> createState() => _NovaSuiteAdminAppState();
-}
-
-class _NovaSuiteAdminAppState extends State<NovaSuiteAdminApp> {
-  TenantTheme _activeTheme = TenantTheme.defaultNovaCare();
-  UserModel? _currentUser;
-
-  void _updateTheme(TenantTheme newTheme) {
-    setState(() {
-      _activeTheme = newTheme;
-    });
-  }
-
-  void _onLoginSuccess(UserModel user) {
-    setState(() {
-      _currentUser = user;
-    });
-  }
-
-  void _onSignOut() {
-    setState(() {
-      _currentUser = null;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          title: _activeTheme.appTitle,
-          debugShowCheckedModeBanner: false,
-          themeMode: themeProvider.themeMode,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          home: _currentUser == null
-              ? LoginScreen(
-                  activeTheme: _activeTheme,
-                  onLoginSuccess: _onLoginSuccess,
-                )
-              : AdminMainShell(
-                  activeTheme: _activeTheme,
-                  currentUser: _currentUser!,
-                  onThemeChanged: _updateTheme,
-                  onSignOut: _onSignOut,
-                ),
-        );
-      },
+    final authProvider = context.watch<AuthProvider>();
+    final navProvider = context.watch<AppNavigationProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
+    final currentUser = authProvider.currentUser;
+    final activeTheme = navProvider.activeTheme;
+
+    return MaterialApp(
+      title: activeTheme.appTitle,
+      debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      home: currentUser == null
+          ? LoginScreen(
+              activeTheme: activeTheme,
+              onLoginSuccess: (user) {
+                context.read<AuthProvider>().setCurrentUser(user);
+              },
+            )
+          : AdminMainShell(
+              activeTheme: activeTheme,
+              currentUser: currentUser,
+              onThemeChanged: (newTheme) {
+                context.read<AppNavigationProvider>().setActiveTheme(newTheme);
+              },
+              onSignOut: () {
+                context.read<AuthProvider>().logout();
+              },
+            ),
     );
   }
 }
@@ -125,248 +115,46 @@ class AdminMainShell extends StatefulWidget {
 }
 
 class _AdminMainShellState extends State<AdminMainShell> {
-  int _selectedIndex = 0; // 0: Dashboard, 1: Sales, 2: Approvals, 3: Marketing, 4: Logistics, 5: COD, 6: Whitelabel, 7: HR, 8: GM Inventory
-  int _marketingSubNavIndex = 0;
-  int _salesSubNavIndex = 0;
-  int _supervisorSubNavIndex = 0;
-  int _inventorySubNavIndex = 0;
-  bool _isSidebarCollapsed = false;
   final String _selectedTenant = 'Nova Care Herbal';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  // Interactive Live Orders List
-  late List<OrderModel> _orders;
-  double _totalMarketerBudget = 3500000.0;
-  double _riderEmekaCodBalance = 125000.0;
-  final double _riderEmekaMaxLimit = 150000.0;
-
-  // Active Stock Transfers List
-  final List<Map<String, dynamic>> _transfers = [
-    {
-      'waybill': 'WB-2026-4891',
-      'source': 'Lagos Central Factory Hub',
-      'destination': 'Abuja Regional Hub (NovaExpress)',
-      'product': 'Herbal Care Detox Tea',
-      'quantity': 500,
-      'status': 'dispatched',
-      'date': '2026-07-24 10:30 AM',
-    },
-    {
-      'waybill': 'WB-2026-4820',
-      'source': 'Lagos Central Factory Hub',
-      'destination': 'Rider Emeka Mini-Hub (Port Harcourt)',
-      'product': 'Herbal Vitality Booster',
-      'quantity': 50,
-      'status': 'completed',
-      'date': '2026-07-23 04:15 PM',
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
-    final role = widget.currentUser.role;
-    if (role == UserRole.digitalMarketer) {
-      _selectedIndex = 3;
-    } else if (role == UserRole.salesCallRep) {
-      _selectedIndex = 1;
-    } else if (role == UserRole.supervisor) {
-      _selectedIndex = 2;
-    } else if (role == UserRole.logisticsCallRep) {
-      _selectedIndex = 4;
-    } else if (role == UserRole.financeManager) {
-      _selectedIndex = 5;
-    } else {
-      _selectedIndex = 0;
-    }
-
-    _loadInitialOrders();
-    _orders = [
-      OrderModel(
-        id: 'ord-101',
-        orderNumber: 'ORD-849201',
-        companyId: 'tenant-novacare',
-        productId: 'prod-herbal-tea',
-        salesRepId: 'salesrep.john@novacare.com',
-        customerName: 'Amina Bello',
-        customerPhone: '08085040146',
-        deliveryState: 'Lagos',
-        deliveryCity: 'Ikeja',
-        deliveryAddress: '14 Allen Avenue, Ikeja, Lagos',
-        status: OrderStatus.upsellPending,
-        quantity: 2,
-        basePrice: 25000.0,
-        upsellAmount: 12000.0,
-        downsellDiscount: 0.0,
-        totalAmount: 62000.0,
-        upsellStatus: UpsellStatus.pending,
-        upsellNotes: 'Client requested 1 extra Herbal Detox Bottle',
-        paymentStatus: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(minutes: 25)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-      OrderModel(
-        id: 'ord-102',
-        orderNumber: 'ORD-849202',
-        companyId: 'tenant-novacare',
-        productId: 'prod-herbal-tea',
-        salesRepId: 'salesrep.sarah@novacare.com',
-        customerName: 'Chidi Okeke',
-        customerPhone: '08165119466',
-        deliveryState: 'Abuja',
-        deliveryCity: 'Maitama',
-        deliveryAddress: '8 Gana Street, Maitama, Abuja',
-        status: OrderStatus.accepted,
-        quantity: 1,
-        basePrice: 25000.0,
-        upsellAmount: 0.0,
-        downsellDiscount: 0.0,
-        totalAmount: 25000.0,
-        upsellStatus: UpsellStatus.none,
-        paymentStatus: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 40)),
-      ),
-      OrderModel(
-        id: 'ord-103',
-        orderNumber: 'ORD-849203',
-        companyId: 'tenant-novacare',
-        productId: 'prod-booster',
-        salesRepId: 'salesrep.john@novacare.com',
-        customerName: 'Emeka Nwosu',
-        customerPhone: '08085040146',
-        deliveryState: 'Rivers',
-        deliveryCity: 'Port Harcourt',
-        deliveryAddress: '42 GRA Phase 2, Port Harcourt',
-        status: OrderStatus.inTransit,
-        quantity: 3,
-        basePrice: 18000.0,
-        upsellAmount: 0.0,
-        downsellDiscount: 2000.0,
-        totalAmount: 52000.0,
-        upsellStatus: UpsellStatus.approved,
-        paymentStatus: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-      OrderModel(
-        id: 'ord-104',
-        orderNumber: 'ORD-2026-8901',
-        companyId: 'tenant-novacare',
-        productId: 'prod-herbal-tea',
-        salesRepId: null,
-        customerName: 'Chief Bartholomew Okonkwo',
-        customerPhone: '08085040146',
-        deliveryState: 'Lagos',
-        deliveryCity: 'Ikeja GRA',
-        deliveryAddress: '14 Isaac John Street',
-        status: OrderStatus.newOrder,
-        quantity: 2,
-        basePrice: 25000.0,
-        upsellAmount: 0.0,
-        downsellDiscount: 0.0,
-        totalAmount: 50000.0,
-        upsellStatus: UpsellStatus.none,
-        paymentStatus: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(minutes: 10)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 10)),
-      ),
-      OrderModel(
-        id: 'ord-105',
-        orderNumber: 'ORD-2026-8902',
-        companyId: 'tenant-novacare',
-        productId: 'prod-booster',
-        salesRepId: null,
-        customerName: 'Dr. Folake Adeleke',
-        customerPhone: '08165119466',
-        deliveryState: 'Abuja',
-        deliveryCity: 'Maitama',
-        deliveryAddress: 'Aso Drive Plot 402',
-        status: OrderStatus.callBack,
-        quantity: 1,
-        basePrice: 28000.0,
-        upsellAmount: 0.0,
-        downsellDiscount: 0.0,
-        totalAmount: 28000.0,
-        upsellStatus: UpsellStatus.none,
-        paymentStatus: 'pending',
-        scheduledCallbackAt: DateTime.now().add(const Duration(minutes: 5)),
-        createdAt: DateTime.now().subtract(const Duration(minutes: 25)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 25)),
-      ),
-      OrderModel(
-        id: 'ord-106',
-        orderNumber: 'ORD-2026-8903',
-        companyId: 'tenant-novacare',
-        productId: 'prod-herbal-tea',
-        salesRepId: null,
-        customerName: 'Alhaji Ibrahim Danladi',
-        customerPhone: '08085040146',
-        deliveryState: 'Kano',
-        deliveryCity: 'Nassarawa GRA',
-        deliveryAddress: '7 Lamido Road',
-        status: OrderStatus.newOrder,
-        quantity: 1,
-        basePrice: 22000.0,
-        upsellAmount: 0.0,
-        downsellDiscount: 0.0,
-        totalAmount: 22000.0,
-        upsellStatus: UpsellStatus.none,
-        paymentStatus: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(minutes: 40)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 40)),
-      ),
-      OrderModel(
-        id: 'ord-107',
-        orderNumber: 'ORD-2026-8904',
-        companyId: 'tenant-novacare',
-        productId: 'prod-booster',
-        salesRepId: null,
-        customerName: 'Engineer Chidi Nnamdi',
-        customerPhone: '08165119466',
-        deliveryState: 'Rivers',
-        deliveryCity: 'Port Harcourt',
-        deliveryAddress: '88 Aba Road, Garrison',
-        status: OrderStatus.newOrder,
-        quantity: 1,
-        basePrice: 25000.0,
-        upsellAmount: 0.0,
-        downsellDiscount: 0.0,
-        totalAmount: 25000.0,
-        upsellStatus: UpsellStatus.none,
-        paymentStatus: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-    ];
-  }
-
-  void _loadInitialOrders() async {
-    final repo = OrderRepository();
-    final list = await repo.fetchOrders(companyId: widget.currentUser.companyId);
-    if (mounted && list.isNotEmpty) {
-      setState(() {
-        _orders = list;
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navProvider = context.read<AppNavigationProvider>();
+      final role = widget.currentUser.role;
+      if (role == UserRole.digitalMarketer) {
+        navProvider.setNavIndex(3);
+      } else if (role == UserRole.salesCallRep) {
+        navProvider.setNavIndex(1);
+      } else if (role == UserRole.supervisor) {
+        navProvider.setNavIndex(2);
+      } else if (role == UserRole.logisticsCallRep) {
+        navProvider.setNavIndex(4);
+      } else if (role == UserRole.financeManager) {
+        navProvider.setNavIndex(5);
+      } else {
+        navProvider.setNavIndex(0);
+      }
+    });
   }
 
   void _handleVerifyRemittance() async {
+    final financeProvider = context.read<FinanceProvider>();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => VerifyRemittanceDialog(
         riderName: 'Rider Emeka (Independent)',
-        currentBalance: _riderEmekaCodBalance,
-        maxCreditLimit: _riderEmekaMaxLimit,
+        currentBalance: financeProvider.riderEmekaCodBalance,
+        maxCreditLimit: financeProvider.riderEmekaMaxLimit,
         remittedAmount: 125000.0,
         activeTheme: widget.activeTheme,
       ),
     );
 
     if (result == true) {
-      setState(() {
-        _riderEmekaCodBalance = 0.0;
-      });
+      financeProvider.verifyRemittance();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -379,22 +167,21 @@ class _AdminMainShellState extends State<AdminMainShell> {
   }
 
   void _handleCreateTransfer() async {
+    final logisticsProvider = context.read<LogisticsProvider>();
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => CreateTransferDialog(activeTheme: widget.activeTheme),
     );
 
     if (result != null) {
-      setState(() {
-        _transfers.insert(0, {
-          'waybill': result['waybill_number'],
-          'source': result['source'],
-          'destination': result['destination'],
-          'product': result['product'],
-          'quantity': result['quantity'],
-          'status': 'dispatched',
-          'date': 'Just now',
-        });
+      logisticsProvider.addTransfer({
+        'waybill': result['waybill_number'],
+        'source': result['source'],
+        'destination': result['destination'],
+        'product': result['product'],
+        'quantity': result['quantity'],
+        'status': 'dispatched',
+        'date': 'Just now',
       });
 
       if (!mounted) return;
@@ -408,19 +195,20 @@ class _AdminMainShellState extends State<AdminMainShell> {
   }
 
   void _handleConfirmTransferReceipt(int index) {
-    setState(() {
-      _transfers[index]['status'] = 'completed';
-    });
+    final logisticsProvider = context.read<LogisticsProvider>();
+    final waybill = logisticsProvider.transfers[index]['waybill'];
+    logisticsProvider.confirmTransferReceipt(index);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.green,
-        content: Text('Stock Transfer Waybill ${_transfers[index]['waybill']} confirmed & restocked successfully!'),
+        content: Text('Stock Transfer Waybill $waybill confirmed & restocked successfully!'),
       ),
     );
   }
 
   void _handleFundMarketer() async {
+    final marketingProvider = context.read<MarketingProvider>();
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => FundMarketerDialog(activeTheme: widget.activeTheme),
@@ -428,9 +216,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
 
     if (result != null) {
       final amount = result['amount'] as double;
-      setState(() {
-        _totalMarketerBudget += amount;
-      });
+      marketingProvider.fundMarketerBudget(amount);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -443,6 +229,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
   }
 
   void _handleRequestUpsell(OrderModel order) async {
+    final salesProvider = context.read<SalesCallCenterProvider>();
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => RequestUpsellDialog(
@@ -452,52 +239,55 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
 
     if (result != null) {
-      final index = _orders.indexWhere((o) => o.id == order.id);
-      if (index != -1) {
-        setState(() {
-          _orders[index] = OrderModel(
-            id: order.id,
-            orderNumber: order.orderNumber,
-            companyId: order.companyId,
-            productId: order.productId,
-            salesRepId: order.salesRepId,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-            deliveryState: order.deliveryState,
-            deliveryCity: order.deliveryCity,
-            deliveryAddress: order.deliveryAddress,
-            status: OrderStatus.upsellPending,
-            quantity: order.quantity,
-            basePrice: order.basePrice,
-            upsellAmount: result['upsell_amount'] as double,
-            downsellDiscount: result['downsell_discount'] as double,
-            totalAmount: result['new_total_amount'] as double,
-            upsellStatus: UpsellStatus.pending,
-            upsellNotes: result['notes'] as String,
-            paymentStatus: order.paymentStatus,
-            createdAt: order.createdAt,
-            updatedAt: DateTime.now(),
-          );
-        });
+      final updatedOrder = OrderModel(
+        id: order.id,
+        orderNumber: order.orderNumber,
+        companyId: order.companyId,
+        productId: order.productId,
+        salesRepId: order.salesRepId,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        deliveryState: order.deliveryState,
+        deliveryCity: order.deliveryCity,
+        deliveryAddress: order.deliveryAddress,
+        status: OrderStatus.upsellPending,
+        quantity: order.quantity,
+        basePrice: order.basePrice,
+        upsellAmount: result['upsell_amount'] as double,
+        downsellDiscount: result['downsell_discount'] as double,
+        totalAmount: result['new_total_amount'] as double,
+        upsellStatus: UpsellStatus.pending,
+        upsellNotes: result['notes'] as String,
+        paymentStatus: order.paymentStatus,
+        createdAt: order.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      salesProvider.updateOrder(updatedOrder);
 
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: widget.activeTheme.primaryColor,
-            content: Text('Up-sell request for #${order.orderNumber} sent to Supervisor Realtime Queue!'),
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: widget.activeTheme.primaryColor,
+          content: Text('Up-sell request for #${order.orderNumber} sent to Supervisor Realtime Queue!'),
+        ),
+      );
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
+    final navProvider = context.watch<AppNavigationProvider>();
+    final salesProvider = context.watch<SalesCallCenterProvider>();
+    final logisticsProvider = context.watch<LogisticsProvider>();
+    final marketingProvider = context.watch<MarketingProvider>();
+    final financeProvider = context.watch<FinanceProvider>();
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1000;
-    final sidebarWidth = isDesktop ? (_isSidebarCollapsed ? 74.0 : 260.0) : 260.0;
+    final isSidebarCollapsed = navProvider.isSidebarCollapsed;
+    final sidebarWidth = isDesktop ? (isSidebarCollapsed ? 74.0 : 260.0) : 260.0;
+    final selectedIndex = navProvider.currentNavIndex;
+    final orders = salesProvider.orders;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -518,39 +308,29 @@ class _AdminMainShellState extends State<AdminMainShell> {
                     _buildHeader(context, isDesktop: isDesktop),
                     Expanded(
                       child: IndexedStack(
-                        index: _selectedIndex,
+                        index: selectedIndex,
                         children: [
-                          _buildDashboardView(screenWidth),
+                          _buildDashboardView(context, screenWidth, orders, marketingProvider.totalMarketerBudget, financeProvider.riderEmekaCodBalance, financeProvider.riderEmekaMaxLimit, logisticsProvider.transfers),
                           SalesCallCenterSuitePage(
                             activeTheme: widget.activeTheme,
                             currentUser: widget.currentUser,
-                            orders: _orders,
-                            activeSubIndex: _salesSubNavIndex,
+                            orders: orders,
+                            activeSubIndex: navProvider.salesSubNavIndex,
                             onUpdateOrder: (updatedOrder) {
-                              final idx = _orders.indexWhere((o) => o.id == updatedOrder.id);
-                              if (idx != -1) {
-                                setState(() {
-                                  _orders[idx] = updatedOrder;
-                                });
-                              }
+                              context.read<SalesCallCenterProvider>().updateOrder(updatedOrder);
                             },
                             onRequestUpsell: (updatedOrder) {
-                              final idx = _orders.indexWhere((o) => o.id == updatedOrder.id);
-                              if (idx != -1) {
-                                setState(() {
-                                  _orders[idx] = updatedOrder;
-                                });
-                              }
+                              context.read<SalesCallCenterProvider>().updateOrder(updatedOrder);
                             },
                           ),
                           SupervisorConsolePage(
                             currentUser: widget.currentUser,
-                            activeSubIndex: _supervisorSubNavIndex,
+                            activeSubIndex: navProvider.supervisorSubNavIndex,
                           ),
-                          _buildMarketingMainView(screenWidth),
-                          _buildLogisticsWarehousesView(screenWidth),
-                          _buildCODReconciliationView(screenWidth),
-                          _buildWhitelabelSettingsView(screenWidth),
+                          _buildMarketingMainView(screenWidth, navProvider.marketingSubNavIndex),
+                          _buildLogisticsWarehousesView(context, screenWidth, logisticsProvider.transfers),
+                          _buildCODReconciliationView(context, screenWidth, financeProvider.riderEmekaCodBalance, financeProvider.riderEmekaMaxLimit),
+                          _buildWhitelabelSettingsView(context, screenWidth),
                           HRStaffManagementPage(
                             activeTheme: widget.activeTheme,
                             currentUser: widget.currentUser,
@@ -558,17 +338,14 @@ class _AdminMainShellState extends State<AdminMainShell> {
                           GMInventorySuitePage(
                             activeTheme: widget.activeTheme,
                             currentUser: widget.currentUser,
-                            activeSubIndex: _inventorySubNavIndex,
+                            activeSubIndex: navProvider.inventorySubNavIndex,
                           ),
                           NotificationsSuitePage(
                             activeTheme: widget.activeTheme,
                             currentUser: widget.currentUser,
-                            orders: _orders,
+                            orders: orders,
                             onUpdateOrder: (updated) {
-                              final idx = _orders.indexWhere((o) => o.id == updated.id);
-                              if (idx != -1) {
-                                setState(() => _orders[idx] = updated);
-                              }
+                              context.read<SalesCallCenterProvider>().updateOrder(updated);
                             },
                           ),
                         ],
@@ -593,7 +370,11 @@ class _AdminMainShellState extends State<AdminMainShell> {
   Widget _buildSidebarContent(BuildContext context, {required bool isDrawer}) {
     final theme = widget.activeTheme;
     final user = widget.currentUser;
-    final isCollapsed = !_isSidebarCollapsed && !isDrawer ? false : (_isSidebarCollapsed && !isDrawer);
+    final navProvider = context.watch<AppNavigationProvider>();
+    final salesProvider = context.watch<SalesCallCenterProvider>();
+    final orders = salesProvider.orders;
+    final isSidebarCollapsed = navProvider.isSidebarCollapsed;
+    final isCollapsed = !isSidebarCollapsed && !isDrawer ? false : (isSidebarCollapsed && !isDrawer);
 
     return Container(
       color: theme.primaryColor,
@@ -613,7 +394,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       ),
                       child: const Icon(Icons.flash_on, color: Colors.white, size: 20),
                     ),
-                    onPressed: () => setState(() => _isSidebarCollapsed = false),
+                    onPressed: () => context.read<AppNavigationProvider>().setSidebarCollapsed(false),
                     tooltip: 'Expand Sidebar',
                   )
                 : Row(
@@ -653,7 +434,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       if (!isDrawer)
                         IconButton(
                           icon: const Icon(Icons.chevron_left_rounded, color: Colors.white70),
-                          onPressed: () => setState(() => _isSidebarCollapsed = true),
+                          onPressed: () => context.read<AppNavigationProvider>().setSidebarCollapsed(true),
                           tooltip: 'Collapse Sidebar',
                         ),
                     ],
@@ -674,25 +455,25 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('SALES & DIALER QUEUE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(1, 0, _salesSubNavIndex, Icons.phone_callback_rounded, 'Live Dialer Queue', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 1, _salesSubNavIndex, Icons.format_list_bulleted_rounded, 'All Orders Directory', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 2, _salesSubNavIndex, Icons.assignment_turned_in_rounded, 'Confirmed Orders Log', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 3, _salesSubNavIndex, Icons.stars_rounded, 'Upsell Approvals Hub', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 4, _salesSubNavIndex, Icons.auto_graph_rounded, 'Rep Performance', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 5, _salesSubNavIndex, Icons.record_voice_over_rounded, 'Call Scripts & Objections', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 6, _salesSubNavIndex, Icons.account_tree_rounded, 'Team Organogram & Hierarchy', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 0, navProvider.salesSubNavIndex, Icons.phone_callback_rounded, 'Live Dialer Queue', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 1, navProvider.salesSubNavIndex, Icons.format_list_bulleted_rounded, 'All Orders Directory', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 2, navProvider.salesSubNavIndex, Icons.assignment_turned_in_rounded, 'Confirmed Orders Log', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 3, navProvider.salesSubNavIndex, Icons.stars_rounded, 'Upsell Approvals Hub', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 4, navProvider.salesSubNavIndex, Icons.auto_graph_rounded, 'Rep Performance', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 5, navProvider.salesSubNavIndex, Icons.record_voice_over_rounded, 'Call Scripts & Objections', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 6, navProvider.salesSubNavIndex, Icons.account_tree_rounded, 'Team Organogram & Hierarchy', isCollapsed: isCollapsed),
                   _sidebarNavItem(
                     2,
                     Icons.verified_user_rounded,
                     'Supervisor Approvals',
-                    badgeCount: _orders.where((o) => o.upsellStatus == UpsellStatus.pending).length,
+                    badgeCount: orders.where((o) => o.upsellStatus == UpsellStatus.pending).length,
                     isCollapsed: isCollapsed,
                   ),
                   _sidebarNavItem(
                     9,
                     Icons.notifications_active_rounded,
                     'Notifications Center',
-                    badgeCount: _orders.where((o) => o.scheduledCallbackAt != null && o.scheduledCallbackAt!.isBefore(DateTime.now().add(const Duration(minutes: 30)))).length,
+                    badgeCount: orders.where((o) => o.scheduledCallbackAt != null && o.scheduledCallbackAt!.isBefore(DateTime.now().add(const Duration(minutes: 30)))).length,
                     isCollapsed: isCollapsed,
                   ),
                   const Divider(color: Colors.white24, height: 20),
@@ -701,12 +482,12 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('MARKETING SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(3, 0, _marketingSubNavIndex, Icons.auto_graph_rounded, 'Ad Performance', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 1, _marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 2, _marketingSubNavIndex, Icons.build_circle_rounded, 'Form Builder Wizard', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 3, _marketingSubNavIndex, Icons.assignment_turned_in_rounded, 'Submissions Log', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 4, _marketingSubNavIndex, Icons.campaign_rounded, 'SMS & Broadcasts', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 5, _marketingSubNavIndex, Icons.webhook_rounded, 'FB CAPI & Pixel', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 0, navProvider.marketingSubNavIndex, Icons.auto_graph_rounded, 'Ad Performance', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 1, navProvider.marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 2, navProvider.marketingSubNavIndex, Icons.build_circle_rounded, 'Form Builder Wizard', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 3, navProvider.marketingSubNavIndex, Icons.assignment_turned_in_rounded, 'Submissions Log', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 4, navProvider.marketingSubNavIndex, Icons.campaign_rounded, 'SMS & Broadcasts', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 5, navProvider.marketingSubNavIndex, Icons.webhook_rounded, 'FB CAPI & Pixel', isCollapsed: isCollapsed),
                   const Divider(color: Colors.white24, height: 20),
                   if (!isCollapsed)
                     const Padding(
@@ -714,9 +495,9 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       child: Text('LOGISTICS & WAREHOUSES', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
                   _sidebarNavItem(4, Icons.local_shipping_rounded, 'Logistics Hubs', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(8, 0, _inventorySubNavIndex, Icons.shopping_bag_rounded, 'Products Catalog', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(8, 1, _inventorySubNavIndex, Icons.domain_rounded, 'Warehouse Matrix', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(8, 2, _inventorySubNavIndex, Icons.alt_route_rounded, 'Stock Transfers (IWT)', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(8, 0, navProvider.inventorySubNavIndex, Icons.shopping_bag_rounded, 'Products Catalog', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(8, 1, navProvider.inventorySubNavIndex, Icons.domain_rounded, 'Warehouse Matrix', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(8, 2, navProvider.inventorySubNavIndex, Icons.alt_route_rounded, 'Stock Transfers (IWT)', isCollapsed: isCollapsed),
                   _sidebarNavItem(5, Icons.payments_rounded, 'COD Reconciliation', isCollapsed: isCollapsed),
                   _sidebarNavItem(7, Icons.badge_rounded, 'HR Staff Directory', isCollapsed: isCollapsed),
                   _sidebarNavItem(6, Icons.palette_rounded, 'Whitelabel Branding', isCollapsed: isCollapsed),
@@ -728,12 +509,12 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('MARKETING SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(3, 0, _marketingSubNavIndex, Icons.auto_graph_rounded, 'Ad Performance', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 1, _marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 2, _marketingSubNavIndex, Icons.build_circle_rounded, 'Form Builder Wizard', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 3, _marketingSubNavIndex, Icons.assignment_turned_in_rounded, 'Submissions Log', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 4, _marketingSubNavIndex, Icons.campaign_rounded, 'SMS & Broadcasts', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 5, _marketingSubNavIndex, Icons.webhook_rounded, 'FB CAPI & Pixel', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 0, navProvider.marketingSubNavIndex, Icons.auto_graph_rounded, 'Ad Performance', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 1, navProvider.marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 2, navProvider.marketingSubNavIndex, Icons.build_circle_rounded, 'Form Builder Wizard', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 3, navProvider.marketingSubNavIndex, Icons.assignment_turned_in_rounded, 'Submissions Log', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 4, navProvider.marketingSubNavIndex, Icons.campaign_rounded, 'SMS & Broadcasts', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 5, navProvider.marketingSubNavIndex, Icons.webhook_rounded, 'FB CAPI & Pixel', isCollapsed: isCollapsed),
                 ] else if (user.role == UserRole.salesCallRep) ...[
                   _sidebarNavItem(0, Icons.dashboard_rounded, 'Dashboard Overview', isCollapsed: isCollapsed),
                   const Divider(color: Colors.white24, height: 20),
@@ -742,12 +523,12 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('SALES DIALER SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(1, 0, _salesSubNavIndex, Icons.phone_callback_rounded, 'Live Dialer Queue', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 1, _salesSubNavIndex, Icons.format_list_bulleted_rounded, 'All Orders Directory', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 2, _salesSubNavIndex, Icons.assignment_turned_in_rounded, 'Confirmed Orders Log', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 3, _salesSubNavIndex, Icons.stars_rounded, 'Upsell Approvals Hub', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 4, _salesSubNavIndex, Icons.auto_graph_rounded, 'Rep Performance', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(1, 5, _salesSubNavIndex, Icons.record_voice_over_rounded, 'Call Scripts & Objections', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 0, navProvider.salesSubNavIndex, Icons.phone_callback_rounded, 'Live Dialer Queue', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 1, navProvider.salesSubNavIndex, Icons.format_list_bulleted_rounded, 'All Orders Directory', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 2, navProvider.salesSubNavIndex, Icons.assignment_turned_in_rounded, 'Confirmed Orders Log', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 3, navProvider.salesSubNavIndex, Icons.stars_rounded, 'Upsell Approvals Hub', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 4, navProvider.salesSubNavIndex, Icons.auto_graph_rounded, 'Rep Performance', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(1, 5, navProvider.salesSubNavIndex, Icons.record_voice_over_rounded, 'Call Scripts & Objections', isCollapsed: isCollapsed),
                 ] else if (user.role == UserRole.supervisor) ...[
                   _sidebarNavItem(0, Icons.dashboard_rounded, 'Dashboard Overview', isCollapsed: isCollapsed),
                   const Divider(color: Colors.white24, height: 20),
@@ -756,11 +537,11 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('SUPERVISOR COMMAND SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(2, 0, _supervisorSubNavIndex, Icons.dashboard_rounded, 'Squad Overview & KPIs', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 1, _supervisorSubNavIndex, Icons.bolt_rounded, 'Realtime Approvals', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 2, _supervisorSubNavIndex, Icons.folder_shared_rounded, 'Team Order Directory', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(2, 0, navProvider.supervisorSubNavIndex, Icons.dashboard_rounded, 'Squad Overview & KPIs', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(2, 1, navProvider.supervisorSubNavIndex, Icons.bolt_rounded, 'Realtime Approvals', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(2, 2, navProvider.supervisorSubNavIndex, Icons.folder_shared_rounded, 'Team Order Directory', isCollapsed: isCollapsed),
                   if (user.canTakeCalls)
-                    _featureDirectNavItem(2, 3, _supervisorSubNavIndex, Icons.phone_in_talk_rounded, 'My Dialer Queue', isCollapsed: isCollapsed),
+                    _featureDirectNavItem(2, 3, navProvider.supervisorSubNavIndex, Icons.phone_in_talk_rounded, 'My Dialer Queue', isCollapsed: isCollapsed),
                 ] else if (user.role == UserRole.logisticsCallRep) ...[
                   _sidebarNavItem(0, Icons.dashboard_rounded, 'Dashboard Overview', isCollapsed: isCollapsed),
                   _sidebarNavItem(4, Icons.local_shipping_rounded, 'Logistics & Hubs', isCollapsed: isCollapsed),
@@ -772,9 +553,9 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('INVENTORY & WAREHOUSES', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(8, 0, _inventorySubNavIndex, Icons.shopping_bag_rounded, 'Products Catalog', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(8, 1, _inventorySubNavIndex, Icons.domain_rounded, 'Warehouse Matrix', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(8, 2, _inventorySubNavIndex, Icons.alt_route_rounded, 'Stock Transfers (IWT)', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(8, 0, navProvider.inventorySubNavIndex, Icons.shopping_bag_rounded, 'Products Catalog', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(8, 1, navProvider.inventorySubNavIndex, Icons.domain_rounded, 'Warehouse Matrix', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(8, 2, navProvider.inventorySubNavIndex, Icons.alt_route_rounded, 'Stock Transfers (IWT)', isCollapsed: isCollapsed),
                   _sidebarNavItem(4, Icons.local_shipping_rounded, 'Logistics Hubs', isCollapsed: isCollapsed),
                 ] else if (user.role == UserRole.financeManager) ...[
                   _sidebarNavItem(0, Icons.dashboard_rounded, 'Dashboard Overview', isCollapsed: isCollapsed),
@@ -834,7 +615,8 @@ class _AdminMainShellState extends State<AdminMainShell> {
   }
 
   Widget _featureDirectNavItem(int targetIndex, int subIndex, int currentSubIndex, IconData icon, String label, {bool isCollapsed = false}) {
-    final isSelected = _selectedIndex == targetIndex && currentSubIndex == subIndex;
+    final navProvider = context.watch<AppNavigationProvider>();
+    final isSelected = navProvider.currentNavIndex == targetIndex && currentSubIndex == subIndex;
     final theme = widget.activeTheme;
 
     if (isCollapsed) {
@@ -848,13 +630,10 @@ class _AdminMainShellState extends State<AdminMainShell> {
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () {
-                setState(() {
-                  _selectedIndex = targetIndex;
-                  if (targetIndex == 1) _salesSubNavIndex = subIndex;
-                  if (targetIndex == 2) _supervisorSubNavIndex = subIndex;
-                  if (targetIndex == 3) _marketingSubNavIndex = subIndex;
-                  if (targetIndex == 8) _inventorySubNavIndex = subIndex;
-                });
+                context.read<AppNavigationProvider>().setDirectFeatureNav(
+                      targetIndex: targetIndex,
+                      subIndex: subIndex,
+                    );
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 }
@@ -881,13 +660,10 @@ class _AdminMainShellState extends State<AdminMainShell> {
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () {
-            setState(() {
-              _selectedIndex = targetIndex;
-              if (targetIndex == 1) _salesSubNavIndex = subIndex;
-              if (targetIndex == 2) _supervisorSubNavIndex = subIndex;
-              if (targetIndex == 3) _marketingSubNavIndex = subIndex;
-              if (targetIndex == 8) _inventorySubNavIndex = subIndex;
-            });
+            context.read<AppNavigationProvider>().setDirectFeatureNav(
+                  targetIndex: targetIndex,
+                  subIndex: subIndex,
+                );
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             }
@@ -920,10 +696,9 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
   }
 
-
-
   Widget _sidebarNavItem(int index, IconData icon, String label, {int badgeCount = 0, bool isCollapsed = false}) {
-    final isSelected = _selectedIndex == index;
+    final navProvider = context.watch<AppNavigationProvider>();
+    final isSelected = navProvider.currentNavIndex == index;
     final theme = widget.activeTheme;
 
     if (isCollapsed) {
@@ -937,7 +712,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () {
-                setState(() => _selectedIndex = index);
+                context.read<AppNavigationProvider>().setNavIndex(index);
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 }
@@ -964,7 +739,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () {
-            setState(() => _selectedIndex = index);
+            context.read<AppNavigationProvider>().setNavIndex(index);
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             }
@@ -1092,7 +867,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                     const SizedBox(width: 8),
                     // Notifications Bell
                     IconButton(
-                      onPressed: () => setState(() => _selectedIndex = 9),
+                      onPressed: () => context.read<AppNavigationProvider>().setNavIndex(9),
                       tooltip: 'View Notifications Center',
                       icon: Stack(
                         children: [
@@ -1216,7 +991,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () => setState(() => _selectedIndex = 9),
+                          onPressed: () => context.read<AppNavigationProvider>().setNavIndex(9),
                           icon: Stack(
                             children: [
                               Icon(Icons.notifications_none_rounded, size: 22, color: cs.onSurface.withValues(alpha: 0.7)),
@@ -1275,10 +1050,18 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
   }
 
-  Widget _buildDashboardView(double screenWidth) {
+  Widget _buildDashboardView(
+    BuildContext context,
+    double screenWidth,
+    List<OrderModel> orders,
+    double totalMarketerBudget,
+    double riderEmekaCodBalance,
+    double riderEmekaMaxLimit,
+    List<Map<String, dynamic>> transfers,
+  ) {
     final currency = widget.activeTheme.currencySymbol;
     final role = widget.currentUser.role;
-    final pendingUpsellsCount = _orders.where((o) => o.upsellStatus == UpsellStatus.pending).length;
+    final pendingUpsellsCount = orders.where((o) => o.upsellStatus == UpsellStatus.pending).length;
     final isMobile = screenWidth < 800;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF132A22) : Colors.white;
@@ -1374,7 +1157,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
             ],
           ] else if (role == UserRole.supervisor) ...[
             if (isMobile) ...[
-              _statCard('Total Squad COD Revenue', '$currency 3,500,000', 'Across 6 Supervisees', Icons.payments, Colors.green),
+              _statCard('Supervisor Team Override', '₦145,000', 'Team Override Incentive', Icons.payments, Colors.green),
               const SizedBox(height: 12),
               _statCard('Active Squad Queue', '142 Orders', 'Auto Round-Robin Active', Icons.group_work, Colors.orange),
               const SizedBox(height: 12),
@@ -1384,7 +1167,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
             ] else ...[
               Row(
                 children: [
-                  Expanded(child: _statCard('Total Squad COD Revenue', '$currency 3,500,000', 'Across 6 Supervisees', Icons.payments, Colors.green)),
+                  Expanded(child: _statCard('Supervisor Team Override', '₦145,000', 'Team Override Incentive', Icons.payments, Colors.green)),
                   const SizedBox(width: 12),
                   Expanded(child: _statCard('Active Squad Queue', '142 Orders', 'Auto Round-Robin Active', Icons.group_work, Colors.orange)),
                   const SizedBox(width: 12),
@@ -1420,7 +1203,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
             if (isMobile) ...[
               _statCard('Central Factory Stock', '4,500 units', '320 Allocated', Icons.inventory, Colors.blue),
               const SizedBox(height: 12),
-              _statCard('Active Waybills In-Transit', '${_transfers.where((t) => t["status"] == "dispatched").length} Waybill(s)', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange),
+              _statCard('Active Waybills In-Transit', '${transfers.where((t) => t["status"] == "dispatched").length} Waybill(s)', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange),
               const SizedBox(height: 12),
               _statCard('Delivery Success Rate', '94.2%', 'Rider Mini-Hubs Active', Icons.check_circle, Colors.green),
             ] else ...[
@@ -1428,7 +1211,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                 children: [
                   Expanded(child: _statCard('Central Factory Stock', '4,500 units', '320 Allocated', Icons.inventory, Colors.blue)),
                   const SizedBox(width: 12),
-                  Expanded(child: _statCard('Active Waybills In-Transit', '${_transfers.where((t) => t["status"] == "dispatched").length} Waybill(s)', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange)),
+                  Expanded(child: _statCard('Active Waybills In-Transit', '${transfers.where((t) => t["status"] == "dispatched").length} Waybill(s)', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange)),
                   const SizedBox(width: 12),
                   Expanded(child: _statCard('Delivery Success Rate', '94.2%', 'Rider Mini-Hubs Active', Icons.check_circle, Colors.green)),
                 ],
@@ -1436,7 +1219,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
             ],
           ] else if (role == UserRole.financeManager) ...[
             if (isMobile) ...[
-              _statCard('Holding Cash with Riders', '$currency ${_riderEmekaCodBalance.toStringAsFixed(0)}', 'Max Limit: $currency ${_riderEmekaMaxLimit.toStringAsFixed(0)}', Icons.account_balance_wallet, Colors.amber.shade800),
+              _statCard('Holding Cash with Riders', '$currency ${riderEmekaCodBalance.toStringAsFixed(0)}', 'Max Limit: $currency ${riderEmekaMaxLimit.toStringAsFixed(0)}', Icons.account_balance_wallet, Colors.amber.shade800),
               const SizedBox(height: 12),
               _statCard('Pending Deposit Receipts', '1 Receipt', 'Verification Needed', Icons.receipt_long, Colors.purple),
               const SizedBox(height: 12),
@@ -1444,7 +1227,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
             ] else ...[
               Row(
                 children: [
-                  Expanded(child: _statCard('Holding Cash with Riders', '$currency ${_riderEmekaCodBalance.toStringAsFixed(0)}', 'Max Limit: $currency ${_riderEmekaMaxLimit.toStringAsFixed(0)}', Icons.account_balance_wallet, Colors.amber.shade800)),
+                  Expanded(child: _statCard('Holding Cash with Riders', '$currency ${riderEmekaCodBalance.toStringAsFixed(0)}', 'Max Limit: $currency ${riderEmekaMaxLimit.toStringAsFixed(0)}', Icons.account_balance_wallet, Colors.amber.shade800)),
                   const SizedBox(width: 12),
                   Expanded(child: _statCard('Pending Deposit Receipts', '1 Receipt', 'Verification Needed', Icons.receipt_long, Colors.purple)),
                   const SizedBox(width: 12),
@@ -1461,7 +1244,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
               const SizedBox(height: 12),
               _statCard('Upsells Pending', '$pendingUpsellsCount Request(s)', 'Supervisor Action Needed', Icons.verified, Colors.purple),
               const SizedBox(height: 12),
-              _statCard('Ad Spend Budget', '$currency ${_totalMarketerBudget.toStringAsFixed(0)}', '4.2x ROAS Multiplier', Icons.ads_click, Colors.blue),
+              _statCard('Ad Spend Budget', '$currency ${totalMarketerBudget.toStringAsFixed(0)}', '4.2x ROAS Multiplier', Icons.ads_click, Colors.blue),
             ] else ...[
               Row(
                 children: [
@@ -1471,7 +1254,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                   const SizedBox(width: 12),
                   Expanded(child: _statCard('Upsells Pending', '$pendingUpsellsCount Request(s)', 'Supervisor Action Needed', Icons.verified, Colors.purple)),
                   const SizedBox(width: 12),
-                  Expanded(child: _statCard('Ad Spend Budget', '$currency ${_totalMarketerBudget.toStringAsFixed(0)}', '4.2x ROAS Multiplier', Icons.ads_click, Colors.blue)),
+                  Expanded(child: _statCard('Ad Spend Budget', '$currency ${totalMarketerBudget.toStringAsFixed(0)}', '4.2x ROAS Multiplier', Icons.ads_click, Colors.blue)),
                 ],
               ),
             ],
@@ -1488,7 +1271,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
           // Live Orders Table
           Text('Recent Incoming Orders', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          _ordersTable(_orders),
+          _ordersTable(orders),
         ],
       ),
     );
@@ -1510,20 +1293,23 @@ class _AdminMainShellState extends State<AdminMainShell> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('📈 Weekly Commission & Call Volume Trends', style: GoogleFonts.outfit(fontSize: isMobile ? 14 : 16, fontWeight: FontWeight.bold, color: textPrimary)),
-                  Text('7-day commission performance trajectory across active calls', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('📈 Weekly Commission & Call Volume Trends', style: GoogleFonts.outfit(fontSize: isMobile ? 13.5 : 16, fontWeight: FontWeight.bold, color: textPrimary), overflow: TextOverflow.ellipsis),
+                    Text('7-day commission performance trajectory across active calls', style: GoogleFonts.inter(fontSize: 10.5, color: textMuted), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text('₦123k Commission', style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                child: Text('₦123k Commission', style: GoogleFonts.jetBrainsMono(fontSize: 10.5, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
               ),
             ],
           ),
@@ -1668,21 +1454,15 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
   }
 
-  Widget _buildMarketingMainView(double screenWidth) {
+  Widget _buildMarketingMainView(double screenWidth, int activeSubIndex) {
     return DigitalMarketingSuitePage(
       activeTheme: widget.activeTheme,
       currentUser: widget.currentUser,
-      activeSubIndex: _marketingSubNavIndex,
+      activeSubIndex: activeSubIndex,
     );
   }
 
-
-
-
-
-  // Supervisor Console view is powered by SupervisorConsolePage from sales_supervisor feature
-
-  Widget _buildLogisticsWarehousesView(double screenWidth) {
+  Widget _buildLogisticsWarehousesView(BuildContext context, double screenWidth, List<Map<String, dynamic>> transfers) {
     final isMobile = screenWidth < 900;
     final theme = widget.activeTheme;
 
@@ -1757,7 +1537,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                           DataColumn(label: Text('Status', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor))),
                           DataColumn(label: Text('Action', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor))),
                         ],
-                        rows: _transfers.asMap().entries.map((entry) {
+                        rows: transfers.asMap().entries.map((entry) {
                           final index = entry.key;
                           final item = entry.value;
                           final isDispatched = item['status'] == 'dispatched';
@@ -1872,9 +1652,14 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
   }
 
-  Widget _buildCODReconciliationView(double screenWidth) {
+  Widget _buildCODReconciliationView(
+    BuildContext context,
+    double screenWidth,
+    double riderEmekaCodBalance,
+    double riderEmekaMaxLimit,
+  ) {
     final currency = widget.activeTheme.currencySymbol;
-    final isCleared = _riderEmekaCodBalance == 0.0;
+    final isCleared = riderEmekaCodBalance == 0.0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
@@ -1906,7 +1691,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                         children: [
                           const Text('Delivery Agent: Rider Emeka (Independent)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                           Text(
-                            'Holding Cash Balance: $currency ${_riderEmekaCodBalance.toStringAsFixed(0)} / Max Credit Limit: $currency ${_riderEmekaMaxLimit.toStringAsFixed(0)}',
+                            'Holding Cash Balance: $currency ${riderEmekaCodBalance.toStringAsFixed(0)} / Max Credit Limit: $currency ${riderEmekaMaxLimit.toStringAsFixed(0)}',
                             style: TextStyle(color: isCleared ? Colors.green.shade800 : Colors.grey, fontSize: 13, fontWeight: isCleared ? FontWeight.bold : FontWeight.normal),
                           ),
                         ],
@@ -1928,7 +1713,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
   }
 
-  Widget _buildWhitelabelSettingsView(double screenWidth) {
+  Widget _buildWhitelabelSettingsView(BuildContext context, double screenWidth) {
     final theme = widget.activeTheme;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),

@@ -23,14 +23,14 @@ class SupervisorReassignmentTab extends StatefulWidget {
 }
 
 class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
-  final Set<String> _selectedOrderIds = {};
-  String? _selectedTargetRepId;
+  late ValueNotifier<Set<String>> _selectedOrderIds;
+  late ValueNotifier<String?> _selectedTargetRepId;
 
-  String _searchQuery = '';
-  String _selectedStatusFilter = 'All Statuses';
-  String _selectedRepFilter = 'All Reps';
-  String _selectedProductFilter = 'All Products';
-  bool _isCardViewMode = false;
+  late ValueNotifier<String> _searchQuery;
+  late ValueNotifier<String> _selectedStatusFilter;
+  late ValueNotifier<String> _selectedRepFilter;
+  late ValueNotifier<String> _selectedProductFilter;
+  late ValueNotifier<bool> _isCardViewMode;
 
   final List<String> _statusOptions = [
     'All Statuses',
@@ -54,30 +54,46 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final theme = widget.activeTheme;
-    final isDark = widget.isDarkMode;
-    final cardBg = isDark ? const Color(0xFF132A22) : Colors.white;
-    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
-    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
-    final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800;
+  void initState() {
+    super.initState();
+    _selectedOrderIds = ValueNotifier<Set<String>>({});
+    _selectedTargetRepId = ValueNotifier<String?>(null);
+    _searchQuery = ValueNotifier<String>('');
+    _selectedStatusFilter = ValueNotifier<String>('All Statuses');
+    _selectedRepFilter = ValueNotifier<String>('All Reps');
+    _selectedProductFilter = ValueNotifier<String>('All Products');
+    _isCardViewMode = ValueNotifier<bool>(false);
+  }
 
-    final filteredOrders = widget.squadOrders.where((order) {
-      final matchesSearch = order.orderNumber.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          order.customerName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          order.customerPhone.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          order.deliveryState.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (order.deliveryCity ?? '').toLowerCase().contains(_searchQuery.toLowerCase());
+  @override
+  void dispose() {
+    _selectedOrderIds.dispose();
+    _selectedTargetRepId.dispose();
+    _searchQuery.dispose();
+    _selectedStatusFilter.dispose();
+    _selectedRepFilter.dispose();
+    _selectedProductFilter.dispose();
+    _isCardViewMode.dispose();
+    super.dispose();
+  }
 
-      final matchesRep = _selectedRepFilter == 'All Reps' || order.salesRepId == _selectedRepFilter;
-      final matchesProduct = _selectedProductFilter == 'All Products' ||
-          order.productId.toLowerCase().contains(_selectedProductFilter.toLowerCase());
+  List<OrderModel> _getFilteredOrders() {
+    return widget.squadOrders.where((order) {
+      final q = _searchQuery.value.toLowerCase();
+      final matchesSearch = q.isEmpty ||
+          order.orderNumber.toLowerCase().contains(q) ||
+          order.customerName.toLowerCase().contains(q) ||
+          order.customerPhone.toLowerCase().contains(q) ||
+          order.deliveryState.toLowerCase().contains(q) ||
+          (order.deliveryCity ?? '').toLowerCase().contains(q);
+
+      final matchesRep = _selectedRepFilter.value == 'All Reps' || order.salesRepId == _selectedRepFilter.value;
+      final matchesProduct = _selectedProductFilter.value == 'All Products' ||
+          order.productId.toLowerCase().contains(_selectedProductFilter.value.toLowerCase());
 
       bool matchesStatus = true;
-      if (_selectedStatusFilter != 'All Statuses') {
-        switch (_selectedStatusFilter) {
+      if (_selectedStatusFilter.value != 'All Statuses') {
+        switch (_selectedStatusFilter.value) {
           case 'New':
             matchesStatus = order.status == OrderStatus.newOrder;
             break;
@@ -113,447 +129,503 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
 
       return matchesSearch && matchesRep && matchesProduct && matchesStatus;
     }).toList();
+  }
 
-    final showCards = isMobile || _isCardViewMode;
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.activeTheme;
+    final isDark = widget.isDarkMode;
+    final cardBg = isDark ? const Color(0xFF132A22) : Colors.white;
+    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header & Title
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '📂 Team Order Directory & Reassignment Console',
-                      style: GoogleFonts.outfit(
-                        fontSize: isMobile ? 18 : 22,
-                        fontWeight: FontWeight.bold,
-                        color: textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Comprehensive view of all customer leads assigned across your squad. Filter, search, and bulk-reassign leads in real time.',
-                      style: GoogleFonts.inter(fontSize: 12.5, color: textMuted),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+    return ValueListenableBuilder<String>(
+      valueListenable: _searchQuery,
+      builder: (context, queryVal, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: _selectedStatusFilter,
+          builder: (context, statusVal, _) {
+            return ValueListenableBuilder<String>(
+              valueListenable: _selectedRepFilter,
+              builder: (context, repVal, _) {
+                return ValueListenableBuilder<String>(
+                  valueListenable: _selectedProductFilter,
+                  builder: (context, prodVal, _) {
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: _isCardViewMode,
+                      builder: (context, cardModeVal, _) {
+                        final filteredOrders = _getFilteredOrders();
+                        final showCards = isMobile || cardModeVal;
 
-          const SizedBox(height: 16),
-
-          // Filters & Control Bar Container
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Search + Status Filter + Rep Filter + Product Filter + View Switcher
-                if (isMobile) ...[
-                  TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Search order #, customer, phone, city...',
-                      hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      filled: true,
-                      fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildDropdownFilter(
-                        value: _selectedStatusFilter,
-                        items: _statusOptions,
-                        onChanged: (val) => setState(() => _selectedStatusFilter = val!),
-                        isDark: isDark,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        textPrimary: textPrimary,
-                      ),
-                      _buildDropdownFilter(
-                        value: _selectedRepFilter,
-                        items: ['All Reps', ...widget.squad.map((s) => s.user.id)],
-                        itemLabelMap: {
-                          'All Reps': 'All Reps',
-                          for (var s in widget.squad) s.user.id: s.user.fullName,
-                        },
-                        onChanged: (val) => setState(() => _selectedRepFilter = val!),
-                        isDark: isDark,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        textPrimary: textPrimary,
-                      ),
-                      _buildDropdownFilter(
-                        value: _selectedProductFilter,
-                        items: _productOptions,
-                        onChanged: (val) => setState(() => _selectedProductFilter = val!),
-                        isDark: isDark,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        textPrimary: textPrimary,
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          onChanged: (val) => setState(() => _searchQuery = val),
-                          style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
-                          decoration: InputDecoration(
-                            hintText: 'Search order #, customer name, phone, state, city...',
-                            hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
-                            prefixIcon: const Icon(Icons.search, size: 18),
-                            filled: true,
-                            fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: borderColor),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _buildDropdownFilter(
-                        value: _selectedStatusFilter,
-                        items: _statusOptions,
-                        onChanged: (val) => setState(() => _selectedStatusFilter = val!),
-                        isDark: isDark,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        textPrimary: textPrimary,
-                      ),
-                      const SizedBox(width: 10),
-                      _buildDropdownFilter(
-                        value: _selectedRepFilter,
-                        items: ['All Reps', ...widget.squad.map((s) => s.user.id)],
-                        itemLabelMap: {
-                          'All Reps': 'All Reps',
-                          for (var s in widget.squad) s.user.id: s.user.fullName,
-                        },
-                        onChanged: (val) => setState(() => _selectedRepFilter = val!),
-                        isDark: isDark,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        textPrimary: textPrimary,
-                      ),
-                      const SizedBox(width: 10),
-                      _buildDropdownFilter(
-                        value: _selectedProductFilter,
-                        items: _productOptions,
-                        onChanged: (val) => setState(() => _selectedProductFilter = val!),
-                        isDark: isDark,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        textPrimary: textPrimary,
-                      ),
-                      const SizedBox(width: 10),
-                      IconButton(
-                        tooltip: showCards ? 'Switch to Table View' : 'Switch to Cards View',
-                        icon: Icon(showCards ? Icons.table_chart : Icons.grid_view, color: theme.primaryColor),
-                        onPressed: () => setState(() => _isCardViewMode = !_isCardViewMode),
-                      ),
-                    ],
-                  ),
-                ],
-
-                const SizedBox(height: 14),
-                Divider(height: 1, color: borderColor),
-                const SizedBox(height: 14),
-
-                // Batch Reassignment Action Bar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: filteredOrders.isNotEmpty &&
-                              filteredOrders.every((o) => _selectedOrderIds.contains(o.id)),
-                          activeColor: const Color(0xFF10B981),
-                          onChanged: (val) {
-                            setState(() {
-                              if (val == true) {
-                                _selectedOrderIds.addAll(filteredOrders.map((o) => o.id));
-                              } else {
-                                _selectedOrderIds.clear();
-                              }
-                            });
-                          },
-                        ),
-                        Text(
-                          'Select All Filtered (${filteredOrders.length})',
-                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: borderColor),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _selectedTargetRepId,
-                              hint: Text('Target Rep...', style: GoogleFonts.inter(color: textMuted, fontSize: 12)),
-                              dropdownColor: cardBg,
-                              style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
-                              items: widget.squad.map((rep) {
-                                return DropdownMenuItem<String>(
-                                  value: rep.user.id,
-                                  child: Text('${rep.user.fullName} (${rep.activeLeadCount} active)'),
-                                );
-                              }).toList(),
-                              onChanged: (val) => setState(() => _selectedTargetRepId = val),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          onPressed: (_selectedOrderIds.isNotEmpty && _selectedTargetRepId != null)
-                              ? () {
-                                  widget.onExecuteReassignment(
-                                    _selectedOrderIds.toList(),
-                                    _selectedTargetRepId!,
-                                  );
-                                  setState(() {
-                                    _selectedOrderIds.clear();
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      backgroundColor: Color(0xFF10B981),
-                                      content: Text('✅ Selected squad orders reassigned successfully!'),
-                                    ),
-                                  );
-                                }
-                              : null,
-                          icon: const Icon(Icons.swap_horiz, size: 16),
-                          label: Text(
-                            'Reassign (${_selectedOrderIds.length})',
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Directory Results Table / Cards Container
-          Container(
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor),
-            ),
-            child: filteredOrders.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Center(
-                      child: Text('No orders found matching the filter criteria.', style: GoogleFonts.inter(color: textMuted)),
-                    ),
-                  )
-                : showCards
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          children: filteredOrders.map((order) {
-                            return _buildOrderMobileCard(order, isDark, theme, borderColor, textPrimary, textMuted);
-                          }).toList(),
-                        ),
-                      )
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                              child: DataTable(
-                                dataRowMinHeight: 56,
-                                dataRowMaxHeight: 64,
-                                columnSpacing: 16,
-                                horizontalMargin: 16,
-                                headingRowColor: WidgetStateProperty.all(
-                                  isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
-                                ),
-                                dividerThickness: 1.0,
-                                border: TableBorder(
-                                  horizontalInside: BorderSide(color: borderColor, width: 1),
-                                ),
-                                columns: [
-                                  DataColumn(
-                                    label: Checkbox(
-                                      value: filteredOrders.isNotEmpty &&
-                                          filteredOrders.every((o) => _selectedOrderIds.contains(o.id)),
-                                      activeColor: const Color(0xFF10B981),
-                                      onChanged: (val) {
-                                        setState(() {
-                                          if (val == true) {
-                                            _selectedOrderIds.addAll(filteredOrders.map((o) => o.id));
-                                          } else {
-                                            _selectedOrderIds.clear();
-                                          }
-                                        });
-                                      },
+                        return SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '📂 Team Order Directory & Reassignment Console',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: isMobile ? 18 : 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: textPrimary,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Comprehensive view of all customer leads assigned across your squad. Filter, search, and bulk-reassign leads in real time.',
+                                          style: GoogleFonts.inter(fontSize: 12.5, color: textMuted),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  DataColumn(label: Text('ORDER #', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('CUSTOMER', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('LOCATION', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('PRODUCT', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('ASSIGNED REP', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('STATUS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('TOTAL', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
-                                  DataColumn(label: Text('ACTION', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
                                 ],
-                                rows: filteredOrders.map((order) {
-                                  final isSelected = _selectedOrderIds.contains(order.id);
-                                  final assignedRep = widget.squad.firstWhere(
-                                    (r) => r.user.id == order.salesRepId,
-                                    orElse: () => SuperviseePerformanceModel(
-                                      user: UserModel(
-                                        id: order.salesRepId ?? 'unassigned',
-                                        email: 'unassigned@novacare.com',
-                                        firstName: order.salesRepId ?? 'Unassigned',
-                                        lastName: 'Pool',
-                                        role: UserRole.salesCallRep,
-                                        companyId: widget.activeTheme.companyId,
-                                        isActive: true,
-                                        createdAt: DateTime.now(),
-                                      ),
-                                      assignedProducts: [],
-                                      activeLeadCount: 0,
-                                      callsPlacedToday: 0,
-                                      confirmedOrdersToday: 0,
-                                      confirmationRateToday: 0,
-                                      codRevenueToday: 0,
-                                      commissionEarnedToday: 0,
-                                    ),
-                                  );
+                              ),
+                              const SizedBox(height: 16),
 
-                                  return DataRow(
-                                    selected: isSelected,
-                                    color: WidgetStateProperty.resolveWith<Color?>((states) {
-                                      if (isSelected) {
-                                        return isDark ? const Color(0xFF1E3A2B) : const Color(0xFFECFDF5);
-                                      }
-                                      return Colors.transparent;
-                                    }),
-                                    cells: [
-                                      DataCell(
-                                        Checkbox(
-                                          value: isSelected,
-                                          activeColor: const Color(0xFF10B981),
-                                          onChanged: (val) {
-                                            setState(() {
-                                              if (val == true) {
-                                                _selectedOrderIds.add(order.id);
-                                              } else {
-                                                _selectedOrderIds.remove(order.id);
-                                              }
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          order.orderNumber,
-                                          style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text(order.customerName, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.bold, color: textPrimary)),
-                                            Text(order.customerPhone, style: GoogleFonts.jetBrainsMono(fontSize: 11, color: textMuted)),
-                                          ],
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text('${order.deliveryCity}, ${order.deliveryState}', style: GoogleFonts.inter(fontSize: 12, color: textPrimary)),
-                                      ),
-                                      DataCell(
-                                        Text(order.productId, style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
-                                      ),
-                                      DataCell(
-                                        Text(assignedRep.user.fullName, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary)),
-                                      ),
-                                      DataCell(
-                                        _buildStatusBadge(order.status, isDark),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          '₦${order.totalAmount.toStringAsFixed(0)}',
-                                          style: GoogleFonts.jetBrainsMono(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        OutlinedButton(
-                                          style: OutlinedButton.styleFrom(
-                                            side: BorderSide(color: borderColor),
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            visualDensity: VisualDensity.compact,
+                              // Filters & Control Bar Container
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: cardBg,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (isMobile) ...[
+                                      TextField(
+                                        onChanged: (val) => _searchQuery.value = val,
+                                        style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+                                        decoration: InputDecoration(
+                                          hintText: 'Search order #, customer, phone, city...',
+                                          hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                                          prefixIcon: const Icon(Icons.search, size: 18),
+                                          filled: true,
+                                          fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: BorderSide(color: borderColor),
                                           ),
-                                          onPressed: () => _showQuickReassignModal(order),
-                                          child: Text('Reassign', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
                                         ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: [
+                                          _buildDropdownFilter(
+                                            value: statusVal,
+                                            items: _statusOptions,
+                                            onChanged: (val) {
+                                              if (val != null) _selectedStatusFilter.value = val;
+                                            },
+                                            isDark: isDark,
+                                            cardBg: cardBg,
+                                            borderColor: borderColor,
+                                            textPrimary: textPrimary,
+                                          ),
+                                          _buildDropdownFilter(
+                                            value: repVal,
+                                            items: ['All Reps', ...widget.squad.map((s) => s.user.id)],
+                                            itemLabelMap: {
+                                              'All Reps': 'All Reps',
+                                              for (var s in widget.squad) s.user.id: s.user.fullName,
+                                            },
+                                            onChanged: (val) {
+                                              if (val != null) _selectedRepFilter.value = val;
+                                            },
+                                            isDark: isDark,
+                                            cardBg: cardBg,
+                                            borderColor: borderColor,
+                                            textPrimary: textPrimary,
+                                          ),
+                                          _buildDropdownFilter(
+                                            value: prodVal,
+                                            items: _productOptions,
+                                            onChanged: (val) {
+                                              if (val != null) _selectedProductFilter.value = val;
+                                            },
+                                            isDark: isDark,
+                                            cardBg: cardBg,
+                                            borderColor: borderColor,
+                                            textPrimary: textPrimary,
+                                          ),
+                                        ],
+                                      ),
+                                    ] else ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              onChanged: (val) => _searchQuery.value = val,
+                                              style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+                                              decoration: InputDecoration(
+                                                hintText: 'Search order #, customer name, phone, state, city...',
+                                                hintStyle: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                                                prefixIcon: const Icon(Icons.search, size: 18),
+                                                filled: true,
+                                                fillColor: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(color: borderColor),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          _buildDropdownFilter(
+                                            value: statusVal,
+                                            items: _statusOptions,
+                                            onChanged: (val) {
+                                              if (val != null) _selectedStatusFilter.value = val;
+                                            },
+                                            isDark: isDark,
+                                            cardBg: cardBg,
+                                            borderColor: borderColor,
+                                            textPrimary: textPrimary,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          _buildDropdownFilter(
+                                            value: repVal,
+                                            items: ['All Reps', ...widget.squad.map((s) => s.user.id)],
+                                            itemLabelMap: {
+                                              'All Reps': 'All Reps',
+                                              for (var s in widget.squad) s.user.id: s.user.fullName,
+                                            },
+                                            onChanged: (val) {
+                                              if (val != null) _selectedRepFilter.value = val;
+                                            },
+                                            isDark: isDark,
+                                            cardBg: cardBg,
+                                            borderColor: borderColor,
+                                            textPrimary: textPrimary,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          _buildDropdownFilter(
+                                            value: prodVal,
+                                            items: _productOptions,
+                                            onChanged: (val) {
+                                              if (val != null) _selectedProductFilter.value = val;
+                                            },
+                                            isDark: isDark,
+                                            cardBg: cardBg,
+                                            borderColor: borderColor,
+                                            textPrimary: textPrimary,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          IconButton(
+                                            tooltip: showCards ? 'Switch to Table View' : 'Switch to Cards View',
+                                            icon: Icon(showCards ? Icons.table_chart : Icons.grid_view, color: theme.primaryColor),
+                                            onPressed: () => _isCardViewMode.value = !_isCardViewMode.value,
+                                          ),
+                                        ],
                                       ),
                                     ],
-                                  );
-                                }).toList(),
+
+                                    const SizedBox(height: 14),
+                                    Divider(height: 1, color: borderColor),
+                                    const SizedBox(height: 14),
+
+                                    // Batch Reassignment Action Bar
+                                    ValueListenableBuilder<Set<String>>(
+                                      valueListenable: _selectedOrderIds,
+                                      builder: (context, selectedIdsVal, _) {
+                                        return ValueListenableBuilder<String?>(
+                                          valueListenable: _selectedTargetRepId,
+                                          builder: (context, targetRepVal, _) {
+                                            return Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Checkbox(
+                                                      value: filteredOrders.isNotEmpty &&
+                                                          filteredOrders.every((o) => selectedIdsVal.contains(o.id)),
+                                                      activeColor: const Color(0xFF10B981),
+                                                      onChanged: (val) {
+                                                        if (val == true) {
+                                                          _selectedOrderIds.value = {...selectedIdsVal, ...filteredOrders.map((o) => o.id)};
+                                                        } else {
+                                                          _selectedOrderIds.value = {};
+                                                        }
+                                                      },
+                                                    ),
+                                                    Text(
+                                                      'Select All Filtered (${filteredOrders.length})',
+                                                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF1F5F9),
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        border: Border.all(color: borderColor),
+                                                      ),
+                                                      child: DropdownButtonHideUnderline(
+                                                        child: DropdownButton<String>(
+                                                          value: targetRepVal,
+                                                          hint: Text('Target Rep...', style: GoogleFonts.inter(color: textMuted, fontSize: 12)),
+                                                          dropdownColor: cardBg,
+                                                          style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
+                                                          items: widget.squad.map((rep) {
+                                                            return DropdownMenuItem<String>(
+                                                              value: rep.user.id,
+                                                              child: Text('${rep.user.fullName} (${rep.activeLeadCount} active)'),
+                                                            );
+                                                          }).toList(),
+                                                          onChanged: (val) => _selectedTargetRepId.value = val,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    ElevatedButton.icon(
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: const Color(0xFF10B981),
+                                                        foregroundColor: Colors.white,
+                                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                        visualDensity: VisualDensity.compact,
+                                                      ),
+                                                      onPressed: (selectedIdsVal.isNotEmpty && targetRepVal != null)
+                                                          ? () {
+                                                              widget.onExecuteReassignment(
+                                                                selectedIdsVal.toList(),
+                                                                targetRepVal,
+                                                              );
+                                                              _selectedOrderIds.value = {};
+                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(
+                                                                  backgroundColor: Color(0xFF10B981),
+                                                                  content: Text('✅ Selected squad orders reassigned successfully!'),
+                                                                ),
+                                                              );
+                                                            }
+                                                          : null,
+                                                      icon: const Icon(Icons.swap_horiz, size: 16),
+                                                      label: Text(
+                                                        'Reassign (${selectedIdsVal.length})',
+                                                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-          ),
-        ],
-      ),
+
+                              const SizedBox(height: 16),
+
+                              // Directory Results Table / Cards Container
+                              ValueListenableBuilder<Set<String>>(
+                                valueListenable: _selectedOrderIds,
+                                builder: (context, selectedIdsVal, _) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: cardBg,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: borderColor),
+                                    ),
+                                    child: filteredOrders.isEmpty
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(40),
+                                            child: Center(
+                                              child: Text('No orders found matching the filter criteria.', style: GoogleFonts.inter(color: textMuted)),
+                                            ),
+                                          )
+                                        : showCards
+                                            ? Padding(
+                                                padding: const EdgeInsets.all(12),
+                                                child: Column(
+                                                  children: filteredOrders.map((order) {
+                                                    return _buildOrderMobileCard(order, isDark, theme, borderColor, textPrimary, textMuted, selectedIdsVal);
+                                                  }).toList(),
+                                                ),
+                                              )
+                                            : LayoutBuilder(
+                                                builder: (context, constraints) {
+                                                  return SingleChildScrollView(
+                                                    scrollDirection: Axis.horizontal,
+                                                    physics: const BouncingScrollPhysics(),
+                                                    child: ConstrainedBox(
+                                                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                                                      child: DataTable(
+                                                        dataRowMinHeight: 56,
+                                                        dataRowMaxHeight: 64,
+                                                        columnSpacing: 16,
+                                                        horizontalMargin: 16,
+                                                        headingRowColor: WidgetStateProperty.all(
+                                                          isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+                                                        ),
+                                                        dividerThickness: 1.0,
+                                                        border: TableBorder(
+                                                          horizontalInside: BorderSide(color: borderColor, width: 1),
+                                                        ),
+                                                        columns: [
+                                                          DataColumn(
+                                                            label: Checkbox(
+                                                              value: filteredOrders.isNotEmpty &&
+                                                                  filteredOrders.every((o) => selectedIdsVal.contains(o.id)),
+                                                              activeColor: const Color(0xFF10B981),
+                                                              onChanged: (val) {
+                                                                if (val == true) {
+                                                                  _selectedOrderIds.value = {...selectedIdsVal, ...filteredOrders.map((o) => o.id)};
+                                                                } else {
+                                                                  _selectedOrderIds.value = {};
+                                                                }
+                                                              },
+                                                            ),
+                                                          ),
+                                                          DataColumn(label: Text('ORDER #', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('CUSTOMER', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('LOCATION', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('PRODUCT', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('ASSIGNED REP', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('STATUS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('TOTAL', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                          DataColumn(label: Text('ACTION', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted))),
+                                                        ],
+                                                        rows: filteredOrders.map((order) {
+                                                          final isSelected = selectedIdsVal.contains(order.id);
+                                                          final assignedRep = widget.squad.firstWhere(
+                                                            (r) => r.user.id == order.salesRepId,
+                                                            orElse: () => SuperviseePerformanceModel(
+                                                              user: UserModel(
+                                                                id: order.salesRepId ?? 'unassigned',
+                                                                email: 'unassigned@novacare.com',
+                                                                firstName: order.salesRepId ?? 'Unassigned',
+                                                                lastName: 'Pool',
+                                                                role: UserRole.salesCallRep,
+                                                                companyId: widget.activeTheme.companyId,
+                                                                isActive: true,
+                                                                createdAt: DateTime.now(),
+                                                              ),
+                                                              assignedProducts: [],
+                                                              activeLeadCount: 0,
+                                                              callsPlacedToday: 0,
+                                                              confirmedOrdersToday: 0,
+                                                              confirmationRateToday: 0,
+                                                              codRevenueToday: 0,
+                                                              commissionEarnedToday: 0,
+                                                            ),
+                                                          );
+
+                                                          return DataRow(
+                                                            selected: isSelected,
+                                                            color: WidgetStateProperty.resolveWith<Color?>((states) {
+                                                              if (isSelected) {
+                                                                return isDark ? const Color(0xFF1E3A2B) : const Color(0xFFECFDF5);
+                                                              }
+                                                              return Colors.transparent;
+                                                            }),
+                                                            cells: [
+                                                              DataCell(
+                                                                Checkbox(
+                                                                  value: isSelected,
+                                                                  activeColor: const Color(0xFF10B981),
+                                                                  onChanged: (val) {
+                                                                    final copy = Set<String>.from(selectedIdsVal);
+                                                                    if (val == true) {
+                                                                      copy.add(order.id);
+                                                                    } else {
+                                                                      copy.remove(order.id);
+                                                                    }
+                                                                    _selectedOrderIds.value = copy;
+                                                                  },
+                                                                ),
+                                                              ),
+                                                              DataCell(
+                                                                Text(
+                                                                  order.orderNumber,
+                                                                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
+                                                                ),
+                                                              ),
+                                                              DataCell(
+                                                                Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  children: [
+                                                                    Text(order.customerName, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.bold, color: textPrimary)),
+                                                                    Text(order.customerPhone, style: GoogleFonts.jetBrainsMono(fontSize: 11, color: textMuted)),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              DataCell(
+                                                                Text('${order.deliveryCity}, ${order.deliveryState}', style: GoogleFonts.inter(fontSize: 12, color: textPrimary)),
+                                                              ),
+                                                              DataCell(
+                                                                Text(order.productId, style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+                                                              ),
+                                                              DataCell(
+                                                                Text(assignedRep.user.fullName, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary)),
+                                                              ),
+                                                              DataCell(
+                                                                _buildStatusBadge(order.status, isDark),
+                                                              ),
+                                                              DataCell(
+                                                                Text(
+                                                                  '₦${order.totalAmount.toStringAsFixed(0)}',
+                                                                  style: GoogleFonts.jetBrainsMono(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                                                                ),
+                                                              ),
+                                                              DataCell(
+                                                                OutlinedButton(
+                                                                  style: OutlinedButton.styleFrom(
+                                                                    side: BorderSide(color: borderColor),
+                                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                                    visualDensity: VisualDensity.compact,
+                                                                  ),
+                                                                  onPressed: () => _showQuickReassignModal(order),
+                                                                  child: Text('Reassign', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -599,8 +671,9 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
     Color borderColor,
     Color textPrimary,
     Color textMuted,
+    Set<String> selectedIdsVal,
   ) {
-    final isSelected = _selectedOrderIds.contains(order.id);
+    final isSelected = selectedIdsVal.contains(order.id);
     final assignedRep = widget.squad.firstWhere(
       (r) => r.user.id == order.salesRepId,
       orElse: () => SuperviseePerformanceModel(
@@ -646,13 +719,13 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
                     value: isSelected,
                     activeColor: const Color(0xFF10B981),
                     onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _selectedOrderIds.add(order.id);
-                        } else {
-                          _selectedOrderIds.remove(order.id);
-                        }
-                      });
+                      final copy = Set<String>.from(selectedIdsVal);
+                      if (val == true) {
+                        copy.add(order.id);
+                      } else {
+                        copy.remove(order.id);
+                      }
+                      _selectedOrderIds.value = copy;
                     },
                   ),
                   Text(
@@ -734,7 +807,7 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
   }
 
   void _showQuickReassignModal(OrderModel order) {
-    String? selectedTarget;
+    final modalTargetRep = ValueNotifier<String?>(null);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -746,19 +819,22 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
           children: [
             Text('Customer: ${order.customerName} (${order.customerPhone})', style: GoogleFonts.inter(fontSize: 13)),
             const SizedBox(height: 12),
-            StatefulBuilder(
-              builder: (context, setModalState) => DropdownButton<String>(
-                value: selectedTarget,
-                isExpanded: true,
-                hint: const Text('Select Target Sales Rep...'),
-                items: widget.squad.map((rep) {
-                  return DropdownMenuItem<String>(
-                    value: rep.user.id,
-                    child: Text('${rep.user.fullName} (${rep.activeLeadCount} active leads)'),
-                  );
-                }).toList(),
-                onChanged: (val) => setModalState(() => selectedTarget = val),
-              ),
+            ValueListenableBuilder<String?>(
+              valueListenable: modalTargetRep,
+              builder: (context, targetVal, _) {
+                return DropdownButton<String>(
+                  value: targetVal,
+                  isExpanded: true,
+                  hint: const Text('Select Target Sales Rep...'),
+                  items: widget.squad.map((rep) {
+                    return DropdownMenuItem<String>(
+                      value: rep.user.id,
+                      child: Text('${rep.user.fullName} (${rep.activeLeadCount} active leads)'),
+                    );
+                  }).toList(),
+                  onChanged: (val) => modalTargetRep.value = val,
+                );
+              },
             ),
           ],
         ),
@@ -767,8 +843,8 @@ class _SupervisorReassignmentTabState extends State<SupervisorReassignmentTab> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
             onPressed: () {
-              if (selectedTarget != null) {
-                widget.onExecuteReassignment([order.id], selectedTarget!);
+              if (modalTargetRep.value != null) {
+                widget.onExecuteReassignment([order.id], modalTargetRep.value!);
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Order reassigned successfully!')),

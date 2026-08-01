@@ -20,10 +20,10 @@ class AgentProfileModal extends StatefulWidget {
 }
 
 class _AgentProfileModalState extends State<AgentProfileModal> {
-  late List<String> _assignedProducts;
-  late int _maxLeadCap;
-  late bool _autoAssignEnabled;
-  String _selectedTimeframe = 'Daily';
+  late ValueNotifier<List<String>> _assignedProducts;
+  late ValueNotifier<int> _maxLeadCap;
+  late ValueNotifier<bool> _autoAssignEnabled;
+  late ValueNotifier<String> _selectedTimeframe;
 
   final List<String> _allAvailableProducts = [
     'Grazer Herbal Detox Tea',
@@ -34,9 +34,19 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
   @override
   void initState() {
     super.initState();
-    _assignedProducts = List.from(widget.supervisee.assignedProducts);
-    _maxLeadCap = widget.supervisee.maxLeadCap;
-    _autoAssignEnabled = widget.supervisee.autoAssignmentEnabled;
+    _assignedProducts = ValueNotifier<List<String>>(List.from(widget.supervisee.assignedProducts));
+    _maxLeadCap = ValueNotifier<int>(widget.supervisee.maxLeadCap);
+    _autoAssignEnabled = ValueNotifier<bool>(widget.supervisee.autoAssignmentEnabled);
+    _selectedTimeframe = ValueNotifier<String>('Daily');
+  }
+
+  @override
+  void dispose() {
+    _assignedProducts.dispose();
+    _maxLeadCap.dispose();
+    _autoAssignEnabled.dispose();
+    _selectedTimeframe.dispose();
+    super.dispose();
   }
 
   @override
@@ -160,57 +170,62 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                     ),
                     const SizedBox(height: 14),
 
-                    Column(
-                      children: _allAvailableProducts.map((prod) {
-                        final isAssigned = _assignedProducts.contains(prod);
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isAssigned
-                                ? theme.primaryColor.withValues(alpha: 0.08)
-                                : isDark
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isAssigned ? theme.primaryColor.withValues(alpha: 0.4) : borderColor,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isAssigned ? Icons.shopping_bag : Icons.shopping_bag_outlined,
-                                color: isAssigned ? theme.primaryColor : textMuted,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  prod,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: textPrimary,
-                                  ),
+                    ValueListenableBuilder<List<String>>(
+                      valueListenable: _assignedProducts,
+                      builder: (context, assignedList, _) {
+                        return Column(
+                          children: _allAvailableProducts.map((prod) {
+                            final isAssigned = assignedList.contains(prod);
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: isAssigned
+                                    ? theme.primaryColor.withValues(alpha: 0.08)
+                                    : isDark
+                                        ? const Color(0xFF0F172A)
+                                        : const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isAssigned ? theme.primaryColor.withValues(alpha: 0.4) : borderColor,
                                 ),
                               ),
-                              Switch.adaptive(
-                                value: isAssigned,
-                                activeTrackColor: theme.primaryColor,
-                                onChanged: (val) {
-                                  setState(() {
-                                    if (val) {
-                                      _assignedProducts.add(prod);
-                                    } else {
-                                      _assignedProducts.remove(prod);
-                                    }
-                                  });
-                                },
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isAssigned ? Icons.shopping_bag : Icons.shopping_bag_outlined,
+                                    color: isAssigned ? theme.primaryColor : textMuted,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      prod,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  Switch.adaptive(
+                                    value: isAssigned,
+                                    activeTrackColor: theme.primaryColor,
+                                    onChanged: (val) {
+                                      final list = List<String>.from(assignedList);
+                                      if (val) {
+                                        list.add(prod);
+                                      } else {
+                                        list.remove(prod);
+                                      }
+                                      _assignedProducts.value = list;
+                                    },
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
                     ),
 
                     const SizedBox(height: 24),
@@ -220,81 +235,83 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                     Row(
                       children: [
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: ValueListenableBuilder<int>(
+                            valueListenable: _maxLeadCap,
+                            builder: (context, capVal, _) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Max Active Lead Cap',
-                                        style: TextStyle(fontSize: 13, color: textMuted)),
-                                    Text('$_maxLeadCap Leads',
-                                        style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.primaryColor)),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Max Active Lead Cap',
+                                            style: TextStyle(fontSize: 13, color: textMuted)),
+                                        Text('$capVal Leads',
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.primaryColor)),
+                                      ],
+                                    ),
+                                    Slider(
+                                      value: capVal.toDouble(),
+                                      min: 5,
+                                      max: 50,
+                                      divisions: 9,
+                                      activeColor: theme.primaryColor,
+                                      onChanged: (val) => _maxLeadCap.value = val.toInt(),
+                                    ),
                                   ],
                                 ),
-                                Slider(
-                                  value: _maxLeadCap.toDouble(),
-                                  min: 5,
-                                  max: 50,
-                                  divisions: 9,
-                                  activeColor: theme.primaryColor,
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _maxLeadCap = val.toInt();
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Auto Round-Robin',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: textPrimary)),
-                                      const SizedBox(height: 4),
-                                      Text('Deliver incoming leads',
-                                          style: TextStyle(fontSize: 12, color: textMuted)),
-                                    ],
-                                  ),
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: _autoAssignEnabled,
+                            builder: (context, autoAssignVal, _) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: borderColor),
                                 ),
-                                Switch.adaptive(
-                                  value: _autoAssignEnabled,
-                                  activeTrackColor: const Color(0xFF10B981),
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _autoAssignEnabled = val;
-                                    });
-                                  },
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Auto Round-Robin',
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: textPrimary)),
+                                          const SizedBox(height: 4),
+                                          Text('Deliver incoming leads',
+                                              style: TextStyle(fontSize: 12, color: textMuted)),
+                                        ],
+                                      ),
+                                    ),
+                                    Switch.adaptive(
+                                      value: autoAssignVal,
+                                      activeTrackColor: const Color(0xFF10B981),
+                                      onChanged: (val) => _autoAssignEnabled.value = val,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -306,38 +323,43 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildSectionHeader('📊 Performance Metrics', textPrimary),
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: borderColor),
-                          ),
-                          child: Row(
-                            children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
-                              final isSelected = _selectedTimeframe == tf;
-                              return GestureDetector(
-                                onTap: () => setState(() => _selectedTimeframe = tf),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? theme.primaryColor
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    tf,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected ? Colors.white : textMuted,
+                        ValueListenableBuilder<String>(
+                          valueListenable: _selectedTimeframe,
+                          builder: (context, tfVal, _) {
+                            return Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: borderColor),
+                              ),
+                              child: Row(
+                                children: ['Daily', 'Weekly', 'Monthly'].map((tf) {
+                                  final isSelected = tfVal == tf;
+                                  return GestureDetector(
+                                    onTap: () => _selectedTimeframe.value = tf,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? theme.primaryColor
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        tf,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected ? Colors.white : textMuted,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
+                                  );
+                                }).toList(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -392,9 +414,9 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                         ),
                         onPressed: () {
                           final updated = widget.supervisee.copyWith(
-                            assignedProducts: _assignedProducts,
-                            maxLeadCap: _maxLeadCap,
-                            autoAssignmentEnabled: _autoAssignEnabled,
+                            assignedProducts: _assignedProducts.value,
+                            maxLeadCap: _maxLeadCap.value,
+                            autoAssignmentEnabled: _autoAssignEnabled.value,
                           );
                           widget.onSave(updated);
                           Navigator.of(context).pop();

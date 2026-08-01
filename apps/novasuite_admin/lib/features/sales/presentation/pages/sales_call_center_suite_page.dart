@@ -46,35 +46,71 @@ class SalesCallCenterSuitePage extends StatefulWidget {
 }
 
 class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
-  late int _activeSubTab;
-  String _searchQuery = '';
-  String _stateFilter = 'All';
-  String _queueStatusFilter = 'All';
-  bool? _userViewModePreference;
-  String _sortOption = 'newest';
+  late final ValueNotifier<int> _activeSubTabNotifier;
+  late final ValueNotifier<String> _searchQueryNotifier;
+  late final ValueNotifier<String> _stateFilterNotifier;
+  late final ValueNotifier<String> _queueStatusFilterNotifier;
+  late final ValueNotifier<bool?> _userViewModePreferenceNotifier;
+  late final ValueNotifier<String> _sortOptionNotifier;
 
   // Filters for All Orders Master Directory
-  String _allOrdersSearchQuery = '';
-  String _allOrdersStatusFilter = 'All';
-  String _allOrdersCategoryFilter = 'All';
-  String _allOrdersStateFilter = 'All';
-  bool _showOnlyMyAssignedLeads = false;
+  late final ValueNotifier<String> _allOrdersSearchQueryNotifier;
+  late final ValueNotifier<String> _allOrdersStatusFilterNotifier;
+  late final ValueNotifier<String> _allOrdersCategoryFilterNotifier;
+  late final ValueNotifier<String> _allOrdersStateFilterNotifier;
+  late final ValueNotifier<bool> _showOnlyMyAssignedLeadsNotifier;
 
   // Product Attachment Filter for Scripts
-  String _selectedScriptProductFilter = 'All Assigned Products';
+  late final ValueNotifier<String> _selectedScriptProductFilterNotifier;
+  late final ValueNotifier<UserRole> _simulatedRoleNotifier;
+  late final ValueNotifier<List<Map<String, dynamic>>> _customCallScriptsNotifier;
+  late final ValueNotifier<Map<String, List<OrderActivityModel>>> _orderActivityStoreNotifier;
 
-  // Organogram & Daily Reports State
-  late UserRole _simulatedRole;
+  int get _activeSubTab => _activeSubTabNotifier.value;
+  set _activeSubTab(int val) => _activeSubTabNotifier.value = val;
+
+  String get _searchQuery => _searchQueryNotifier.value;
+  set _searchQuery(String val) => _searchQueryNotifier.value = val;
+
+  String get _stateFilter => _stateFilterNotifier.value;
+  set _stateFilter(String val) => _stateFilterNotifier.value = val;
+
+  String get _queueStatusFilter => _queueStatusFilterNotifier.value;
+  set _queueStatusFilter(String val) => _queueStatusFilterNotifier.value = val;
+
+  bool? get _userViewModePreference => _userViewModePreferenceNotifier.value;
+  set _userViewModePreference(bool? val) => _userViewModePreferenceNotifier.value = val;
+
+  String get _sortOption => _sortOptionNotifier.value;
+  set _sortOption(String val) => _sortOptionNotifier.value = val;
+
+  String get _allOrdersSearchQuery => _allOrdersSearchQueryNotifier.value;
+  set _allOrdersSearchQuery(String val) => _allOrdersSearchQueryNotifier.value = val;
+
+  String get _allOrdersStatusFilter => _allOrdersStatusFilterNotifier.value;
+  set _allOrdersStatusFilter(String val) => _allOrdersStatusFilterNotifier.value = val;
+
+  String get _allOrdersCategoryFilter => _allOrdersCategoryFilterNotifier.value;
+  set _allOrdersCategoryFilter(String val) => _allOrdersCategoryFilterNotifier.value = val;
+
+  String get _allOrdersStateFilter => _allOrdersStateFilterNotifier.value;
+  set _allOrdersStateFilter(String val) => _allOrdersStateFilterNotifier.value = val;
+
+  bool get _showOnlyMyAssignedLeads => _showOnlyMyAssignedLeadsNotifier.value;
+  set _showOnlyMyAssignedLeads(bool val) => _showOnlyMyAssignedLeadsNotifier.value = val;
+
+  String get _selectedScriptProductFilter => _selectedScriptProductFilterNotifier.value;
+  set _selectedScriptProductFilter(String val) => _selectedScriptProductFilterNotifier.value = val;
+
+  UserRole get _simulatedRole => _simulatedRoleNotifier.value;
+  set _simulatedRole(UserRole val) => _simulatedRoleNotifier.value = val;
+
+  List<Map<String, dynamic>> get _customCallScripts => _customCallScriptsNotifier.value;
+
+  Map<String, List<OrderActivityModel>> get _orderActivityStore => _orderActivityStoreNotifier.value;
+
   late List<Map<String, dynamic>> _ahodTeams;
-
-  // Dynamic Product-Attached Call Scripts List
-  late List<Map<String, dynamic>> _customCallScripts;
-
-  // State for Call Dialog / Reschedule Modal
   final _noteController = TextEditingController();
-
-  // Real-time Order Activity Store
-  final Map<String, List<OrderActivityModel>> _orderActivityStore = {};
 
   void _recordActivity({
     required OrderModel order,
@@ -88,8 +124,10 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
     String? newStatus,
     Map<String, dynamic>? metadata,
   }) {
+    final currentStore = Map<String, List<OrderActivityModel>>.from(_orderActivityStoreNotifier.value);
+    final list = List<OrderActivityModel>.from(currentStore[order.id] ?? []);
     final activity = OrderActivityModel(
-      id: 'act-${DateTime.now().millisecondsSinceEpoch}-${_orderActivityStore.length}',
+      id: 'act-${DateTime.now().millisecondsSinceEpoch}-${list.length}',
       orderId: order.id,
       activityType: activityType,
       title: title,
@@ -103,11 +141,9 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       createdAt: DateTime.now(),
     );
 
-    setState(() {
-      final list = _orderActivityStore[order.id] ?? [];
-      list.insert(0, activity);
-      _orderActivityStore[order.id] = list;
-    });
+    list.insert(0, activity);
+    currentStore[order.id] = list;
+    _orderActivityStoreNotifier.value = currentStore;
 
     OrderRepository().logActivity(activity);
   }
@@ -115,8 +151,23 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   @override
   void initState() {
     super.initState();
-    _activeSubTab = widget.activeSubIndex;
-    _simulatedRole = widget.currentUser.role == UserRole.salesCallRep ? UserRole.salesCallRep : UserRole.hod;
+    _activeSubTabNotifier = ValueNotifier<int>(widget.activeSubIndex);
+    _searchQueryNotifier = ValueNotifier<String>('');
+    _stateFilterNotifier = ValueNotifier<String>('All');
+    _queueStatusFilterNotifier = ValueNotifier<String>('All');
+    _userViewModePreferenceNotifier = ValueNotifier<bool?>(null);
+    _sortOptionNotifier = ValueNotifier<String>('newest');
+
+    _allOrdersSearchQueryNotifier = ValueNotifier<String>('');
+    _allOrdersStatusFilterNotifier = ValueNotifier<String>('All');
+    _allOrdersCategoryFilterNotifier = ValueNotifier<String>('All');
+    _allOrdersStateFilterNotifier = ValueNotifier<String>('All');
+    _showOnlyMyAssignedLeadsNotifier = ValueNotifier<bool>(false);
+
+    _selectedScriptProductFilterNotifier = ValueNotifier<String>('All Assigned Products');
+    _simulatedRoleNotifier = ValueNotifier<UserRole>(widget.currentUser.role == UserRole.salesCallRep ? UserRole.salesCallRep : UserRole.hod);
+    _customCallScriptsNotifier = ValueNotifier<List<Map<String, dynamic>>>([]);
+    _orderActivityStoreNotifier = ValueNotifier<Map<String, List<OrderActivityModel>>>({});
 
     _ahodTeams = [
       {
@@ -265,7 +316,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       },
     ];
 
-    _customCallScripts = [
+    _customCallScriptsNotifier.value = [
       {
         'objection': 'Customer says: "The price is too high for 1 bottle!"',
         'product': 'Grazer Herbal Detox Tea',
@@ -298,12 +349,31 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   }
 
   @override
+  void dispose() {
+    _activeSubTabNotifier.dispose();
+    _searchQueryNotifier.dispose();
+    _stateFilterNotifier.dispose();
+    _queueStatusFilterNotifier.dispose();
+    _userViewModePreferenceNotifier.dispose();
+    _sortOptionNotifier.dispose();
+    _allOrdersSearchQueryNotifier.dispose();
+    _allOrdersStatusFilterNotifier.dispose();
+    _allOrdersCategoryFilterNotifier.dispose();
+    _allOrdersStateFilterNotifier.dispose();
+    _showOnlyMyAssignedLeadsNotifier.dispose();
+    _selectedScriptProductFilterNotifier.dispose();
+    _simulatedRoleNotifier.dispose();
+    _customCallScriptsNotifier.dispose();
+    _orderActivityStoreNotifier.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant SalesCallCenterSuitePage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.activeSubIndex != widget.activeSubIndex) {
-      setState(() {
-        _activeSubTab = widget.activeSubIndex;
-      });
+      _activeSubTab = widget.activeSubIndex;
     }
   }
 
@@ -312,17 +382,64 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 800;
 
-    return IndexedStack(
-      index: _activeSubTab,
-      children: [
-        _buildLiveDialerQueueTab(isMobile),
-        _buildAllOrdersDirectoryTab(isMobile),
-        _buildConfirmedOrdersTab(isMobile),
-        _buildUpsellApprovalsTab(isMobile),
-        _buildPerformanceMetricsTab(isMobile),
-        _buildCallScriptsTab(isMobile),
-        _buildOrganogramConsoleTab(isMobile),
-      ],
+    return ValueListenableBuilder<int>(
+      valueListenable: _activeSubTabNotifier,
+      builder: (context, activeSubTabVal, _) {
+        return IndexedStack(
+          index: _activeSubTab,
+          children: [
+            ValueListenableBuilder(
+              valueListenable: _searchQueryNotifier,
+              builder: (context, _, __) => ValueListenableBuilder(
+                valueListenable: _stateFilterNotifier,
+                builder: (context, _, __) => ValueListenableBuilder(
+                  valueListenable: _queueStatusFilterNotifier,
+                  builder: (context, _, __) => ValueListenableBuilder(
+                    valueListenable: _userViewModePreferenceNotifier,
+                    builder: (context, _, __) => _buildLiveDialerQueueTab(isMobile),
+                  ),
+                ),
+              ),
+            ),
+            ValueListenableBuilder(
+              valueListenable: _allOrdersSearchQueryNotifier,
+              builder: (context, _, __) => ValueListenableBuilder(
+                valueListenable: _allOrdersStatusFilterNotifier,
+                builder: (context, _, __) => ValueListenableBuilder(
+                  valueListenable: _allOrdersStateFilterNotifier,
+                  builder: (context, _, __) => ValueListenableBuilder(
+                    valueListenable: _allOrdersCategoryFilterNotifier,
+                    builder: (context, _, __) => ValueListenableBuilder(
+                      valueListenable: _showOnlyMyAssignedLeadsNotifier,
+                      builder: (context, _, __) => ValueListenableBuilder(
+                        valueListenable: _sortOptionNotifier,
+                        builder: (context, _, __) => ValueListenableBuilder(
+                          valueListenable: _userViewModePreferenceNotifier,
+                          builder: (context, _, __) => _buildAllOrdersDirectoryTab(isMobile),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            _buildConfirmedOrdersTab(isMobile),
+            _buildUpsellApprovalsTab(isMobile),
+            _buildPerformanceMetricsTab(isMobile),
+            ValueListenableBuilder(
+              valueListenable: _selectedScriptProductFilterNotifier,
+              builder: (context, _, __) => ValueListenableBuilder(
+                valueListenable: _customCallScriptsNotifier,
+                builder: (context, _, __) => _buildCallScriptsTab(isMobile),
+              ),
+            ),
+            ValueListenableBuilder(
+              valueListenable: _simulatedRoleNotifier,
+              builder: (context, _, __) => _buildOrganogramConsoleTab(isMobile),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -756,9 +873,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                 ? Column(
                     children: [
                       TextField(
-                        onChanged: (val) => setState(() {
-                          _searchQuery = val;
-                        }),
+                        onChanged: (val) => _searchQuery = val,
                         style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.white : Colors.black),
                         decoration: InputDecoration(
                           hintText: 'Search customer, phone, or order #...',
@@ -797,9 +912,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                                   ],
                                   onChanged: (val) {
                                     if (val != null) {
-                                      setState(() {
-                                        _stateFilter = val;
-                                      });
+                                      _stateFilter = val;
                                     }
                                   },
                                 ),
@@ -831,9 +944,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                                   ],
                                   onChanged: (val) {
                                     if (val != null) {
-                                      setState(() {
-                                        _queueStatusFilter = val;
-                                      });
+                                      _queueStatusFilter = val;
                                     }
                                   },
                                 ),
@@ -852,7 +963,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   InkWell(
-                                    onTap: () => setState(() => _userViewModePreference = true),
+                                    onTap: () => _userViewModePreference = true,
                                     borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -871,7 +982,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                                   ),
                                   Container(width: 1, height: 20, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
                                   InkWell(
-                                    onTap: () => setState(() => _userViewModePreference = false),
+                                    onTap: () => _userViewModePreference = false,
                                     borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -900,9 +1011,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                     children: [
                       Expanded(
                         child: TextField(
-                          onChanged: (val) => setState(() {
-                            _searchQuery = val;
-                          }),
+                          onChanged: (val) => _searchQuery = val,
                           style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.white : Colors.black),
                           decoration: InputDecoration(
                             hintText: 'Search customer, phone, or order #...',
@@ -938,9 +1047,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                             ],
                             onChanged: (val) {
                               if (val != null) {
-                                setState(() {
-                                  _stateFilter = val;
-                                });
+                                _stateFilter = val;
                               }
                             },
                           ),
@@ -972,9 +1079,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                             ],
                             onChanged: (val) {
                               if (val != null) {
-                                setState(() {
-                                  _queueStatusFilter = val;
-                                });
+                                _queueStatusFilter = val;
                               }
                             },
                           ),
@@ -993,7 +1098,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             InkWell(
-                              onTap: () => setState(() => _userViewModePreference = true),
+                              onTap: () => _userViewModePreference = true,
                               borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -1012,7 +1117,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                             ),
                             Container(width: 1, height: 20, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
                             InkWell(
-                              onTap: () => setState(() => _userViewModePreference = false),
+                              onTap: () => _userViewModePreference = false,
                               borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -2789,7 +2894,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       InkWell(
-                        onTap: () => setState(() => _showOnlyMyAssignedLeads = false),
+                        onTap: () => _showOnlyMyAssignedLeads = false,
                         borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -2809,7 +2914,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                       ),
                       Container(width: 1, height: 18, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
                       InkWell(
-                        onTap: () => setState(() => _showOnlyMyAssignedLeads = true),
+                        onTap: () => _showOnlyMyAssignedLeads = true,
                         borderRadius: const BorderRadius.horizontal(right: Radius.circular(10)),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -2858,7 +2963,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                               child: SizedBox(
                                 height: 36,
                                 child: TextField(
-                                  onChanged: (val) => setState(() => _allOrdersSearchQuery = val),
+                                  onChanged: (val) => _allOrdersSearchQuery = val,
                                   style: TextStyle(fontSize: 12.5, color: isDarkMode ? Colors.white : Colors.black),
                                   decoration: InputDecoration(
                                     hintText: 'Search order #, customer, phone...',
@@ -2887,7 +2992,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   InkWell(
-                                    onTap: () => setState(() => _userViewModePreference = true),
+                                    onTap: () => _userViewModePreference = true,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                       decoration: BoxDecoration(
@@ -2899,7 +3004,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                                   ),
                                   Container(width: 1, height: 18, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
                                   InkWell(
-                                    onTap: () => setState(() => _userViewModePreference = false),
+                                    onTap: () => _userViewModePreference = false,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                       decoration: BoxDecoration(
@@ -2923,7 +3028,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           child: Row(
                             children: [
                               _buildCompactDropdownFilter(_allOrdersStatusFilter, (val) {
-                                if (val != null) setState(() => _allOrdersStatusFilter = val);
+                                if (val != null) _allOrdersStatusFilter = val;
                               }, const [
                                 DropdownMenuItem(value: 'All', child: Text('All Stages')),
                                 DropdownMenuItem(value: 'new', child: Text('🌱 New Lead')),
@@ -2939,7 +3044,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                               ], isDarkMode),
                               const SizedBox(width: 6),
                               _buildCompactDropdownFilter(_allOrdersStateFilter, (val) {
-                                if (val != null) setState(() => _allOrdersStateFilter = val);
+                                if (val != null) _allOrdersStateFilter = val;
                               }, const [
                                 DropdownMenuItem(value: 'All', child: Text('All States')),
                                 DropdownMenuItem(value: 'Lagos', child: Text('Lagos')),
@@ -2950,7 +3055,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                               ], isDarkMode),
                               const SizedBox(width: 6),
                               _buildCompactDropdownFilter(_allOrdersCategoryFilter, (val) {
-                                if (val != null) setState(() => _allOrdersCategoryFilter = val);
+                                if (val != null) _allOrdersCategoryFilter = val;
                               }, const [
                                 DropdownMenuItem(value: 'All', child: Text('All Products')),
                                 DropdownMenuItem(value: 'Tea', child: Text('🍵 Tea')),
@@ -2959,7 +3064,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                               ], isDarkMode),
                               const SizedBox(width: 6),
                               _buildCompactDropdownFilter(_sortOption, (val) {
-                                if (val != null) setState(() => _sortOption = val);
+                                if (val != null) _sortOption = val;
                               }, const [
                                 DropdownMenuItem(value: 'newest', child: Text('📅 Newest')),
                                 DropdownMenuItem(value: 'oldest', child: Text('⏳ Oldest')),
@@ -2981,7 +3086,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                         SizedBox(
                           width: 240,
                           child: TextField(
-                            onChanged: (val) => setState(() => _allOrdersSearchQuery = val),
+                            onChanged: (val) => _allOrdersSearchQuery = val,
                             style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.white : Colors.black),
                             decoration: InputDecoration(
                               hintText: 'Search order #, customer, phone, driver...',
@@ -2996,7 +3101,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           ),
                         ),
                         _buildCompactDropdownFilter(_allOrdersStatusFilter, (val) {
-                          if (val != null) setState(() => _allOrdersStatusFilter = val);
+                          if (val != null) _allOrdersStatusFilter = val;
                         }, const [
                           DropdownMenuItem(value: 'All', child: Text('All Pipeline Stages')),
                           DropdownMenuItem(value: 'new', child: Text('🌱 New Lead')),
@@ -3011,7 +3116,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           DropdownMenuItem(value: 'cancelled', child: Text('❌ Cancelled')),
                         ], isDarkMode),
                         _buildCompactDropdownFilter(_allOrdersStateFilter, (val) {
-                          if (val != null) setState(() => _allOrdersStateFilter = val);
+                          if (val != null) _allOrdersStateFilter = val;
                         }, const [
                           DropdownMenuItem(value: 'All', child: Text('All States')),
                           DropdownMenuItem(value: 'Lagos', child: Text('Lagos State')),
@@ -3021,7 +3126,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           DropdownMenuItem(value: 'Oyo', child: Text('Oyo State')),
                         ], isDarkMode),
                         _buildCompactDropdownFilter(_allOrdersCategoryFilter, (val) {
-                          if (val != null) setState(() => _allOrdersCategoryFilter = val);
+                          if (val != null) _allOrdersCategoryFilter = val;
                         }, const [
                           DropdownMenuItem(value: 'All', child: Text('All Products')),
                           DropdownMenuItem(value: 'Tea', child: Text('🍵 Grazer Herbal Tea')),
@@ -3029,7 +3134,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           DropdownMenuItem(value: 'Skin', child: Text('✨ Clear Skin Care')),
                         ], isDarkMode),
                         _buildCompactDropdownFilter(_sortOption, (val) {
-                          if (val != null) setState(() => _sortOption = val);
+                          if (val != null) _sortOption = val;
                         }, const [
                           DropdownMenuItem(value: 'newest', child: Text('📅 Newest First')),
                           DropdownMenuItem(value: 'oldest', child: Text('⏳ Oldest First')),
@@ -3048,7 +3153,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               InkWell(
-                                onTap: () => setState(() => _userViewModePreference = true),
+                                onTap: () => _userViewModePreference = true,
                                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -3067,7 +3172,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                               ),
                               Container(width: 1, height: 20, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
                               InkWell(
-                                onTap: () => setState(() => _userViewModePreference = false),
+                                onTap: () => _userViewModePreference = false,
                                 borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -3615,9 +3720,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       isMobile: isMobile,
       onStartCall: (order) => _openCallActionModal(order),
       onOpenFullQueue: () {
-        setState(() {
-          _activeSubTab = 0;
-        });
+        _activeSubTab = 0;
       },
     );
   }
@@ -3629,9 +3732,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
     );
 
     if (result != null) {
-      setState(() {
-        _customCallScripts.insert(0, result);
-      });
+      _customCallScriptsNotifier.value = [result, ..._customCallScriptsNotifier.value];
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3870,7 +3971,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           DropdownMenuItem(value: 'Clear Skin Herbal Care', child: Text('Clear Skin Herbal Care')),
                         ],
                         onChanged: (val) {
-                          if (val != null) setState(() => _selectedScriptProductFilter = val);
+                          if (val != null) _selectedScriptProductFilter = val;
                         },
                       ),
                     ),
@@ -4111,7 +4212,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   Widget _buildRolePill(UserRole role, String label, bool isDarkMode) {
     final isSelected = _simulatedRole == role;
     return InkWell(
-      onTap: () => setState(() => _simulatedRole = role),
+      onTap: () => _simulatedRole = role,
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -4574,40 +4675,38 @@ class _RescheduledCountdownCard extends StatefulWidget {
 
 class _RescheduledCountdownCardState extends State<_RescheduledCountdownCard> {
   Timer? _timer;
-  late Duration _remaining;
+  late final ValueNotifier<Duration> _remainingNotifier;
 
   @override
   void initState() {
     super.initState();
-    _updateRemaining();
+    _remainingNotifier = ValueNotifier<Duration>(widget.scheduledCallbackAt.difference(DateTime.now()));
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        setState(() {
-          _updateRemaining();
-        });
+        _remainingNotifier.value = widget.scheduledCallbackAt.difference(DateTime.now());
       }
     });
-  }
-
-  void _updateRemaining() {
-    _remaining = widget.scheduledCallbackAt.difference(DateTime.now());
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _remainingNotifier.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isOverdue = _remaining.isNegative;
-    final absRemaining = _remaining.abs();
+    return ValueListenableBuilder<Duration>(
+      valueListenable: _remainingNotifier,
+      builder: (context, remainingVal, _) {
+        final isOverdue = remainingVal.isNegative;
+        final absRemaining = remainingVal.abs();
 
-    final hours = absRemaining.inHours;
-    final minutes = absRemaining.inMinutes.remainder(60);
-    final seconds = absRemaining.inSeconds.remainder(60);
-    final days = absRemaining.inDays;
+        final hours = absRemaining.inHours;
+        final minutes = absRemaining.inMinutes.remainder(60);
+        final seconds = absRemaining.inSeconds.remainder(60);
+        final days = absRemaining.inDays;
 
     String countdownStr;
     if (days > 0) {
@@ -4716,6 +4815,8 @@ class _RescheduledCountdownCardState extends State<_RescheduledCountdownCard> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

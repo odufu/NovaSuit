@@ -30,7 +30,19 @@ class CallRepDashboardOverview extends StatefulWidget {
 }
 
 class _CallRepDashboardOverviewState extends State<CallRepDashboardOverview> {
-  DashboardTimeframe _selectedTimeframe = DashboardTimeframe.daily;
+  late ValueNotifier<DashboardTimeframe> _timeframeNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _timeframeNotifier = ValueNotifier<DashboardTimeframe>(DashboardTimeframe.daily);
+  }
+
+  @override
+  void dispose() {
+    _timeframeNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,360 +51,357 @@ class _CallRepDashboardOverviewState extends State<CallRepDashboardOverview> {
     final isMobile = widget.isMobile;
     final now = DateTime.now();
 
-    // Filter orders by timeframe
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final startOfWeekDay = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-
-    List<OrderModel> timeframeOrders = [];
-    switch (_selectedTimeframe) {
-      case DashboardTimeframe.daily:
-        timeframeOrders = widget.myOrders.where((o) =>
-            o.updatedAt.year == now.year &&
-            o.updatedAt.month == now.month &&
-            o.updatedAt.day == now.day).toList();
-        break;
-      case DashboardTimeframe.weekly:
-        timeframeOrders = widget.myOrders.where((o) => o.updatedAt.isAfter(startOfWeekDay)).toList();
-        break;
-      case DashboardTimeframe.monthly:
-        timeframeOrders = widget.myOrders.where((o) =>
-            o.updatedAt.year == now.year &&
-            o.updatedAt.month == now.month).toList();
-        break;
-    }
-
-    // Carry-Over / Take-over calls (orders created/assigned before today that are still uncalled/pending)
-    final carryOverOrders = widget.myOrders.where((o) =>
-        (o.status == OrderStatus.newOrder || o.status == OrderStatus.contacting || o.status == OrderStatus.assignedToRep) &&
-        o.createdAt.isBefore(DateTime(now.year, now.month, now.day))).toList();
-
-    // Calculate metrics
-    final totalCallsMade = timeframeOrders.length + (_selectedTimeframe == DashboardTimeframe.daily ? 42 : (_selectedTimeframe == DashboardTimeframe.weekly ? 210 : 840));
-    final confirmedCount = timeframeOrders.where((o) => o.status == OrderStatus.accepted || o.status == OrderStatus.delivered).length;
-    final confirmationRate = totalCallsMade > 0 ? (((confirmedCount + 34) / totalCallsMade) * 100).toStringAsFixed(1) : '80.9';
-
-    final totalUpsellRevenue = timeframeOrders.fold<double>(0.0, (sum, o) => sum + o.upsellAmount) + 480000.0;
-    final repBonus = totalUpsellRevenue * 0.05;
-
-    // Active uncalled queue leads
-    final activeQueueLeads = widget.myOrders.where((o) =>
-        o.status == OrderStatus.newOrder ||
-        o.status == OrderStatus.contacting ||
-        o.status == OrderStatus.callBack ||
-        o.status == OrderStatus.rescheduled).toList();
-
     final cardBg = isDarkMode ? const Color(0xFF132A22) : Colors.white;
     final borderColor = isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 12 : 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Bar with Timeframe Switcher
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ValueListenableBuilder<DashboardTimeframe>(
+      valueListenable: _timeframeNotifier,
+      builder: (context, selectedTimeframeVal, _) {
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final startOfWeekDay = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+
+        List<OrderModel> timeframeOrders = [];
+        switch (selectedTimeframeVal) {
+          case DashboardTimeframe.daily:
+            timeframeOrders = widget.myOrders.where((o) =>
+                o.updatedAt.year == now.year &&
+                o.updatedAt.month == now.month &&
+                o.updatedAt.day == now.day).toList();
+            break;
+          case DashboardTimeframe.weekly:
+            timeframeOrders = widget.myOrders.where((o) => o.updatedAt.isAfter(startOfWeekDay)).toList();
+            break;
+          case DashboardTimeframe.monthly:
+            timeframeOrders = widget.myOrders.where((o) =>
+                o.updatedAt.year == now.year &&
+                o.updatedAt.month == now.month).toList();
+            break;
+        }
+
+        final carryOverOrders = widget.myOrders.where((o) =>
+            (o.status == OrderStatus.newOrder || o.status == OrderStatus.contacting || o.status == OrderStatus.assignedToRep) &&
+            o.createdAt.isBefore(DateTime(now.year, now.month, now.day))).toList();
+
+        final totalCallsMade = timeframeOrders.length + (selectedTimeframeVal == DashboardTimeframe.daily ? 42 : (selectedTimeframeVal == DashboardTimeframe.weekly ? 210 : 840));
+        final confirmedCount = timeframeOrders.where((o) => o.status == OrderStatus.accepted || o.status == OrderStatus.delivered).length;
+        final confirmationRate = totalCallsMade > 0 ? (((confirmedCount + 34) / totalCallsMade) * 100).toStringAsFixed(1) : '80.9';
+
+        final totalUpsellRevenue = timeframeOrders.fold<double>(0.0, (sum, o) => sum + o.upsellAmount) + 480000.0;
+        final repBonus = totalUpsellRevenue * 0.05;
+
+        final activeQueueLeads = widget.myOrders.where((o) =>
+            o.status == OrderStatus.newOrder ||
+            o.status == OrderStatus.contacting ||
+            o.status == OrderStatus.callBack ||
+            o.status == OrderStatus.rescheduled).toList();
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(isMobile ? 12 : 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Header Bar with Timeframe Switcher
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Call Rep Dashboard & Live Queue',
-                    style: GoogleFonts.outfit(
-                      fontSize: isMobile ? 20 : 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Call Rep Dashboard & Live Queue',
+                        style: GoogleFonts.outfit(
+                          fontSize: isMobile ? 20 : 24,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      Text(
+                        'Track daily confirmation rates, upsell bonuses, carry-over calls, and live queue.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'Track daily confirmation rates, upsell bonuses, carry-over calls, and live queue.',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                  // Segmented Timeframe Switcher (Daily | Weekly | Monthly)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTimeframeTab(DashboardTimeframe.daily, 'Daily', selectedTimeframeVal),
+                        Container(width: 1, height: 18, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                        _buildTimeframeTab(DashboardTimeframe.weekly, 'Weekly', selectedTimeframeVal),
+                        Container(width: 1, height: 18, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                        _buildTimeframeTab(DashboardTimeframe.monthly, 'Monthly', selectedTimeframeVal),
+                      ],
                     ),
                   ),
                 ],
               ),
-              // Segmented Timeframe Switcher (Daily | Weekly | Monthly)
+              const SizedBox(height: 20),
+
+              // Top Metrics Grid Cards
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  _metricCard(
+                    'CALLS MADE',
+                    '$totalCallsMade Calls',
+                    selectedTimeframeVal == DashboardTimeframe.daily ? 'Target: 50 Calls' : 'On Track',
+                    Icons.phone_in_talk,
+                    Colors.blue,
+                    isMobile,
+                  ),
+                  _metricCard(
+                    'CONFIRMATION RATE',
+                    '$confirmationRate%',
+                    '${confirmedCount + 34} Confirmed / $totalCallsMade Calls',
+                    Icons.check_circle,
+                    Colors.green,
+                    isMobile,
+                  ),
+                  _metricCard(
+                    'UPSELL REVENUE',
+                    '$currency ${NumberFormat('#,##0').format(totalUpsellRevenue)}',
+                    '+ $currency ${NumberFormat('#,##0').format(repBonus)} Rep Bonus',
+                    Icons.stars,
+                    Colors.purple,
+                    isMobile,
+                  ),
+                  _metricCard(
+                    'AVG CALL DURATION',
+                    '3m 12s',
+                    'Optimal Range',
+                    Icons.timer,
+                    Colors.orange,
+                    isMobile,
+                  ),
+                  _metricCard(
+                    'CARRY-OVER CALLS',
+                    '${carryOverOrders.length} Pending',
+                    'Leads left since yesterday',
+                    Icons.history_toggle_off_rounded,
+                    carryOverOrders.isNotEmpty ? Colors.amber.shade800 : Colors.grey,
+                    isMobile,
+                    isAlert: carryOverOrders.isNotEmpty,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+
+              // Compact Call Queue Section Header with WhatsApp Badge & Action Button
               Container(
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: borderColor, width: 1.2),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTimeframeTab(DashboardTimeframe.daily, 'Daily'),
-                    Container(width: 1, height: 18, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                    _buildTimeframeTab(DashboardTimeframe.weekly, 'Weekly'),
-                    Container(width: 1, height: 18, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                    _buildTimeframeTab(DashboardTimeframe.monthly, 'Monthly'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Top Metrics Grid Cards
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _metricCard(
-                'CALLS MADE',
-                '$totalCallsMade Calls',
-                _selectedTimeframe == DashboardTimeframe.daily ? 'Target: 50 Calls' : 'On Track',
-                Icons.phone_in_talk,
-                Colors.blue,
-                isMobile,
-              ),
-              _metricCard(
-                'CONFIRMATION RATE',
-                '$confirmationRate%',
-                '${confirmedCount + 34} Confirmed / $totalCallsMade Calls',
-                Icons.check_circle,
-                Colors.green,
-                isMobile,
-              ),
-              _metricCard(
-                'UPSELL REVENUE',
-                '$currency ${NumberFormat('#,##0').format(totalUpsellRevenue)}',
-                '+ $currency ${NumberFormat('#,##0').format(repBonus)} Rep Bonus',
-                Icons.stars,
-                Colors.purple,
-                isMobile,
-              ),
-              _metricCard(
-                'AVG CALL DURATION',
-                '3m 12s',
-                'Optimal Range',
-                Icons.timer,
-                Colors.orange,
-                isMobile,
-              ),
-              _metricCard(
-                'CARRY-OVER CALLS',
-                '${carryOverOrders.length} Pending',
-                'Leads left since yesterday',
-                Icons.history_toggle_off_rounded,
-                carryOverOrders.isNotEmpty ? Colors.amber.shade800 : Colors.grey,
-                isMobile,
-                isAlert: carryOverOrders.isNotEmpty,
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-
-          // Compact Call Queue Section Header with WhatsApp Badge & Action Button
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor, width: 1.2),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'MY LIVE CALL QUEUE',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
+                        Row(
+                          children: [
+                            Text(
+                              'MY LIVE CALL QUEUE',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
 
-                        // WhatsApp-Style Circular Number Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF25D366), // WhatsApp Green
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF25D366).withValues(alpha: 0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF25D366),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF25D366).withValues(alpha: 0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${activeQueueLeads.length}',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'UNPROCESSED',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        ElevatedButton.icon(
+                          onPressed: widget.onOpenFullQueue,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF0A2E23),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 2,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${activeQueueLeads.length}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'UNPROCESSED',
-                                style: GoogleFonts.inter(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
+                          icon: const Icon(Icons.phone_forwarded_rounded, size: 16),
+                          label: Text(
+                            'Launch Auto-Dialer Queue',
+                            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 14),
 
-                    // Launch Auto-Dialer Queue / Enter Full Workspace Button
-                    ElevatedButton.icon(
-                      onPressed: widget.onOpenFullQueue,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF0A2E23),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 2,
-                      ),
-                      icon: const Icon(Icons.phone_forwarded_rounded, size: 16),
-                      label: Text(
-                        'Launch Auto-Dialer Queue',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-
-                // Compact Queue List View (Small Preview List)
-                activeQueueLeads.isEmpty
-                    ? Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Center(
-                      child: Text(
-                        '🎉 Great job! All assigned leads in your call queue have been contacted.',
-                        style: GoogleFonts.inter(
-                          color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
-                          fontSize: 13,
+                    activeQueueLeads.isEmpty
+                        ? Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Center(
+                          child: Text(
+                            '🎉 Great job! All assigned leads in your call queue have been contacted.',
+                            style: GoogleFonts.inter(
+                              color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  )
-                : ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: activeQueueLeads.length > 5 ? 5 : activeQueueLeads.length,
-                    separatorBuilder: (context, index) => Divider(
-                      height: 1,
-                      color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200,
-                    ),
-                    itemBuilder: (context, index) {
-                      final order = activeQueueLeads[index];
-                      final isCarryOver = order.createdAt.isBefore(DateTime(now.year, now.month, now.day));
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: activeQueueLeads.length > 5 ? 5 : activeQueueLeads.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200,
+                        ),
+                        itemBuilder: (context, index) {
+                          final order = activeQueueLeads[index];
+                          final isCarryOver = order.createdAt.isBefore(DateTime(now.year, now.month, now.day));
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                CircleAvatar(
-                                  radius: 18,
-                                  backgroundColor: isDarkMode ? const Color(0xFF0C1F17) : const Color(0xFFE8F5E9),
-                                  child: Icon(
-                                    Icons.person_outline_rounded,
-                                    size: 18,
-                                    color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                Row(
                                   children: [
-                                    Row(
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: isDarkMode ? const Color(0xFF0C1F17) : const Color(0xFFE8F5E9),
+                                      child: Icon(
+                                        Icons.person_outline_rounded,
+                                        size: 18,
+                                        color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          order.customerName,
-                                          style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13.5,
-                                            color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                                          ),
-                                        ),
-                                        if (isCarryOver) ...[
-                                          const SizedBox(width: 6),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: Colors.amber.shade100,
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              'Carry-Over',
-                                              style: TextStyle(
-                                                fontSize: 9.5,
+                                        Row(
+                                          children: [
+                                            Text(
+                                              order.customerName,
+                                              style: GoogleFonts.inter(
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.amber.shade900,
+                                                fontSize: 13.5,
+                                                color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
                                               ),
                                             ),
+                                            if (isCarryOver) ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.amber.shade100,
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  'Carry-Over',
+                                                  style: TextStyle(
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.amber.shade900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Order #${order.orderNumber} • ${order.deliveryState} • $currency${order.totalAmount}',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11,
+                                            color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
                                           ),
-                                        ],
+                                        ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Order #${order.orderNumber} • ${order.deliveryState} • $currency${order.totalAmount}',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
-                                      ),
                                     ),
                                   ],
                                 ),
+
+                                ElevatedButton.icon(
+                                  onPressed: () => widget.onStartCall(order),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
+                                    foregroundColor: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  icon: const Icon(Icons.phone, size: 14),
+                                  label: const Text('Start Call', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                ),
                               ],
                             ),
-
-                            // Start Call Action Button
-                            ElevatedButton.icon(
-                              onPressed: () => widget.onStartCall(order),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
-                                foregroundColor: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              icon: const Icon(Icons.phone, size: 14),
-                              label: const Text('Start Call', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-              ],
-            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildTimeframeTab(DashboardTimeframe timeframe, String label) {
-    final isSelected = _selectedTimeframe == timeframe;
+  Widget _buildTimeframeTab(DashboardTimeframe timeframe, String label, DashboardTimeframe currentSelected) {
+    final isSelected = currentSelected == timeframe;
 
     return InkWell(
-      onTap: () => setState(() => _selectedTimeframe = timeframe),
+      onTap: () => _timeframeNotifier.value = timeframe,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

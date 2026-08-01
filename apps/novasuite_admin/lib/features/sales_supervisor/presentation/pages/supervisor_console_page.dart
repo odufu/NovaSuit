@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:novasuite_core/novasuite_core.dart';
+import '../providers/supervisor_dashboard_provider.dart';
+import '../../../sales/presentation/providers/sales_call_center_provider.dart';
 import '../widgets/supervisor_kpi_dashboard_tab.dart';
 import '../widgets/supervisor_approvals_tab.dart';
 import '../widgets/supervisor_reassignment_tab.dart';
@@ -24,18 +27,9 @@ class SupervisorConsolePage extends StatefulWidget {
 class _SupervisorConsolePageState extends State<SupervisorConsolePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupervisorRepository _supervisorRepo = SupervisorRepository();
-  final OrderRepository _orderRepo = OrderRepository();
   final NovaSipTelephonyService _telephonyService = NovaSipTelephonyService();
   final TextEditingController _noteController = TextEditingController();
-
-  List<SuperviseePerformanceModel> _squad = [];
-  List<OrderModel> _squadOrders = [];
-  List<OrderModel> _pendingUpsells = [];
-  SupervisorDailyReportModel _dailyReport = SupervisorDailyReportModel.defaultReportForJuly27();
-  bool _isLoading = true;
-  final bool _isDarkMode = true;
-
-  OrderModel? _activeCallOrder;
+  final ValueNotifier<OrderModel?> _activeCallOrder = ValueNotifier<OrderModel?>(null);
 
   @override
   void initState() {
@@ -46,7 +40,6 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
       vsync: this,
       initialIndex: widget.activeSubIndex.clamp(0, tabCount - 1),
     );
-    _loadSupervisorData();
   }
 
   @override
@@ -62,43 +55,8 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
   void dispose() {
     _tabController.dispose();
     _noteController.dispose();
+    _activeCallOrder.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadSupervisorData() async {
-    setState(() => _isLoading = true);
-    final squad = await _supervisorRepo.fetchSquadSupervisees(
-      companyId: widget.currentUser.companyId,
-      supervisorId: widget.currentUser.id,
-    );
-
-    final orders = await _orderRepo.fetchOrders(
-      companyId: widget.currentUser.companyId,
-    );
-
-    final report = await _supervisorRepo.fetchDailyOperationalReport(
-      companyId: widget.currentUser.companyId,
-      date: DateTime.now(),
-    );
-
-    final pending = orders.where((o) => o.status == OrderStatus.upsellPending).toList();
-
-    setState(() {
-      _squad = squad;
-      _squadOrders = orders;
-      _dailyReport = report;
-      _pendingUpsells = pending;
-      _isLoading = false;
-    });
-  }
-
-  void _handleUpdateSupervisee(SuperviseePerformanceModel updated) {
-    setState(() {
-      final index = _squad.indexWhere((s) => s.user.id == updated.user.id);
-      if (index != -1) {
-        _squad[index] = updated;
-      }
-    });
   }
 
   void _handleResolveUpsell(String orderId, bool approve) async {
@@ -108,18 +66,18 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
       supervisorId: widget.currentUser.id,
     );
 
-    setState(() {
-      _pendingUpsells.removeWhere((o) => o.id == orderId);
-    });
+    if (!mounted) return;
+    context.read<SupervisorDashboardProvider>().fetchSquadData(
+          companyId: widget.currentUser.companyId,
+          supervisorId: widget.currentUser.id,
+        );
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: approve ? const Color(0xFF10B981) : Colors.red,
-          content: Text(approve ? '✅ Upsell Request Approved!' : '❌ Upsell Request Declined.'),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: approve ? const Color(0xFF10B981) : Colors.red,
+        content: Text(approve ? '✅ Upsell Request Approved!' : '❌ Upsell Request Declined.'),
+      ),
+    );
   }
 
   void _handleReassign(List<String> orderIds, String targetRepId) async {
@@ -128,14 +86,15 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
       targetSalesRepId: targetRepId,
       supervisorId: widget.currentUser.id,
     );
-    await _loadSupervisorData();
+    if (!mounted) return;
+    context.read<SupervisorDashboardProvider>().fetchSquadData(
+          companyId: widget.currentUser.companyId,
+          supervisorId: widget.currentUser.id,
+        );
   }
 
   void _startDirectCall(OrderModel order) {
-    setState(() {
-      _activeCallOrder = order;
-    });
-
+    _activeCallOrder.value = order;
     _telephonyService.initiateCall(order);
 
     showDialog(
@@ -147,10 +106,7 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
         currentUser: widget.currentUser,
         noteController: _noteController,
         onUpdateOrder: (updated) {
-          final idx = _squadOrders.indexWhere((o) => o.id == updated.id);
-          if (idx != -1) {
-            setState(() => _squadOrders[idx] = updated);
-          }
+          context.read<SalesCallCenterProvider>().updateOrder(updated);
         },
         onRecordActivity: ({required order, required activityType, required title, required details, newStatus}) {},
         onOpenReschedule: (order) {},
@@ -162,8 +118,17 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final dashboardProvider = context.watch<SupervisorDashboardProvider>();
+    final salesProvider = context.watch<SalesCallCenterProvider>();
+
     final theme = TenantTheme.defaultNovaCare();
-    final cardBg = _isDarkMode ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC);
+    const isDarkMode = true;
+    const cardBg = Color(0xFF0C1F17);
+
+    final squad = dashboardProvider.squad;
+    final squadOrders = salesProvider.orders;
+    final dailyReport = dashboardProvider.dailyReport ?? SupervisorDailyReportModel.defaultReportForJuly27();
+    final pendingUpsells = squadOrders.where((o) => o.status == OrderStatus.upsellPending).toList();
 
     return Scaffold(
       backgroundColor: cardBg,
@@ -172,29 +137,32 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
           Column(
             children: [
               Expanded(
-                child: _isLoading
+                child: dashboardProvider.isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
                     : TabBarView(
                         controller: _tabController,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          // Tab 0: Squad Overview & Operational KPIs (Merged Leaderboard & Daily Report)
+                          // Tab 0: Squad Overview & Operational KPIs
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: SupervisorKpiDashboardTab(
-                              squad: _squad,
-                              squadOrders: _squadOrders,
-                              dailyReport: _dailyReport,
+                              squad: squad,
+                              squadOrders: squadOrders,
+                              dailyReport: dailyReport,
                               activeTheme: theme,
-                              isDarkMode: _isDarkMode,
-                              onUpdateSupervisee: _handleUpdateSupervisee,
+                              isDarkMode: isDarkMode,
+                              onUpdateSupervisee: (updated) {
+                                context.read<SupervisorDashboardProvider>().updateSupervisee(updated);
+                              },
                               onDateOrTimeframeChanged: (selectedDate, timeframe) async {
-                                final report = await _supervisorRepo.fetchDailyOperationalReport(
+                                await _supervisorRepo.fetchDailyOperationalReport(
                                   companyId: widget.currentUser.companyId,
                                   date: selectedDate,
                                   timeframe: timeframe,
                                 );
-                                setState(() => _dailyReport = report);
+                                if (!context.mounted) return;
+                                context.read<SupervisorDashboardProvider>().setTimeframe(timeframe);
                               },
                             ),
                           ),
@@ -203,9 +171,9 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: SupervisorApprovalsTab(
-                              pendingUpsellOrders: _pendingUpsells,
+                              pendingUpsellOrders: pendingUpsells,
                               activeTheme: theme,
-                              isDarkMode: _isDarkMode,
+                              isDarkMode: isDarkMode,
                               onResolveUpsell: _handleResolveUpsell,
                             ),
                           ),
@@ -214,23 +182,23 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: SupervisorReassignmentTab(
-                              squadOrders: _squadOrders,
-                              squad: _squad,
+                              squadOrders: squadOrders,
+                              squad: squad,
                               activeTheme: theme,
-                              isDarkMode: _isDarkMode,
+                              isDarkMode: isDarkMode,
                               onExecuteReassignment: _handleReassign,
                             ),
                           ),
 
-                          // Tab 3: My Personal Dialer Queue (When HR canTakeCalls == true)
+                          // Tab 3: My Personal Dialer Queue
                           if (widget.currentUser.canTakeCalls)
                             Padding(
                               padding: const EdgeInsets.all(24),
                               child: CallRepDashboardOverview(
                                 currentUser: widget.currentUser,
-                                myOrders: _squadOrders,
+                                myOrders: squadOrders,
                                 activeTheme: theme,
-                                isDarkMode: _isDarkMode,
+                                isDarkMode: isDarkMode,
                                 onStartCall: _startDirectCall,
                                 onOpenFullQueue: () {},
                               ),
@@ -241,38 +209,40 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
             ],
           ),
 
-          if (_activeCallOrder != null)
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: NovaDialerFloatingBar(
-                activeTheme: theme,
-                currentUser: widget.currentUser,
-                isDarkMode: _isDarkMode,
-                onOpenCallModal: () {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (ctx) => CallActionModal(
-                      order: _activeCallOrder!,
-                      activeTheme: theme,
-                      currentUser: widget.currentUser,
-                      noteController: _noteController,
-                      onUpdateOrder: (updated) {
-                        final idx = _squadOrders.indexWhere((o) => o.id == updated.id);
-                        if (idx != -1) {
-                          setState(() => _squadOrders[idx] = updated);
-                        }
-                      },
-                      onRecordActivity: ({required order, required activityType, required title, required details, newStatus}) {},
-                      onOpenReschedule: (order) {},
-                      onOpenCancellationReason: (order) {},
-                      onShowRequestUpsell: (order) {},
-                    ),
-                  );
-                },
-              ),
-            ),
+          ValueListenableBuilder<OrderModel?>(
+            valueListenable: _activeCallOrder,
+            builder: (context, activeOrder, _) {
+              if (activeOrder == null) return const SizedBox.shrink();
+              return Positioned(
+                bottom: 24,
+                right: 24,
+                child: NovaDialerFloatingBar(
+                  activeTheme: theme,
+                  currentUser: widget.currentUser,
+                  isDarkMode: isDarkMode,
+                  onOpenCallModal: () {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (ctx) => CallActionModal(
+                        order: activeOrder,
+                        activeTheme: theme,
+                        currentUser: widget.currentUser,
+                        noteController: _noteController,
+                        onUpdateOrder: (updated) {
+                          context.read<SalesCallCenterProvider>().updateOrder(updated);
+                        },
+                        onRecordActivity: ({required order, required activityType, required title, required details, newStatus}) {},
+                        onOpenReschedule: (order) {},
+                        onOpenCancellationReason: (order) {},
+                        onShowRequestUpsell: (order) {},
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

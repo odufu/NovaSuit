@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
+import '../providers/hr_provider.dart';
 import '../widgets/add_edit_staff_dialog.dart';
 
-class HRStaffManagementPage extends StatefulWidget {
+class HRStaffManagementPage extends StatelessWidget {
   final TenantTheme activeTheme;
   final UserModel currentUser;
 
@@ -13,16 +15,8 @@ class HRStaffManagementPage extends StatefulWidget {
     required this.currentUser,
   });
 
-  @override
-  State<HRStaffManagementPage> createState() => _HRStaffManagementPageState();
-}
-
-class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
-  String _selectedRoleFilter = 'All Roles';
-  String _searchQuery = '';
-
   // Sample Supervisors List
-  final List<UserModel> _supervisors = [
+  static final List<UserModel> _supervisors = [
     UserModel(
       id: '20000000-0000-4000-8000-000000000002',
       companyId: '11111111-1111-4111-8111-111111111111',
@@ -47,87 +41,11 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
     ),
   ];
 
-  // Company Staff Members Directory
-  late List<Map<String, dynamic>> _staffMembers;
-
-  @override
-  void initState() {
-    super.initState();
-    _staffMembers = [
-      {
-        'id': '30000000-0000-4000-8000-000000000003',
-        'first_name': 'John',
-        'last_name': 'SalesRep',
-        'email': 'salesrep.john@novacare.com',
-        'phone': '+234 803 333 4455',
-        'role': UserRole.salesCallRep,
-        'department': 'Sales Call Center',
-        'supervisor_name': 'Samuel Supervisor',
-        'is_active': true,
-      },
-      {
-        'id': '40000000-0000-4000-8000-000000000004',
-        'first_name': 'Sarah',
-        'last_name': 'SalesRep',
-        'email': 'salesrep.sarah@novacare.com',
-        'phone': '+234 803 444 5566',
-        'role': UserRole.salesCallRep,
-        'department': 'Sales Call Center',
-        'supervisor_name': 'Samuel Supervisor',
-        'is_active': true,
-      },
-      {
-        'id': '50000000-0000-4000-8000-000000000005',
-        'first_name': 'David',
-        'last_name': 'Marketer',
-        'email': 'marketer.david@novacare.com',
-        'phone': '+234 803 555 6677',
-        'role': UserRole.digitalMarketer,
-        'department': 'Digital Marketing',
-        'supervisor_name': 'Alex General Manager',
-        'is_active': true,
-      },
-      {
-        'id': '60000000-0000-4000-8000-000000000006',
-        'first_name': 'Leonard',
-        'last_name': 'LogisticsRep',
-        'email': 'logisticsrep@novaexpress.com',
-        'phone': '+234 803 666 7788',
-        'role': UserRole.logisticsCallRep,
-        'department': 'Logistics Operations',
-        'supervisor_name': 'Alex General Manager',
-        'is_active': true,
-      },
-      {
-        'id': '70000000-0000-4000-8000-000000000007',
-        'first_name': 'Emeka',
-        'last_name': 'Rider',
-        'email': 'rider.emeka@novaexpress.com',
-        'phone': '+234 803 777 8899',
-        'role': UserRole.deliveryAgent,
-        'department': 'Logistics Operations',
-        'supervisor_name': 'Leonard LogisticsRep',
-        'is_active': true,
-      },
-      {
-        'id': '80000000-0000-4000-8000-000000000008',
-        'first_name': 'Fiona',
-        'last_name': 'FinanceManager',
-        'email': 'finance@novacare.com',
-        'phone': '+234 803 888 9900',
-        'role': UserRole.financeManager,
-        'department': 'Finance & Reconciliation',
-        'supervisor_name': 'Alex General Manager',
-        'is_active': true,
-      },
-    ];
-  }
-
-  void _handleAddStaff() async {
+  void _handleAddStaff(BuildContext context) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddEditStaffDialog(
-        activeTheme: widget.activeTheme,
+        activeTheme: activeTheme,
         availableSupervisors: _supervisors,
       ),
     );
@@ -137,21 +55,21 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
       final supId = result['supervisor_id'] as String?;
       final supervisorObj = _supervisors.firstWhere((s) => s.id == supId, orElse: () => _supervisors.first);
 
-      setState(() {
-        _staffMembers.insert(0, {
-          'id': result['id'],
-          'first_name': result['first_name'],
-          'last_name': result['last_name'],
-          'email': result['email'],
-          'phone': result['phone'],
-          'role': roleObj,
-          'department': result['department'],
-          'supervisor_name': supervisorObj.fullName,
-          'is_active': result['is_active'],
-        });
+      if (!context.mounted) return;
+      context.read<HRProvider>().addStaff({
+        'id': result['id'],
+        'name': '${result['first_name']} ${result['last_name']}',
+        'first_name': result['first_name'],
+        'last_name': result['last_name'],
+        'email': result['email'],
+        'phone': result['phone'],
+        'role': roleObj.label,
+        'department': result['department'],
+        'supervisor_name': supervisorObj.fullName,
+        'status': result['is_active'] ? 'Active' : 'Suspended',
+        'is_active': result['is_active'],
       });
 
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.green,
@@ -161,84 +79,45 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
     }
   }
 
-  void _handleEditStaff(Map<String, dynamic> staff) async {
+  void _handleEditStaff(BuildContext context, Map<String, dynamic> staff) async {
     final userModel = UserModel(
-      id: staff['id'],
-      companyId: widget.currentUser.companyId,
-      role: staff['role'] as UserRole,
-      firstName: staff['first_name'],
-      lastName: staff['last_name'],
-      email: staff['email'],
-      phone: staff['phone'],
-      isActive: staff['is_active'],
+      id: staff['id'] ?? 'usr-001',
+      companyId: currentUser.companyId,
+      role: UserRole.salesCallRep,
+      firstName: staff['first_name'] ?? (staff['name'] != null ? (staff['name'] as String).split(' ').first : 'John'),
+      lastName: staff['last_name'] ?? (staff['name'] != null ? (staff['name'] as String).split(' ').last : 'Doe'),
+      email: staff['email'] ?? '',
+      phone: staff['phone'] ?? '',
+      isActive: staff['status'] == 'Active' || staff['is_active'] == true,
       createdAt: DateTime.now(),
     );
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddEditStaffDialog(
-        activeTheme: widget.activeTheme,
+        activeTheme: activeTheme,
         staffToEdit: userModel,
         availableSupervisors: _supervisors,
       ),
     );
 
     if (result != null) {
-      final index = _staffMembers.indexWhere((s) => s['id'] == staff['id']);
-      if (index != -1) {
-        final roleObj = result['role'] as UserRole;
-        final supId = result['supervisor_id'] as String?;
-        final supervisorObj = _supervisors.firstWhere((s) => s.id == supId, orElse: () => _supervisors.first);
-
-        setState(() {
-          _staffMembers[index] = {
-            'id': result['id'],
-            'first_name': result['first_name'],
-            'last_name': result['last_name'],
-            'email': result['email'],
-            'phone': result['phone'],
-            'role': roleObj,
-            'department': result['department'],
-            'supervisor_name': supervisorObj.fullName,
-            'is_active': result['is_active'],
-          };
-        });
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: widget.activeTheme.primaryColor,
-            content: Text('Updated staff record for ${result['first_name']} ${result['last_name']}!'),
-          ),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: activeTheme.primaryColor,
+          content: Text('Updated staff record for ${result['first_name']} ${result['last_name']}!'),
+        ),
+      );
     }
-  }
-
-  void _toggleStaffStatus(int index) {
-    setState(() {
-      _staffMembers[index]['is_active'] = !(_staffMembers[index]['is_active'] as bool);
-    });
-
-    final isNowActive = _staffMembers[index]['is_active'] as bool;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: isNowActive ? Colors.green : Colors.red,
-        content: Text('${_staffMembers[index]['first_name']} ${_staffMembers[index]['last_name']} account ${isNowActive ? "Activated" : "Suspended"}!'),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = widget.activeTheme;
-
-    final filteredStaff = _staffMembers.where((staff) {
-      final matchesRole = _selectedRoleFilter == 'All Roles' || (staff['role'] as UserRole).label == _selectedRoleFilter;
-      final nameStr = '${staff['first_name']} ${staff['last_name']} ${staff['email']}'.toLowerCase();
-      final matchesSearch = _searchQuery.isEmpty || nameStr.contains(_searchQuery.toLowerCase());
-      return matchesRole && matchesSearch;
-    }).toList();
+    final hrProvider = context.watch<HRProvider>();
+    final theme = activeTheme;
+    final filteredStaff = hrProvider.filteredStaff;
+    final staffMembers = hrProvider.staffMembers;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -257,7 +136,7 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                 ],
               ),
               ElevatedButton.icon(
-                onPressed: _handleAddStaff,
+                onPressed: () => _handleAddStaff(context),
                 style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor, foregroundColor: Colors.white),
                 icon: const Icon(Icons.person_add, size: 18),
                 label: const Text('Onboard New Employee'),
@@ -269,7 +148,7 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
           // HR Metric Cards
           Row(
             children: [
-              Expanded(child: _hrMetricCard('ACTIVE EMPLOYEES', '${_staffMembers.where((s) => s["is_active"] == true).length} Active', '100% Verified', Icons.badge, Colors.blue)),
+              Expanded(child: _hrMetricCard('ACTIVE EMPLOYEES', '${staffMembers.where((s) => s["status"] == "Active" || s["is_active"] == true).length} Active', '100% Verified', Icons.badge, Colors.blue)),
               const SizedBox(width: 16),
               Expanded(child: _hrMetricCard('DEPARTMENTS', '5 Active', 'Sales, Marketing, Ops, Finance, HR', Icons.business, Colors.purple)),
               const SizedBox(width: 16),
@@ -290,7 +169,7 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                 children: [
                   Expanded(
                     child: TextField(
-                      onChanged: (val) => setState(() => _searchQuery = val),
+                      onChanged: (val) => context.read<HRProvider>().setSearchQuery(val),
                       decoration: InputDecoration(
                         hintText: 'Search by employee name or email...',
                         prefixIcon: const Icon(Icons.search, size: 20),
@@ -302,12 +181,12 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                   ),
                   const SizedBox(width: 16),
                   DropdownButton<String>(
-                    value: _selectedRoleFilter,
-                    items: ['All Roles', ...UserRole.values.map((r) => r.label)].map((r) {
+                    value: hrProvider.selectedRoleFilter,
+                    items: ['All', ...UserRole.values.map((r) => r.label)].map((r) {
                       return DropdownMenuItem(value: r, child: Text('Filter: $r'));
                     }).toList(),
                     onChanged: (val) {
-                      if (val != null) setState(() => _selectedRoleFilter = val);
+                      if (val != null) context.read<HRProvider>().setRoleFilter(val);
                     },
                   ),
                 ],
@@ -335,8 +214,9 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                 rows: filteredStaff.asMap().entries.map((entry) {
                   final index = entry.key;
                   final staff = entry.value;
-                  final roleObj = staff['role'] as UserRole;
-                  final isActive = staff['is_active'] as bool;
+                  final roleStr = staff['role'] as String? ?? 'Staff';
+                  final isActive = staff['status'] == 'Active' || staff['is_active'] == true;
+                  final nameStr = staff['name'] as String? ?? '${staff["first_name"]} ${staff["last_name"]}';
 
                   return DataRow(cells: [
                     DataCell(
@@ -346,7 +226,7 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                             backgroundColor: theme.primaryColor,
                             radius: 18,
                             child: Text(
-                              (staff['first_name'] as String).substring(0, 1),
+                              nameStr.isNotEmpty ? nameStr.substring(0, 1) : 'U',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                           ),
@@ -355,8 +235,8 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${staff['first_name']} ${staff['last_name']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                              Text(staff['id'], style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                              Text(nameStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text(staff['id'] ?? 'usr-00', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                             ],
                           ),
                         ],
@@ -367,7 +247,7 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(staff['email'], style: const TextStyle(fontSize: 12)),
+                          Text(staff['email'] ?? '', style: const TextStyle(fontSize: 12)),
                           Text(staff['phone'] ?? '-', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                         ],
                       ),
@@ -376,16 +256,16 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-                        child: Text(roleObj.label, style: TextStyle(color: Colors.blue.shade900, fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: Text(roleStr, style: TextStyle(color: Colors.blue.shade900, fontWeight: FontWeight.bold, fontSize: 12)),
                       ),
                     ),
-                    DataCell(Text(staff['department'])),
+                    DataCell(Text(staff['department'] ?? 'General')),
                     DataCell(
                       Row(
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 14),
                           const SizedBox(width: 4),
-                          Text(staff['supervisor_name'], style: const TextStyle(fontWeight: FontWeight.w600)),
+                          Text(staff['supervisor_name'] ?? 'Samuel Supervisor', style: const TextStyle(fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -411,12 +291,20 @@ class _HRStaffManagementPageState extends State<HRStaffManagementPage> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
-                            onPressed: () => _handleEditStaff(staff),
+                            onPressed: () => _handleEditStaff(context, staff),
                             tooltip: 'Edit Role / Supervisor',
                           ),
                           IconButton(
                             icon: Icon(isActive ? Icons.block : Icons.check_circle, color: isActive ? Colors.red : Colors.green, size: 18),
-                            onPressed: () => _toggleStaffStatus(index),
+                            onPressed: () {
+                              context.read<HRProvider>().toggleStaffActive(index);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: isActive ? Colors.red : Colors.green,
+                                  content: Text('$nameStr account ${isActive ? "Suspended" : "Activated"}!'),
+                                ),
+                              );
+                            },
                             tooltip: isActive ? 'Suspend Employee' : 'Activate Employee',
                           ),
                         ],

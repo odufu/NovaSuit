@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
+import '../providers/logistics_provider.dart';
+import '../providers/inventory_provider.dart';
 import '../widgets/add_edit_product_dialog.dart';
 import '../widgets/create_transfer_dialog.dart';
 
-class GMInventorySuitePage extends StatefulWidget {
+class GMInventorySuitePage extends StatelessWidget {
   final TenantTheme activeTheme;
   final UserModel currentUser;
   final int activeSubIndex;
@@ -16,97 +19,45 @@ class GMInventorySuitePage extends StatefulWidget {
     this.activeSubIndex = 0,
   });
 
-  @override
-  State<GMInventorySuitePage> createState() => _GMInventorySuitePageState();
-}
+  // System Products Catalog Static Seed Data
+  static final List<Map<String, dynamic>> _products = [
+    {
+      'id': 'prod-1',
+      'name': 'Grazer Herbal Detox Tea',
+      'sku': 'SKU-TEA-001',
+      'basePrice': 25000.0,
+      'description': 'Natural herbal tea blend for deep digestive detox.',
+      'availableStock': 4500,
+      'status': 'active',
+    },
+    {
+      'id': 'prod-2',
+      'name': 'Herbal Vitality Booster',
+      'sku': 'SKU-BOOST-002',
+      'basePrice': 18000.0,
+      'description': 'Daily stamina and immune vitality capsules.',
+      'availableStock': 1800,
+      'status': 'active',
+    },
+    {
+      'id': 'prod-3',
+      'name': 'Clear Skin Herbal Care',
+      'sku': 'SKU-SKIN-003',
+      'basePrice': 22000.0,
+      'description': 'Organic herbal topical care for glowing skin.',
+      'availableStock': 950,
+      'status': 'active',
+    },
+  ];
 
-class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
-  late int _activeTab;
-
-  // System Products Catalog
-  late List<Map<String, dynamic>> _products;
-
-  // Active Stock Transfers List
-  late List<Map<String, dynamic>> _transfers;
-
-  @override
-  void initState() {
-    super.initState();
-    _activeTab = widget.activeSubIndex;
-    _products = [
-      {
-        'id': 'prod-1',
-        'name': 'Grazer Herbal Detox Tea',
-        'sku': 'SKU-TEA-001',
-        'basePrice': 25000.0,
-        'description': 'Natural herbal tea blend for deep digestive detox.',
-        'availableStock': 4500,
-        'status': 'active',
-      },
-      {
-        'id': 'prod-2',
-        'name': 'Herbal Vitality Booster',
-        'sku': 'SKU-BOOST-002',
-        'basePrice': 18000.0,
-        'description': 'Daily stamina and immune vitality capsules.',
-        'availableStock': 1800,
-        'status': 'active',
-      },
-      {
-        'id': 'prod-3',
-        'name': 'Clear Skin Herbal Care',
-        'sku': 'SKU-SKIN-003',
-        'basePrice': 22000.0,
-        'description': 'Organic herbal topical care for glowing skin.',
-        'availableStock': 950,
-        'status': 'active',
-      },
-    ];
-
-    _transfers = [
-      {
-        'waybill': 'WB-2026-4891',
-        'source': 'Lagos Central Factory Hub',
-        'destination': 'Abuja Regional Hub (NovaExpress)',
-        'product': 'Grazer Herbal Detox Tea',
-        'quantity': 500,
-        'status': 'dispatched',
-        'date': '2026-07-25 10:30 AM',
-      },
-      {
-        'waybill': 'WB-2026-4820',
-        'source': 'Lagos Central Factory Hub',
-        'destination': 'Rider Emeka Mini-Hub (Port Harcourt)',
-        'product': 'Herbal Vitality Booster',
-        'quantity': 50,
-        'status': 'completed',
-        'date': '2026-07-24 04:15 PM',
-      },
-    ];
-  }
-
-  @override
-  void didUpdateWidget(covariant GMInventorySuitePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.activeSubIndex != widget.activeSubIndex) {
-      setState(() {
-        _activeTab = widget.activeSubIndex;
-      });
-    }
-  }
-
-  void _handleCreateProduct() async {
+  void _handleCreateProduct(BuildContext context) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AddEditProductDialog(activeTheme: widget.activeTheme),
+      builder: (context) => AddEditProductDialog(activeTheme: activeTheme),
     );
 
     if (result != null) {
-      setState(() {
-        _products.insert(0, result);
-      });
-
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.green,
@@ -116,81 +67,76 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
     }
   }
 
-  void _handleEditProduct(Map<String, dynamic> product) async {
+  void _handleEditProduct(BuildContext context, Map<String, dynamic> product) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddEditProductDialog(
-        activeTheme: widget.activeTheme,
+        activeTheme: activeTheme,
         productToEdit: product,
       ),
     );
 
     if (result != null) {
-      final index = _products.indexWhere((p) => p['id'] == product['id']);
-      if (index != -1) {
-        setState(() {
-          _products[index] = result;
-        });
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: widget.activeTheme.primaryColor,
-            content: Text('Updated product specifications for ${result['name']}!'),
-          ),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: activeTheme.primaryColor,
+          content: Text('Updated product specifications for ${result['name']}!'),
+        ),
+      );
     }
   }
 
-  void _handleDispatchTransfer() async {
+  void _handleDispatchTransfer(BuildContext context) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => CreateTransferDialog(activeTheme: widget.activeTheme),
+      builder: (context) => CreateTransferDialog(activeTheme: activeTheme),
     );
 
     if (result != null) {
-      setState(() {
-        _transfers.insert(0, {
-          'waybill': result['waybill_number'],
-          'source': result['source'],
-          'destination': result['destination'],
-          'product': result['product'],
-          'quantity': result['quantity'],
-          'status': 'dispatched',
-          'date': 'Just now',
-        });
+      if (!context.mounted) return;
+      context.read<LogisticsProvider>().addTransfer({
+        'waybill': result['waybill_number'],
+        'source': result['source'],
+        'destination': result['destination'],
+        'product': result['product'],
+        'quantity': result['quantity'],
+        'status': 'dispatched',
+        'date': 'Just now',
       });
 
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: widget.activeTheme.primaryColor,
+          backgroundColor: activeTheme.primaryColor,
           content: Text('Waybill ${result['waybill_number']} dispatched to ${result['destination']}!'),
         ),
       );
     }
   }
 
-  void _handleConfirmTransferReceipt(int index) {
-    setState(() {
-      _transfers[index]['status'] = 'completed';
-    });
+  void _handleConfirmTransferReceipt(BuildContext context, int index) {
+    final logisticsProvider = context.read<LogisticsProvider>();
+    final waybill = logisticsProvider.transfers[index]['waybill'];
+    logisticsProvider.confirmTransferReceipt(index);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.green,
-        content: Text('Stock Transfer Waybill ${_transfers[index]['waybill']} confirmed & restocked!'),
+        content: Text('Stock Transfer Waybill $waybill confirmed & restocked!'),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = widget.activeTheme;
+    final inventoryProvider = context.watch<InventoryProvider>();
+    final logisticsProvider = context.watch<LogisticsProvider>();
+    final theme = activeTheme;
     final currency = theme.currencySymbol;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 800;
+    final activeTab = inventoryProvider.activeTab;
+    final transfers = logisticsProvider.transfers;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 14 : 24),
@@ -210,13 +156,13 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
                       runSpacing: 8,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: _handleCreateProduct,
+                          onPressed: () => _handleCreateProduct(context),
                           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
                           icon: const Icon(Icons.add_shopping_cart, size: 16),
                           label: const Text('Create Product'),
                         ),
                         ElevatedButton.icon(
-                          onPressed: _handleDispatchTransfer,
+                          onPressed: () => _handleDispatchTransfer(context),
                           style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor, foregroundColor: Colors.white),
                           icon: const Icon(Icons.local_shipping, size: 16),
                           label: const Text('Dispatch Waybill'),
@@ -238,14 +184,14 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
                     Row(
                       children: [
                         ElevatedButton.icon(
-                          onPressed: _handleCreateProduct,
+                          onPressed: () => _handleCreateProduct(context),
                           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
                           icon: const Icon(Icons.add_shopping_cart, size: 18),
                           label: const Text('Create New Product'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
-                          onPressed: _handleDispatchTransfer,
+                          onPressed: () => _handleDispatchTransfer(context),
                           style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor, foregroundColor: Colors.white),
                           icon: const Icon(Icons.local_shipping, size: 18),
                           label: const Text('Dispatch Stock Transfer'),
@@ -262,7 +208,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
             const SizedBox(height: 12),
             _metricCard('REGIONAL HUB STOCK', '1,800 Units', 'Abuja Hub Ready', Icons.warehouse, Colors.purple),
             const SizedBox(height: 12),
-            _metricCard('ACTIVE WAYBILLS', '${_transfers.where((t) => t["status"] == "dispatched").length} In-Transit', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange),
+            _metricCard('ACTIVE WAYBILLS', '${transfers.where((t) => t["status"] == "dispatched").length} In-Transit', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange),
             const SizedBox(height: 12),
             _metricCard('PRODUCTS CATALOG', '${_products.length} SKUs Active', 'System Available', Icons.category, Colors.green),
           ] else ...[
@@ -272,7 +218,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
                 const SizedBox(width: 16),
                 Expanded(child: _metricCard('REGIONAL HUB STOCK', '1,800 Units', 'Abuja Hub Ready', Icons.warehouse, Colors.purple)),
                 const SizedBox(width: 16),
-                Expanded(child: _metricCard('ACTIVE WAYBILLS', '${_transfers.where((t) => t["status"] == "dispatched").length} In-Transit', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange)),
+                Expanded(child: _metricCard('ACTIVE WAYBILLS', '${transfers.where((t) => t["status"] == "dispatched").length} In-Transit', 'Nationwide Dispatch', Icons.local_shipping, Colors.orange)),
                 const SizedBox(width: 16),
                 Expanded(child: _metricCard('PRODUCTS CATALOG', '${_products.length} SKUs Active', 'System Available', Icons.category, Colors.green)),
               ],
@@ -286,32 +232,33 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
             decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
             child: Row(
               children: [
-                _subTabChip(0, Icons.shopping_bag_rounded, 'Products Catalog (${_products.length})'),
-                _subTabChip(1, Icons.domain_rounded, 'Multi-Warehouse Matrix'),
-                _subTabChip(2, Icons.alt_route_rounded, 'Inter-Warehouse Transfers (IWT)'),
+                _subTabChip(context, 0, Icons.shopping_bag_rounded, 'Products Catalog (${_products.length})'),
+                _subTabChip(context, 1, Icons.domain_rounded, 'Multi-Warehouse Matrix'),
+                _subTabChip(context, 2, Icons.alt_route_rounded, 'Inter-Warehouse Transfers (IWT)'),
               ],
             ),
           ),
           const SizedBox(height: 20),
 
           // Sub-Tab Content
-          if (_activeTab == 0) _buildProductsCatalogTab(currency),
-          if (_activeTab == 1) _buildMultiWarehouseMatrixTab(),
-          if (_activeTab == 2) _buildStockTransfersTab(),
+          if (activeTab == 0) _buildProductsCatalogTab(context, currency),
+          if (activeTab == 1) _buildMultiWarehouseMatrixTab(),
+          if (activeTab == 2) _buildStockTransfersTab(context, transfers),
         ],
       ),
     );
   }
 
-  Widget _subTabChip(int index, IconData icon, String label) {
-    final isActive = _activeTab == index;
+  Widget _subTabChip(BuildContext context, int index, IconData icon, String label) {
+    final activeTab = context.watch<InventoryProvider>().activeTab;
+    final isActive = activeTab == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _activeTab = index),
+        onTap: () => context.read<InventoryProvider>().setActiveTab(index),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? widget.activeTheme.primaryColor : Colors.transparent,
+            color: isActive ? activeTheme.primaryColor : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
@@ -330,7 +277,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
     );
   }
 
-  Widget _buildProductsCatalogTab(String currency) {
+  Widget _buildProductsCatalogTab(BuildContext context, String currency) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade200)),
@@ -370,7 +317,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
               DataCell(
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
-                  onPressed: () => _handleEditProduct(product),
+                  onPressed: () => _handleEditProduct(context, product),
                   tooltip: 'Edit Specs',
                 ),
               ),
@@ -397,7 +344,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
     );
   }
 
-  Widget _buildStockTransfersTab() {
+  Widget _buildStockTransfersTab(BuildContext context, List<Map<String, dynamic>> transfers) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade200)),
@@ -419,7 +366,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
                   DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
                   DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
-                rows: _transfers.asMap().entries.map((entry) {
+                rows: transfers.asMap().entries.map((entry) {
                   final index = entry.key;
                   final item = entry.value;
                   final isDispatched = item['status'] == 'dispatched';
@@ -449,7 +396,7 @@ class _GMInventorySuitePageState extends State<GMInventorySuitePage> {
                     DataCell(
                       isDispatched
                           ? ElevatedButton.icon(
-                              onPressed: () => _handleConfirmTransferReceipt(index),
+                              onPressed: () => _handleConfirmTransferReceipt(context, index),
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                               icon: const Icon(Icons.check, size: 16),
                               label: const Text('Confirm Receipt'),

@@ -27,12 +27,19 @@ class _ReassignLogisticsRepDialogState extends State<ReassignLogisticsRepDialog>
     {'id': 'log-rep-3', 'name': 'Logistics Rep Emeka (Port Harcourt Hub)', 'state': 'Rivers'},
   ];
 
-  late String _selectedRepId;
+  late ValueNotifier<String> _selectedRepId;
 
   @override
   void initState() {
     super.initState();
-    _selectedRepId = widget.order.logisticsRepId ?? _logisticsReps.first['id']!;
+    _selectedRepId = ValueNotifier<String>(widget.order.logisticsRepId ?? _logisticsReps.first['id']!);
+  }
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    _selectedRepId.dispose();
+    super.dispose();
   }
 
   @override
@@ -92,22 +99,27 @@ class _ReassignLogisticsRepDialogState extends State<ReassignLogisticsRepDialog>
 
             const Text('SELECT NEW LOGISTICS REP / HUB MANAGER', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
             const SizedBox(height: 6),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedRepId,
-              items: _logisticsReps.map((rep) {
-                return DropdownMenuItem(
-                  value: rep['id'],
-                  child: Text(rep['name']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            ValueListenableBuilder<String>(
+              valueListenable: _selectedRepId,
+              builder: (context, repVal, _) {
+                return DropdownButtonFormField<String>(
+                  initialValue: repVal,
+                  items: _logisticsReps.map((rep) {
+                    return DropdownMenuItem(
+                      value: rep['id'],
+                      child: Text(rep['name']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) _selectedRepId.value = val;
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
                 );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) setState(() => _selectedRepId = val);
               },
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
             ),
             const SizedBox(height: 14),
 
@@ -139,7 +151,7 @@ class _ReassignLogisticsRepDialogState extends State<ReassignLogisticsRepDialog>
               companyId: widget.order.companyId,
               productId: widget.order.productId,
               salesRepId: widget.order.salesRepId,
-              logisticsRepId: _selectedRepId,
+              logisticsRepId: _selectedRepId.value,
               deliveryAgentId: widget.order.deliveryAgentId,
               warehouseId: widget.order.warehouseId,
               customerName: widget.order.customerName,
@@ -159,7 +171,7 @@ class _ReassignLogisticsRepDialogState extends State<ReassignLogisticsRepDialog>
               paymentStatus: widget.order.paymentStatus,
               proofOfDeliveryUrl: widget.order.proofOfDeliveryUrl,
               deliveryNotes: _reasonController.text.isNotEmpty
-                  ? 'Reassigned to $_selectedRepId: ${_reasonController.text}'
+                  ? 'Reassigned to ${_selectedRepId.value}: ${_reasonController.text}'
                   : widget.order.deliveryNotes,
               createdAt: widget.order.createdAt,
               updatedAt: DateTime.now(),

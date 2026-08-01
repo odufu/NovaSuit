@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
+import 'presentation/providers/rider_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
   await SupabaseConfig.init();
-  runApp(const NovaExpressRiderApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => RiderProvider(),
+      child: const NovaExpressRiderApp(),
+    ),
+  );
 }
 
 class NovaExpressRiderApp extends StatelessWidget {
@@ -32,66 +39,12 @@ class NovaExpressRiderApp extends StatelessWidget {
   }
 }
 
-class RiderMainShell extends StatefulWidget {
+class RiderMainShell extends StatelessWidget {
   const RiderMainShell({super.key});
 
-  @override
-  State<RiderMainShell> createState() => _RiderMainShellState();
-}
-
-class _RiderMainShellState extends State<RiderMainShell> {
-  int _currentTab = 0;
-  bool _isOnline = true;
-  double _currentCodBalance = 125000.0;
-  final double _maxCreditLimit = 150000.0;
-
-  final List<OrderModel> _assignedJobs = [
-    OrderModel(
-      id: 'job-101',
-      orderNumber: 'ORD-849201',
-      companyId: 'tenant-novacare',
-      productId: 'prod-herbal-tea',
-      customerName: 'Amina Bello',
-      customerPhone: '+234 803 123 4567',
-      deliveryState: 'Lagos',
-      deliveryCity: 'Ikeja',
-      deliveryAddress: '14 Allen Avenue, Ikeja, Lagos State',
-      status: OrderStatus.agentNotified,
-      quantity: 2,
-      basePrice: 25000.0,
-      upsellAmount: 12000.0,
-      downsellDiscount: 0.0,
-      totalAmount: 62000.0,
-      upsellStatus: UpsellStatus.approved,
-      paymentStatus: 'pending',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 40)),
-      updatedAt: DateTime.now().subtract(const Duration(minutes: 10)),
-    ),
-    OrderModel(
-      id: 'job-102',
-      orderNumber: 'ORD-849203',
-      companyId: 'tenant-novacare',
-      productId: 'prod-booster',
-      customerName: 'Emeka Nwosu',
-      customerPhone: '+234 701 555 8899',
-      deliveryState: 'Lagos',
-      deliveryCity: 'Lekki',
-      deliveryAddress: 'Block 4, Admiralty Way, Lekki Phase 1, Lagos',
-      status: OrderStatus.inTransit,
-      quantity: 3,
-      basePrice: 18000.0,
-      upsellAmount: 0.0,
-      downsellDiscount: 2000.0,
-      totalAmount: 52000.0,
-      upsellStatus: UpsellStatus.none,
-      paymentStatus: 'pending',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      updatedAt: DateTime.now().subtract(const Duration(minutes: 30)),
-    ),
-  ];
-
-  void _handleUploadDepositReceipt() async {
-    final amountController = TextEditingController(text: _currentCodBalance.toStringAsFixed(0));
+  void _handleUploadDepositReceipt(BuildContext context) async {
+    final riderProvider = context.read<RiderProvider>();
+    final amountController = TextEditingController(text: riderProvider.currentCodBalance.toStringAsFixed(0));
 
     final result = await showDialog<bool>(
       context: context,
@@ -142,7 +95,7 @@ class _RiderMainShellState extends State<RiderMainShell> {
     );
 
     if (result == true) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.green,
@@ -154,6 +107,10 @@ class _RiderMainShellState extends State<RiderMainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final riderProvider = context.watch<RiderProvider>();
+    final isOnline = riderProvider.isOnline;
+    final currentTab = riderProvider.currentTab;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF1B4D3E),
@@ -167,13 +124,13 @@ class _RiderMainShellState extends State<RiderMainShell> {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _isOnline ? Colors.greenAccent : Colors.redAccent,
+                    color: isOnline ? Colors.greenAccent : Colors.redAccent,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  _isOnline ? 'Online - Receiving Jobs' : 'Offline',
+                  isOnline ? 'Online - Receiving Jobs' : 'Offline',
                   style: const TextStyle(fontSize: 11, color: Colors.white70),
                 ),
               ],
@@ -182,31 +139,31 @@ class _RiderMainShellState extends State<RiderMainShell> {
         ),
         actions: [
           Switch(
-            value: _isOnline,
+            value: isOnline,
             activeThumbColor: const Color(0xFFD4AF37),
-            onChanged: (val) => setState(() => _isOnline = val),
+            onChanged: (val) => context.read<RiderProvider>().setOnline(val),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 650), // Responsive max width for tablet screens
+          constraints: const BoxConstraints(maxWidth: 650),
           child: IndexedStack(
-            index: _currentTab,
+            index: currentTab,
             children: [
-              _buildJobsTab(),
+              _buildJobsTab(context),
               _buildInventoryTab(),
-              _buildRemittanceTab(),
+              _buildRemittanceTab(context),
             ],
           ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentTab,
+        currentIndex: currentTab,
         selectedItemColor: const Color(0xFF1B4D3E),
         unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _currentTab = index),
+        onTap: (index) => context.read<RiderProvider>().setTab(index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.two_wheeler_rounded), label: 'Active Jobs'),
           BottomNavigationBarItem(icon: Icon(Icons.inventory_2_rounded), label: 'My Mini-Hub'),
@@ -216,7 +173,10 @@ class _RiderMainShellState extends State<RiderMainShell> {
     );
   }
 
-  Widget _buildJobsTab() {
+  Widget _buildJobsTab(BuildContext context) {
+    final riderProvider = context.watch<RiderProvider>();
+    final assignedJobs = riderProvider.assignedJobs;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -238,7 +198,7 @@ class _RiderMainShellState extends State<RiderMainShell> {
                   children: [
                     const Text('COD Unremitted Cash Holding', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     Text(
-                      '₦ ${_currentCodBalance.toStringAsFixed(0)} / ₦ ${_maxCreditLimit.toStringAsFixed(0)} Max Limit',
+                      '₦ ${riderProvider.currentCodBalance.toStringAsFixed(0)} / ₦ ${riderProvider.maxCreditLimit.toStringAsFixed(0)} Max Limit',
                       style: const TextStyle(fontSize: 12, color: Colors.black87),
                     ),
                   ],
@@ -249,15 +209,15 @@ class _RiderMainShellState extends State<RiderMainShell> {
         ),
         const SizedBox(height: 20),
 
-        Text('Assigned Deliveries (${_assignedJobs.length})', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('Assigned Deliveries (${assignedJobs.length})', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
 
-        ..._assignedJobs.map((job) => _buildJobCard(job)),
+        ...assignedJobs.map((job) => _buildJobCard(context, job)),
       ],
     );
   }
 
-  Widget _buildJobCard(OrderModel job) {
+  Widget _buildJobCard(BuildContext context, OrderModel job) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -316,7 +276,7 @@ class _RiderMainShellState extends State<RiderMainShell> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _showPODModal(job),
+                onPressed: () => _showPODModal(context, job),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B4D3E),
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -358,7 +318,8 @@ class _RiderMainShellState extends State<RiderMainShell> {
     );
   }
 
-  Widget _buildRemittanceTab() {
+  Widget _buildRemittanceTab(BuildContext context) {
+    final riderProvider = context.watch<RiderProvider>();
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -373,12 +334,12 @@ class _RiderMainShellState extends State<RiderMainShell> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Current Holding Cash', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                Text('₦ ${_currentCodBalance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green)),
+                Text('₦ ${riderProvider.currentCodBalance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green)),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _handleUploadDepositReceipt,
+                    onPressed: () => _handleUploadDepositReceipt(context),
                     icon: const Icon(Icons.upload_file),
                     label: const Text('Upload Bank Deposit Receipt'),
                   ),
@@ -391,7 +352,7 @@ class _RiderMainShellState extends State<RiderMainShell> {
     );
   }
 
-  void _showPODModal(OrderModel job) {
+  void _showPODModal(BuildContext context, OrderModel job) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -419,10 +380,7 @@ class _RiderMainShellState extends State<RiderMainShell> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    setState(() {
-                      _assignedJobs.removeWhere((j) => j.id == job.id);
-                      _currentCodBalance += job.totalAmount;
-                    });
+                    context.read<RiderProvider>().completeJobAndCollectCash(job.id, job.totalAmount);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Order marked Delivered! Cash added to COD holding balance.')),
                     );

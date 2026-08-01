@@ -22,6 +22,7 @@ import '../../features/logistics/data/repositories/logistics_repository_impl.dar
 import '../../features/logistics/domain/repositories/logistics_feature_repository.dart';
 import '../../features/logistics/domain/usecases/fetch_inventory_usecase.dart';
 import '../../features/logistics/presentation/providers/logistics_provider.dart';
+import '../../features/logistics/presentation/providers/inventory_provider.dart';
 
 // Marketing Feature
 import '../../features/marketing/data/datasources/marketing_remote_datasource.dart';
@@ -29,7 +30,13 @@ import '../../features/marketing/data/repositories/marketing_repository_impl.dar
 import '../../features/marketing/domain/repositories/marketing_feature_repository.dart';
 import '../../features/marketing/domain/usecases/fetch_campaigns_usecase.dart';
 import '../../features/marketing/presentation/providers/marketing_provider.dart';
+import '../../features/marketing/presentation/providers/campaign_form_builder_provider.dart';
 
+// HR Feature
+import '../../features/hr/presentation/providers/hr_provider.dart';
+
+// Finance Feature
+import '../../features/finance/presentation/providers/finance_provider.dart';
 import '../providers/theme_provider.dart';
 
 final sl = GetIt.instance;
@@ -37,6 +44,11 @@ final sl = GetIt.instance;
 Future<void> initDi() async {
   // Core Providers
   sl.registerLazySingleton(() => ThemeProvider());
+  sl.registerFactory(() => FinanceProvider());
+  sl.registerFactory(() => HRProvider());
+  sl.registerFactory(() => InventoryProvider());
+  sl.registerFactory(() => CampaignFormBuilderProvider());
+
   // ==========================================
   // AUTH FEATURE DI REGISTRATION
   // ==========================================

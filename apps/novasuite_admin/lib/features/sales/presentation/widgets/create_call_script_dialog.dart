@@ -24,8 +24,8 @@ class _CreateCallScriptDialogState extends State<CreateCallScriptDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _scriptController = TextEditingController();
-  String _selectedProduct = 'All Assigned Products';
-  String _selectedCategory = 'Price Objection';
+  late ValueNotifier<String> _selectedProduct;
+  late ValueNotifier<String> _selectedCategory;
 
   final List<String> _categories = [
     'Price Objection',
@@ -34,6 +34,22 @@ class _CreateCallScriptDialogState extends State<CreateCallScriptDialog> {
     'Delivery Time',
     'Dosage & Usage',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedProduct = ValueNotifier<String>('All Assigned Products');
+    _selectedCategory = ValueNotifier<String>('Price Objection');
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _scriptController.dispose();
+    _selectedProduct.dispose();
+    _selectedCategory.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,38 +101,48 @@ class _CreateCallScriptDialogState extends State<CreateCallScriptDialog> {
                 // Product Dropdown
                 const Text('ATTACH TO PRODUCT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
                 const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedProduct,
-                  items: productOptions.map((p) {
-                    return DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13)));
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedProduct = val);
+                ValueListenableBuilder<String>(
+                  valueListenable: _selectedProduct,
+                  builder: (context, prodVal, _) {
+                    return DropdownButtonFormField<String>(
+                      initialValue: prodVal,
+                      items: productOptions.map((p) {
+                        return DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13)));
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) _selectedProduct.value = val;
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    );
                   },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
                 ),
                 const SizedBox(height: 14),
 
                 // Category Dropdown
                 const Text('OBJECTION CATEGORY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
                 const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
-                  items: _categories.map((c) {
-                    return DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)));
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedCategory = val);
+                ValueListenableBuilder<String>(
+                  valueListenable: _selectedCategory,
+                  builder: (context, catVal, _) {
+                    return DropdownButtonFormField<String>(
+                      initialValue: catVal,
+                      items: _categories.map((c) {
+                        return DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)));
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) _selectedCategory.value = val;
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    );
                   },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
                 ),
                 const SizedBox(height: 14),
 
@@ -150,10 +176,10 @@ class _CreateCallScriptDialogState extends State<CreateCallScriptDialog> {
             if (_formKey.currentState!.validate()) {
               Navigator.pop(context, {
                 'objection': _titleController.text.trim(),
-                'product': _selectedProduct,
-                'badge': _selectedCategory,
+                'product': _selectedProduct.value,
+                'badge': _selectedCategory.value,
                 'script': _scriptController.text.trim(),
-                'color': _selectedCategory == 'Price Objection' ? Colors.orange : Colors.blue,
+                'color': _selectedCategory.value == 'Price Objection' ? Colors.orange : Colors.blue,
               });
             }
           },

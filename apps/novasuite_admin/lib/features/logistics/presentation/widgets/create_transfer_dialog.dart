@@ -17,15 +17,28 @@ class CreateTransferDialog extends StatefulWidget {
 class _CreateTransferDialogState extends State<CreateTransferDialog> {
   final _quantityController = TextEditingController(text: '200');
   final _notesController = TextEditingController(text: 'Weekly Hub Stock Replenishment');
-  String _sourceWarehouse = 'Lagos Central Factory Hub';
-  String _destinationWarehouse = 'Abuja Regional Hub (NovaExpress)';
-  String _selectedProduct = 'Herbal Care Detox Tea';
+  late ValueNotifier<String> _sourceWarehouse;
+  late ValueNotifier<String> _destinationWarehouse;
+  late ValueNotifier<String> _selectedProduct;
   late String _waybillNumber;
 
   @override
   void initState() {
     super.initState();
+    _sourceWarehouse = ValueNotifier<String>('Lagos Central Factory Hub');
+    _destinationWarehouse = ValueNotifier<String>('Abuja Regional Hub (NovaExpress)');
+    _selectedProduct = ValueNotifier<String>('Herbal Care Detox Tea');
     _waybillNumber = 'WB-2026-${(1000 + (DateTime.now().millisecondsSinceEpoch % 9000))}';
+  }
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    _notesController.dispose();
+    _sourceWarehouse.dispose();
+    _destinationWarehouse.dispose();
+    _selectedProduct.dispose();
+    super.dispose();
   }
 
   @override
@@ -72,19 +85,24 @@ class _CreateTransferDialogState extends State<CreateTransferDialog> {
               // Source Warehouse Dropdown
               const Text('Source Warehouse (Origin)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _sourceWarehouse,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'Lagos Central Factory Hub', child: Text('🏭 Lagos Central Factory Hub')),
-                  DropdownMenuItem(value: 'Abuja Regional Hub (NovaExpress)', child: Text('🏢 Abuja Regional Hub')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _sourceWarehouse = val);
+              ValueListenableBuilder<String>(
+                valueListenable: _sourceWarehouse,
+                builder: (context, sourceVal, _) {
+                  return DropdownButtonFormField<String>(
+                    initialValue: sourceVal,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Lagos Central Factory Hub', child: Text('🏭 Lagos Central Factory Hub')),
+                      DropdownMenuItem(value: 'Abuja Regional Hub (NovaExpress)', child: Text('🏢 Abuja Regional Hub')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) _sourceWarehouse.value = val;
+                    },
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -92,20 +110,25 @@ class _CreateTransferDialogState extends State<CreateTransferDialog> {
               // Destination Warehouse Dropdown
               const Text('Destination Warehouse (Target)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _destinationWarehouse,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'Abuja Regional Hub (NovaExpress)', child: Text('🏢 Abuja Regional Hub (NovaExpress)')),
-                  DropdownMenuItem(value: 'Rider Emeka Mini-Hub (Port Harcourt)', child: Text('🏍️ Rider Emeka Mini-Hub (Port Harcourt)')),
-                  DropdownMenuItem(value: 'Lagos Central Factory Hub', child: Text('🏭 Lagos Central Factory Hub')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _destinationWarehouse = val);
+              ValueListenableBuilder<String>(
+                valueListenable: _destinationWarehouse,
+                builder: (context, destVal, _) {
+                  return DropdownButtonFormField<String>(
+                    initialValue: destVal,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Abuja Regional Hub (NovaExpress)', child: Text('🏢 Abuja Regional Hub (NovaExpress)')),
+                      DropdownMenuItem(value: 'Rider Emeka Mini-Hub (Port Harcourt)', child: Text('🏍️ Rider Emeka Mini-Hub (Port Harcourt)')),
+                      DropdownMenuItem(value: 'Lagos Central Factory Hub', child: Text('🏭 Lagos Central Factory Hub')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) _destinationWarehouse.value = val;
+                    },
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -120,19 +143,24 @@ class _CreateTransferDialogState extends State<CreateTransferDialog> {
                       children: [
                         const Text('Product to Ship', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedProduct,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'Herbal Care Detox Tea', child: Text('Herbal Care Detox Tea')),
-                            DropdownMenuItem(value: 'Herbal Vitality Booster', child: Text('Herbal Vitality Booster')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedProduct = val);
+                        ValueListenableBuilder<String>(
+                          valueListenable: _selectedProduct,
+                          builder: (context, prodVal, _) {
+                            return DropdownButtonFormField<String>(
+                              initialValue: prodVal,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey.shade50,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              items: const [
+                                DropdownMenuItem(value: 'Herbal Care Detox Tea', child: Text('Herbal Care Detox Tea')),
+                                DropdownMenuItem(value: 'Herbal Vitality Booster', child: Text('Herbal Vitality Booster')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) _selectedProduct.value = val;
+                              },
+                            );
                           },
                         ),
                       ],
@@ -189,9 +217,9 @@ class _CreateTransferDialogState extends State<CreateTransferDialog> {
             final qty = int.tryParse(_quantityController.text) ?? 100;
             Navigator.pop(context, {
               'waybill_number': _waybillNumber,
-              'source': _sourceWarehouse,
-              'destination': _destinationWarehouse,
-              'product': _selectedProduct,
+              'source': _sourceWarehouse.value,
+              'destination': _destinationWarehouse.value,
+              'product': _selectedProduct.value,
               'quantity': qty,
               'notes': _notesController.text,
             });

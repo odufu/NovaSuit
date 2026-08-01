@@ -21,7 +21,19 @@ class NotificationsSuitePage extends StatefulWidget {
 }
 
 class _NotificationsSuitePageState extends State<NotificationsSuitePage> {
-  String _selectedCategory = 'All';
+  late ValueNotifier<String> _selectedCategoryNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategoryNotifier = ValueNotifier<String>('All');
+  }
+
+  @override
+  void dispose() {
+    _selectedCategoryNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,21 +119,26 @@ class _NotificationsSuitePageState extends State<NotificationsSuitePage> {
 
             // Notification List
             Expanded(
-              child: ListView(
-                children: [
-                  if (_selectedCategory == 'All' || _selectedCategory == 'Callbacks') ...[
-                    if (dueCallbacks.isEmpty)
-                      _buildEmptyState('No scheduled callbacks due at this moment.')
-                    else
-                      ...dueCallbacks.map((o) => _buildCallbackNotificationCard(o, theme)),
-                  ],
-                  if (_selectedCategory == 'All' || _selectedCategory == 'Upsells') ...[
-                    ...pendingUpsells.map((o) => _buildUpsellNotificationCard(o, theme)),
-                  ],
-                  if (_selectedCategory == 'All' || _selectedCategory == 'Logistics') ...[
-                    ...autoAssigned.map((o) => _buildLogisticsNotificationCard(o, theme)),
-                  ],
-                ],
+              child: ValueListenableBuilder<String>(
+                valueListenable: _selectedCategoryNotifier,
+                builder: (context, selectedCategoryVal, _) {
+                  return ListView(
+                    children: [
+                      if (selectedCategoryVal == 'All' || selectedCategoryVal == 'Callbacks') ...[
+                        if (dueCallbacks.isEmpty)
+                          _buildEmptyState('No scheduled callbacks due at this moment.')
+                        else
+                          ...dueCallbacks.map((o) => _buildCallbackNotificationCard(o, theme)),
+                      ],
+                      if (selectedCategoryVal == 'All' || selectedCategoryVal == 'Upsells') ...[
+                        ...pendingUpsells.map((o) => _buildUpsellNotificationCard(o, theme)),
+                      ],
+                      if (selectedCategoryVal == 'All' || selectedCategoryVal == 'Logistics') ...[
+                        ...autoAssigned.map((o) => _buildLogisticsNotificationCard(o, theme)),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -131,20 +148,25 @@ class _NotificationsSuitePageState extends State<NotificationsSuitePage> {
   }
 
   Widget _buildFilterChip(String categoryKey, String label) {
-    final isSelected = _selectedCategory == categoryKey;
     final theme = widget.activeTheme;
 
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: theme.primaryColor,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        fontSize: 12,
-      ),
-      onSelected: (val) {
-        if (val) setState(() => _selectedCategory = categoryKey);
+    return ValueListenableBuilder<String>(
+      valueListenable: _selectedCategoryNotifier,
+      builder: (context, selectedCategoryVal, _) {
+        final isSelected = selectedCategoryVal == categoryKey;
+        return ChoiceChip(
+          label: Text(label),
+          selected: isSelected,
+          selectedColor: theme.primaryColor,
+          labelStyle: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+          onSelected: (val) {
+            if (val) _selectedCategoryNotifier.value = categoryKey;
+          },
+        );
       },
     );
   }

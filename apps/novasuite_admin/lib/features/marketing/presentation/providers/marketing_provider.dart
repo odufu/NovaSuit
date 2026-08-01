@@ -6,12 +6,14 @@ class MarketingProvider extends ChangeNotifier {
   final FetchCampaignsUseCase fetchCampaignsUseCase;
 
   List<AdCampaignModel> _campaigns = [];
+  double _totalMarketerBudget = 3500000.0;
   bool _isLoading = false;
   String? _errorMessage;
 
   MarketingProvider({required this.fetchCampaignsUseCase});
 
   List<AdCampaignModel> get campaigns => _campaigns;
+  double get totalMarketerBudget => _totalMarketerBudget;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -29,5 +31,10 @@ class MarketingProvider extends ChangeNotifier {
       _errorMessage = e.toString();
       notifyListeners();
     }
+  }
+
+  void fundMarketerBudget(double amount) {
+    _totalMarketerBudget += amount;
+    notifyListeners();
   }
 }

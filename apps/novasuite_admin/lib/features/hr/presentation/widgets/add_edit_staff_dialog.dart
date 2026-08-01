@@ -25,10 +25,10 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
 
-  late UserRole _selectedRole;
-  late String _selectedDepartment;
-  String? _selectedSupervisorId;
-  late bool _isActive;
+  late ValueNotifier<UserRole> _selectedRole;
+  late ValueNotifier<String> _selectedDepartment;
+  late ValueNotifier<String?> _selectedSupervisorId;
+  late ValueNotifier<bool> _isActive;
 
   final List<String> _departments = [
     'Digital Marketing',
@@ -47,10 +47,23 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
     _emailController = TextEditingController(text: staff?.email ?? '');
     _phoneController = TextEditingController(text: staff?.phone ?? '');
 
-    _selectedRole = staff?.role ?? UserRole.salesCallRep;
-    _selectedDepartment = _departments[1]; // Sales Call Center default
-    _selectedSupervisorId = staff?.supervisorId ?? (widget.availableSupervisors.isNotEmpty ? widget.availableSupervisors.first.id : null);
-    _isActive = staff?.isActive ?? true;
+    _selectedRole = ValueNotifier<UserRole>(staff?.role ?? UserRole.salesCallRep);
+    _selectedDepartment = ValueNotifier<String>(_departments[1]);
+    _selectedSupervisorId = ValueNotifier<String?>(staff?.supervisorId ?? (widget.availableSupervisors.isNotEmpty ? widget.availableSupervisors.first.id : null));
+    _isActive = ValueNotifier<bool>(staff?.isActive ?? true);
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _selectedRole.dispose();
+    _selectedDepartment.dispose();
+    _selectedSupervisorId.dispose();
+    _isActive.dispose();
+    super.dispose();
   }
 
   void _handleSubmit() {
@@ -62,10 +75,10 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
         'last_name': _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
-        'role': _selectedRole,
-        'department': _selectedDepartment,
-        'supervisor_id': _selectedSupervisorId,
-        'is_active': _isActive,
+        'role': _selectedRole.value,
+        'department': _selectedDepartment.value,
+        'supervisor_id': _selectedSupervisorId.value,
+        'is_active': _isActive.value,
       };
 
       Navigator.of(context).pop(staffData);
@@ -197,17 +210,22 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
                 // Role Assignment Dropdown
                 const Text('Assign System Access Role *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 const SizedBox(height: 6),
-                DropdownButtonFormField<UserRole>(
-                  initialValue: _selectedRole,
-                  decoration: _inputDecoration(),
-                  items: UserRole.values.map((role) {
-                    return DropdownMenuItem(
-                      value: role,
-                      child: Text(role.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                ValueListenableBuilder<UserRole>(
+                  valueListenable: _selectedRole,
+                  builder: (context, roleVal, _) {
+                    return DropdownButtonFormField<UserRole>(
+                      initialValue: roleVal,
+                      decoration: _inputDecoration(),
+                      items: UserRole.values.map((role) {
+                        return DropdownMenuItem(
+                          value: role,
+                          child: Text(role.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) _selectedRole.value = val;
+                      },
                     );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedRole = val);
                   },
                 ),
                 const SizedBox(height: 16),
@@ -221,14 +239,19 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
                         children: [
                           const Text('Department *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                           const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            initialValue: _selectedDepartment,
-                            decoration: _inputDecoration(),
-                            items: _departments.map((dept) {
-                              return DropdownMenuItem(value: dept, child: Text(dept));
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) setState(() => _selectedDepartment = val);
+                          ValueListenableBuilder<String>(
+                            valueListenable: _selectedDepartment,
+                            builder: (context, deptVal, _) {
+                              return DropdownButtonFormField<String>(
+                                initialValue: deptVal,
+                                decoration: _inputDecoration(),
+                                items: _departments.map((dept) {
+                                  return DropdownMenuItem(value: dept, child: Text(dept));
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) _selectedDepartment.value = val;
+                                },
+                              );
                             },
                           ),
                         ],
@@ -241,17 +264,22 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
                         children: [
                           const Text('Assigned Supervisor *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                           const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            initialValue: _selectedSupervisorId,
-                            decoration: _inputDecoration(),
-                            items: widget.availableSupervisors.map((sup) {
-                              return DropdownMenuItem(
-                                value: sup.id,
-                                child: Text('${sup.fullName} (${sup.role.label})', overflow: TextOverflow.ellipsis),
+                          ValueListenableBuilder<String?>(
+                            valueListenable: _selectedSupervisorId,
+                            builder: (context, supIdVal, _) {
+                              return DropdownButtonFormField<String>(
+                                initialValue: supIdVal,
+                                decoration: _inputDecoration(),
+                                items: widget.availableSupervisors.map((sup) {
+                                  return DropdownMenuItem(
+                                    value: sup.id,
+                                    child: Text('${sup.fullName} (${sup.role.label})', overflow: TextOverflow.ellipsis),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  _selectedSupervisorId.value = val;
+                                },
                               );
-                            }).toList(),
-                            onChanged: (val) {
-                              setState(() => _selectedSupervisorId = val);
                             },
                           ),
                         ],
@@ -262,22 +290,27 @@ class _AddEditStaffDialogState extends State<AddEditStaffDialog> {
                 const SizedBox(height: 16),
 
                 // Account Status Switch
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ValueListenableBuilder<bool>(
+                  valueListenable: _isActive,
+                  builder: (context, activeVal, _) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Account Active Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        Text(_isActive ? 'Employee is active and can sign in' : 'Employee access is suspended', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Account Active Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(activeVal ? 'Employee is active and can sign in' : 'Employee access is suspended', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                          ],
+                        ),
+                        Switch(
+                          value: activeVal,
+                          activeThumbColor: Colors.green,
+                          onChanged: (val) => _isActive.value = val,
+                        ),
                       ],
-                    ),
-                    Switch(
-                      value: _isActive,
-                      activeThumbColor: Colors.green,
-                      onChanged: (val) => setState(() => _isActive = val),
-                    ),
-                  ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
 

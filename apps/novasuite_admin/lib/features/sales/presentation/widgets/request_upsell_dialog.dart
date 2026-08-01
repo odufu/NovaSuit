@@ -17,23 +17,26 @@ class RequestUpsellDialog extends StatefulWidget {
 }
 
 class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
-  // Upsell: positive quantity; Downsell: negative quantity
-  int _upsellQuantity = 1;
-  bool _isUpsell = true; // toggle: upsell vs downsell
+  late ValueNotifier<int> _upsellQuantity;
+  late ValueNotifier<bool> _isUpsell;
 
   final _unitPriceController = TextEditingController();
   final _notesController = TextEditingController(text: 'Customer requested 1 extra Detox Tea Bottle');
 
-  double _calculatedTotal = 0.0;
+  late ValueNotifier<double> _calculatedTotal;
   double _unitPriceValue = 0.0;
 
   @override
   void initState() {
     super.initState();
-    // Default unit price to the order's base price per unit
+    _upsellQuantity = ValueNotifier<int>(1);
+    _isUpsell = ValueNotifier<bool>(true);
     _unitPriceValue = widget.order.basePrice;
     _unitPriceController.text = widget.order.basePrice.toStringAsFixed(0);
-    _recalculate();
+    
+    final baseTotal = widget.order.basePrice * widget.order.quantity;
+    _calculatedTotal = ValueNotifier<double>(baseTotal + widget.order.basePrice);
+
     _unitPriceController.addListener(_onUnitPriceChanged);
   }
 
@@ -42,6 +45,9 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
     _unitPriceController.removeListener(_onUnitPriceChanged);
     _unitPriceController.dispose();
     _notesController.dispose();
+    _upsellQuantity.dispose();
+    _isUpsell.dispose();
+    _calculatedTotal.dispose();
     super.dispose();
   }
 
@@ -52,12 +58,10 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
 
   void _recalculate() {
     final baseTotal = widget.order.basePrice * widget.order.quantity;
-    final adjustment = _upsellQuantity * _unitPriceValue;
-    setState(() {
-      _calculatedTotal = _isUpsell
-          ? baseTotal + adjustment
-          : (baseTotal - adjustment).clamp(0, double.infinity);
-    });
+    final adjustment = _upsellQuantity.value * _unitPriceValue;
+    _calculatedTotal.value = _isUpsell.value
+        ? baseTotal + adjustment
+        : (baseTotal - adjustment).clamp(0, double.infinity);
   }
 
   @override
@@ -76,7 +80,6 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF0F172A);
     final Color mutedColor = isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600;
 
-    final adjustmentAmount = _upsellQuantity * _unitPriceValue;
     final baseTotal = widget.order.basePrice * widget.order.quantity;
 
     return AlertDialog(
@@ -112,7 +115,7 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
 
-              // ─── Customer Info Card ──────────────────────────────────
+              // Customer Info Card
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: cardBorder)),
@@ -129,142 +132,186 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
               ),
               const SizedBox(height: 18),
 
-              // ─── Upsell / Downsell Toggle ─────────────────────────────
-              Row(
-                children: [
-                  _ToggleChip(
-                    label: '⬆ Up-sell',
-                    selected: _isUpsell,
-                    activeColor: const Color(0xFF10B981),
-                    isDarkMode: isDarkMode,
-                    onTap: () { setState(() { _isUpsell = true; _recalculate(); }); },
-                  ),
-                  const SizedBox(width: 8),
-                  _ToggleChip(
-                    label: '⬇ Down-sell',
-                    selected: !_isUpsell,
-                    activeColor: const Color(0xFFEF4444),
-                    isDarkMode: isDarkMode,
-                    onTap: () { setState(() { _isUpsell = false; _recalculate(); }); },
-                  ),
-                ],
+              // Upsell / Downsell Toggle
+              ValueListenableBuilder<bool>(
+                valueListenable: _isUpsell,
+                builder: (context, isUpsellVal, _) {
+                  return Row(
+                    children: [
+                      _ToggleChip(
+                        label: '⬆ Up-sell',
+                        selected: isUpsellVal,
+                        activeColor: const Color(0xFF10B981),
+                        isDarkMode: isDarkMode,
+                        onTap: () {
+                          _isUpsell.value = true;
+                          _recalculate();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _ToggleChip(
+                        label: '⬇ Down-sell',
+                        selected: !isUpsellVal,
+                        activeColor: const Color(0xFFEF4444),
+                        isDarkMode: isDarkMode,
+                        onTap: () {
+                          _isUpsell.value = false;
+                          _recalculate();
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 18),
 
-              // ─── Quantity Dropdown ────────────────────────────────────
-              Text(
-                _isUpsell ? 'Extra Units to Add' : 'Units to Remove',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textColor),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                  color: inputFill,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: inputBorder),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: _upsellQuantity,
-                    isExpanded: true,
-                    dropdownColor: isDarkMode ? const Color(0xFF132A22) : Colors.white,
-                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: _isUpsell ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: _isUpsell ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                    ),
-                    items: List.generate(10, (i) => i + 1).map((qty) {
-                      return DropdownMenuItem<int>(
-                        value: qty,
-                        child: Text(
-                          '$qty unit${qty > 1 ? "s" : ""}',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: _isUpsell ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() { _upsellQuantity = val; _recalculate(); });
-                    },
-                  ),
-                ),
+              // Quantity Dropdown
+              ValueListenableBuilder<bool>(
+                valueListenable: _isUpsell,
+                builder: (context, isUpsellVal, _) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isUpsellVal ? 'Extra Units to Add' : 'Units to Remove',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textColor),
+                      ),
+                      const SizedBox(height: 8),
+                      ValueListenableBuilder<int>(
+                        valueListenable: _upsellQuantity,
+                        builder: (context, qtyVal, _) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: inputFill,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: inputBorder),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                                value: qtyVal,
+                                isExpanded: true,
+                                dropdownColor: isDarkMode ? const Color(0xFF132A22) : Colors.white,
+                                icon: Icon(Icons.keyboard_arrow_down_rounded, color: isUpsellVal ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: isUpsellVal ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                ),
+                                items: List.generate(10, (i) => i + 1).map((qty) {
+                                  return DropdownMenuItem<int>(
+                                    value: qty,
+                                    child: Text(
+                                      '$qty unit${qty > 1 ? "s" : ""}',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: isUpsellVal ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    _upsellQuantity.value = val;
+                                    _recalculate();
+                                  }
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
-
-              // ─── Unit Price Input ─────────────────────────────────────
+              // Unit Price Input
               Text('Price per Unit ($currency)',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
               const SizedBox(height: 6),
-              TextField(
-                controller: _unitPriceController,
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15),
-                decoration: InputDecoration(
-                  prefixText: '$currency ',
-                  prefixStyle: TextStyle(color: _isUpsell ? const Color(0xFF10B981) : const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 15),
-                  hintText: '0.00',
-                  hintStyle: TextStyle(color: mutedColor),
-                  helperText: 'e.g. $currency${widget.order.basePrice.toStringAsFixed(0)} for the same product, or a different bundle price',
-                  helperStyle: TextStyle(fontSize: 10, color: mutedColor),
-                  filled: true,
-                  fillColor: inputFill,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: inputBorder),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: focusBorder, width: 2),
-                  ),
-                ),
+              ValueListenableBuilder<bool>(
+                valueListenable: _isUpsell,
+                builder: (context, isUpsellVal, _) {
+                  return TextField(
+                    controller: _unitPriceController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15),
+                    decoration: InputDecoration(
+                      prefixText: '$currency ',
+                      prefixStyle: TextStyle(color: isUpsellVal ? const Color(0xFF10B981) : const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 15),
+                      hintText: '0.00',
+                      hintStyle: TextStyle(color: mutedColor),
+                      helperText: 'e.g. $currency${widget.order.basePrice.toStringAsFixed(0)} for the same product',
+                      helperStyle: TextStyle(fontSize: 10, color: mutedColor),
+                      filled: true,
+                      fillColor: inputFill,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: inputBorder),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: focusBorder, width: 2),
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
-              // ─── Computed Adjustment Preview ──────────────────────────
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _isUpsell
-                      ? (isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4))
-                      : (isDarkMode ? const Color(0xFF7F1D1D) : const Color(0xFFFFF5F5)),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _isUpsell
-                        ? (isDarkMode ? const Color(0xFF10B981) : const Color(0xFF86EFAC))
-                        : (isDarkMode ? const Color(0xFFEF4444) : const Color(0xFFFCA5A5)),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _isUpsell
-                          ? '+$_upsellQuantity unit${_upsellQuantity > 1 ? "s" : ""} × $currency${_unitPriceValue.toStringAsFixed(0)}'
-                          : '-$_upsellQuantity unit${_upsellQuantity > 1 ? "s" : ""} × $currency${_unitPriceValue.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w600,
-                        color: _isUpsell ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                      ),
-                    ),
-                    Text(
-                      '${_isUpsell ? "+" : "-"}$currency ${adjustmentAmount.toStringAsFixed(0)}',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 14, fontWeight: FontWeight.bold,
-                        color: _isUpsell ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                      ),
-                    ),
-                  ],
-                ),
+              // Computed Adjustment Preview
+              ValueListenableBuilder<bool>(
+                valueListenable: _isUpsell,
+                builder: (context, isUpsellVal, _) {
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _upsellQuantity,
+                    builder: (context, qtyVal, _) {
+                      final adjustmentAmount = qtyVal * _unitPriceValue;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isUpsellVal
+                              ? (isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4))
+                              : (isDarkMode ? const Color(0xFF7F1D1D) : const Color(0xFFFFF5F5)),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isUpsellVal
+                                ? (isDarkMode ? const Color(0xFF10B981) : const Color(0xFF86EFAC))
+                                : (isDarkMode ? const Color(0xFFEF4444) : const Color(0xFFFCA5A5)),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isUpsellVal
+                                  ? '+$qtyVal unit${qtyVal > 1 ? "s" : ""} × $currency${_unitPriceValue.toStringAsFixed(0)}'
+                                  : '-$qtyVal unit${qtyVal > 1 ? "s" : ""} × $currency${_unitPriceValue.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600,
+                                color: isUpsellVal ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              ),
+                            ),
+                            Text(
+                              '${isUpsellVal ? "+" : "-"}$currency ${adjustmentAmount.toStringAsFixed(0)}',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 14, fontWeight: FontWeight.bold,
+                                color: isUpsellVal ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
-              // ─── Notes Input ──────────────────────────────────────────
+              // Notes Input
               Text('Notes for Supervisor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
               const SizedBox(height: 6),
               TextField(
@@ -288,25 +335,30 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
               ),
               const SizedBox(height: 16),
 
-              // ─── New Total Banner ─────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF86EFAC)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('New Total COD Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isDarkMode ? Colors.white70 : Colors.black87)),
-                    Text(
-                      '$currency ${_calculatedTotal.toStringAsFixed(2)}',
-                      style: GoogleFonts.jetBrainsMono(fontSize: 22, fontWeight: FontWeight.bold,
-                          color: isDarkMode ? const Color(0xFF34D399) : Colors.green.shade800),
+              // New Total Banner
+              ValueListenableBuilder<double>(
+                valueListenable: _calculatedTotal,
+                builder: (context, totalVal, _) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF86EFAC)),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('New Total COD Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isDarkMode ? Colors.white70 : Colors.black87)),
+                        Text(
+                          '$currency ${totalVal.toStringAsFixed(2)}',
+                          style: GoogleFonts.jetBrainsMono(fontSize: 22, fontWeight: FontWeight.bold,
+                              color: isDarkMode ? const Color(0xFF34D399) : Colors.green.shade800),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -323,13 +375,14 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
         ),
         ElevatedButton.icon(
           onPressed: () {
-            final qty = _isUpsell ? _upsellQuantity : -_upsellQuantity;
+            final qty = _isUpsell.value ? _upsellQuantity.value : -_upsellQuantity.value;
+            final adjustmentAmount = _upsellQuantity.value * _unitPriceValue;
             Navigator.pop(context, {
               'upsell_quantity': qty,
               'upsell_unit_price': _unitPriceValue,
-              'upsell_amount': _isUpsell ? adjustmentAmount : 0.0,
-              'downsell_discount': _isUpsell ? 0.0 : adjustmentAmount,
-              'new_total_amount': _calculatedTotal,
+              'upsell_amount': _isUpsell.value ? adjustmentAmount : 0.0,
+              'downsell_discount': _isUpsell.value ? 0.0 : adjustmentAmount,
+              'new_total_amount': _calculatedTotal.value,
               'notes': _notesController.text,
             });
           },
@@ -345,7 +398,6 @@ class _RequestUpsellDialogState extends State<RequestUpsellDialog> {
   }
 }
 
-/// Simple toggle chip widget
 class _ToggleChip extends StatelessWidget {
   final String label;
   final bool selected;

@@ -21,26 +21,34 @@ class SupervisorReportTab extends StatefulWidget {
 }
 
 class _SupervisorReportTabState extends State<SupervisorReportTab> {
-  late DateTime _selectedDate;
-  String _selectedTimeframe = 'Day';
+  late ValueNotifier<DateTime> _selectedDate;
+  late ValueNotifier<String> _selectedTimeframe;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.report.date;
+    _selectedDate = ValueNotifier<DateTime>(widget.report.date);
+    _selectedTimeframe = ValueNotifier<String>('Day');
+  }
+
+  @override
+  void dispose() {
+    _selectedDate.dispose();
+    _selectedTimeframe.dispose();
+    super.dispose();
   }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _selectedDate.value,
       firstDate: DateTime(2026, 1, 1),
       lastDate: DateTime(2026, 12, 31),
     );
 
     if (picked != null) {
-      setState(() => _selectedDate = picked);
-      widget.onDateOrTimeframeChanged(_selectedDate, _selectedTimeframe);
+      _selectedDate.value = picked;
+      widget.onDateOrTimeframeChanged(_selectedDate.value, _selectedTimeframe.value);
     }
   }
 
@@ -55,228 +63,229 @@ class _SupervisorReportTabState extends State<SupervisorReportTab> {
 
     final r = widget.report;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Banner & Controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+    return ValueListenableBuilder<DateTime>(
+      valueListenable: _selectedDate,
+      builder: (context, dateVal, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: _selectedTimeframe,
+          builder: (context, timeframeVal, _) {
+            return SingleChildScrollView(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '📋 Supervisor Daily Operational Summary',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                '📋 Supervisor Daily Operational Summary',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: theme.primaryColor.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  DateFormat('EEEE d MMMM, yyyy').format(dateVal),
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Standard operational report format for squad performance log submission.',
+                            style: TextStyle(fontSize: 13, color: textMuted),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.primaryColor.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          DateFormat('EEEE d MMMM, yyyy').format(_selectedDate),
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.primaryColor),
-                        ),
+                      Row(
+                        children: [
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: borderColor),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            ),
+                            onPressed: _pickDate,
+                            icon: const Icon(Icons.calendar_month, size: 18),
+                            label: const Text('Change Date'),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: borderColor),
+                            ),
+                            child: Row(
+                              children: ['Day', 'Week', 'Month'].map((tf) {
+                                final isSelected = timeframeVal == tf;
+                                return GestureDetector(
+                                  onTap: () {
+                                    _selectedTimeframe.value = tf;
+                                    widget.onDateOrTimeframeChanged(_selectedDate.value, tf);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? theme.primaryColor : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      tf,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected ? Colors.white : textMuted,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Standard operational report format for squad performance log submission.',
-                    style: TextStyle(fontSize: 13, color: textMuted),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: borderColor),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    ),
-                    onPressed: _pickDate,
-                    icon: const Icon(Icons.calendar_month, size: 18),
-                    label: const Text('Change Date'),
-                  ),
-                  const SizedBox(width: 12),
+
+                  const SizedBox(height: 20),
+
                   Container(
-                    padding: const EdgeInsets.all(3),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: borderColor),
                     ),
                     child: Row(
-                      children: ['Day', 'Week', 'Month'].map((tf) {
-                        final isSelected = _selectedTimeframe == tf;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() => _selectedTimeframe = tf);
-                            widget.onDateOrTimeframeChanged(_selectedDate, _selectedTimeframe);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isSelected ? theme.primaryColor : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              tf,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : textMuted,
+                      children: [
+                        const Icon(Icons.inventory_2, color: Colors.amber, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Active Product Lines in Report:',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary)),
+                        const SizedBox(width: 12),
+                        Wrap(
+                          spacing: 8,
+                          children: r.productBreakdown.map((p) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                               ),
+                              child: Text(
+                                p,
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  GridView.count(
+                    crossAxisCount: 3,
+                    childAspectRatio: 2.8,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildReportMetricCard('📦 Total Assigned', '${r.totalAssigned}', 'Leads assigned to squad', theme.primaryColor, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('✅ Confirmed', '${r.confirmedCount}', 'Orders accepted today', const Color(0xFF10B981), isDark, cardBg, borderColor),
+                      _buildReportMetricCard('🚚 Total Delivered', '${r.totalDelivered}', '${r.deliveredTodayAssigned} today + ${r.deliveredPreviousDays} previous', Colors.blue, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('📅 Rescheduled', '${r.rescheduledCount}', 'Callback appointments booked', Colors.purple, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('⏳ In Progress', '${r.inProgressCount}', 'Active calls / dialed today', Colors.orange, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('📵 Switched Off', '${r.switchedOffCount}', 'Unreachable phone signals', Colors.deepOrange, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('📞 Not Picking', '${r.notPickingCount}', 'No response call outcomes', Colors.redAccent, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('🚫 Cancelled', '${r.cancelledCount}', 'Order cancellations', Colors.grey, isDark, cardBg, borderColor),
+                      _buildReportMetricCard('⏸️ Not Ready', '${r.notReadyCount}', 'Pending initial call', Colors.teal, isDark, cardBg, borderColor),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  if (r.untaggedCrmCount > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 22),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'CRM Tagging Notice: ${r.untaggedCrmCount} delivered orders are yet to be tagged on the CRM system.',
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Product Breakdown Tags Strip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.inventory_2, color: Colors.amber, size: 20),
-                const SizedBox(width: 10),
-                Text('Active Product Lines in Report:',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textPrimary)),
-                const SizedBox(width: 12),
-                Wrap(
-                  spacing: 8,
-                  children: r.productBreakdown.map((p) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                        ],
                       ),
-                      child: Text(
-                        p,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // 9 Metric Cards Grid
-          GridView.count(
-            crossAxisCount: 3,
-            childAspectRatio: 2.8,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              _buildReportMetricCard('📦 Total Assigned', '${r.totalAssigned}', 'Leads assigned to squad', theme.primaryColor, isDark, cardBg, borderColor),
-              _buildReportMetricCard('✅ Confirmed', '${r.confirmedCount}', 'Orders accepted today', const Color(0xFF10B981), isDark, cardBg, borderColor),
-              _buildReportMetricCard('🚚 Total Delivered', '${r.totalDelivered}', '${r.deliveredTodayAssigned} today + ${r.deliveredPreviousDays} previous', Colors.blue, isDark, cardBg, borderColor),
-              _buildReportMetricCard('📅 Rescheduled', '${r.rescheduledCount}', 'Callback appointments booked', Colors.purple, isDark, cardBg, borderColor),
-              _buildReportMetricCard('⏳ In Progress', '${r.inProgressCount}', 'Active calls / dialed today', Colors.orange, isDark, cardBg, borderColor),
-              _buildReportMetricCard('📵 Switched Off', '${r.switchedOffCount}', 'Unreachable phone signals', Colors.deepOrange, isDark, cardBg, borderColor),
-              _buildReportMetricCard('📞 Not Picking', '${r.notPickingCount}', 'No response call outcomes', Colors.redAccent, isDark, cardBg, borderColor),
-              _buildReportMetricCard('🚫 Cancelled', '${r.cancelledCount}', 'Order cancellations', Colors.grey, isDark, cardBg, borderColor),
-              _buildReportMetricCard('⏸️ Not Ready', '${r.notReadyCount}', 'Pending initial call', Colors.teal, isDark, cardBg, borderColor),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // CRM Untagged Warning Banner
-          if (r.untaggedCrmCount > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'CRM Tagging Notice: ${r.untaggedCrmCount} delivered orders are yet to be tagged on the CRM system.',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
-          const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-          // Structured Report Log Card
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '📄 Formatted Operational Report (Copy & Share)',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: borderColor),
                     ),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Report summary copied to clipboard!')),
-                        );
-                      },
-                      icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('Copy Text'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: SelectableText(
-                    '''
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '📄 Formatted Operational Report (Copy & Share)',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
+                            ),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.primaryColor,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Report summary copied to clipboard!')),
+                                );
+                              },
+                              icon: const Icon(Icons.copy, size: 16),
+                              label: const Text('Copy Text'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: SelectableText(
+                            '''
 ${r.reportTitle}
 
 Total Assigned ${r.totalAssigned}
@@ -306,19 +315,23 @@ ${r.deliveredTodayAssigned} delivered from today's assigned, ${r.deliveredPrevio
 Total delivered
  ${r.totalDelivered}
 ''',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 13,
-                      height: 1.5,
-                      color: isDark ? const Color(0xFF34D399) : const Color(0xFF065F46),
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              height: 1.5,
+                              color: isDark ? const Color(0xFF34D399) : const Color(0xFF065F46),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

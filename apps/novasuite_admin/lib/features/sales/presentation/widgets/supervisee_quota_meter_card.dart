@@ -25,269 +25,274 @@ class SuperviseeQuotaMeterCard extends StatefulWidget {
 }
 
 class _SuperviseeQuotaMeterCardState extends State<SuperviseeQuotaMeterCard> {
-  QuotaTimeframe _selectedTimeframe = QuotaTimeframe.daily;
+  late ValueNotifier<QuotaTimeframe> _timeframeNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _timeframeNotifier = ValueNotifier<QuotaTimeframe>(QuotaTimeframe.daily);
+  }
+
+  @override
+  void dispose() {
+    _timeframeNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final currency = widget.activeTheme.currencySymbol;
     final now = DateTime.now();
 
-    // Determine filter parameters based on selected timeframe
-    int targetOrders = 25;
-    String targetLabel = 'DAILY CALL REP TARGET';
-    String commissionLabel = 'TODAY\'S COMMISSION';
-    List<OrderModel> filteredOrders = [];
-
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final startOfWeekDay = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-
-    switch (_selectedTimeframe) {
-      case QuotaTimeframe.daily:
-        targetOrders = 25;
-        targetLabel = 'DAILY TARGET';
-        commissionLabel = 'TODAY\'S COMMISSION';
-        filteredOrders = widget.myOrders.where((o) =>
-            o.updatedAt.year == now.year &&
-            o.updatedAt.month == now.month &&
-            o.updatedAt.day == now.day).toList();
-        break;
-
-      case QuotaTimeframe.weekly:
-        targetOrders = 125;
-        targetLabel = 'WEEKLY TARGET';
-        commissionLabel = 'WEEKLY COMMISSION';
-        filteredOrders = widget.myOrders.where((o) => o.updatedAt.isAfter(startOfWeekDay)).toList();
-        break;
-
-      case QuotaTimeframe.monthly:
-        targetOrders = 500;
-        targetLabel = 'MONTHLY TARGET';
-        commissionLabel = 'MONTHLY COMMISSION';
-        filteredOrders = widget.myOrders.where((o) =>
-            o.updatedAt.year == now.year &&
-            o.updatedAt.month == now.month).toList();
-        break;
-    }
-
-    // Count confirmed/accepted orders for this rep within selected period
-    final confirmedCount = filteredOrders.where((o) =>
-        o.status == OrderStatus.accepted ||
-        o.status == OrderStatus.delivered ||
-        o.status == OrderStatus.inTransit).length;
-
-    final progressRatio = (confirmedCount / targetOrders).clamp(0.0, 1.0);
-    final progressPct = (progressRatio * 100).toInt();
-
-    // Confirmation Rate calculation
-    final totalAssigned = filteredOrders.length;
-    final confirmationRate = totalAssigned > 0
-        ? ((confirmedCount / totalAssigned) * 100).toStringAsFixed(1)
-        : '0.0';
-
-    // Commission accrued (₦500 per confirmed order)
-    final accruedCommission = confirmedCount * 500.00;
-
     final cardBg = widget.isDarkMode ? const Color(0xFF132A22) : Colors.white;
     final borderColor = widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(widget.isMobile ? 12 : 16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: widget.isDarkMode ? 0.2 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+    return ValueListenableBuilder<QuotaTimeframe>(
+      valueListenable: _timeframeNotifier,
+      builder: (context, timeframeVal, _) {
+        int targetOrders = 25;
+        String targetLabel = 'DAILY CALL REP TARGET';
+        String commissionLabel = 'TODAY\'S COMMISSION';
+        List<OrderModel> filteredOrders = [];
+
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final startOfWeekDay = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+
+        switch (timeframeVal) {
+          case QuotaTimeframe.daily:
+            targetOrders = 25;
+            targetLabel = 'DAILY TARGET';
+            commissionLabel = 'TODAY\'S COMMISSION';
+            filteredOrders = widget.myOrders.where((o) =>
+                o.updatedAt.year == now.year &&
+                o.updatedAt.month == now.month &&
+                o.updatedAt.day == now.day).toList();
+            break;
+
+          case QuotaTimeframe.weekly:
+            targetOrders = 125;
+            targetLabel = 'WEEKLY TARGET';
+            commissionLabel = 'WEEKLY COMMISSION';
+            filteredOrders = widget.myOrders.where((o) => o.updatedAt.isAfter(startOfWeekDay)).toList();
+            break;
+
+          case QuotaTimeframe.monthly:
+            targetOrders = 500;
+            targetLabel = 'MONTHLY TARGET';
+            commissionLabel = 'MONTHLY COMMISSION';
+            filteredOrders = widget.myOrders.where((o) =>
+                o.updatedAt.year == now.year &&
+                o.updatedAt.month == now.month).toList();
+            break;
+        }
+
+        final confirmedCount = filteredOrders.where((o) =>
+            o.status == OrderStatus.accepted ||
+            o.status == OrderStatus.delivered ||
+            o.status == OrderStatus.inTransit).length;
+
+        final progressRatio = (confirmedCount / targetOrders).clamp(0.0, 1.0);
+        final progressPct = (progressRatio * 100).toInt();
+
+        final totalAssigned = filteredOrders.length;
+        final confirmationRate = totalAssigned > 0
+            ? ((confirmedCount / totalAssigned) * 100).toStringAsFixed(1)
+            : '0.0';
+
+        final accruedCommission = confirmedCount * 500.00;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(widget.isMobile ? 12 : 16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: widget.isDarkMode ? 0.2 : 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Top Timeframe Selector Bar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
+              // Top Timeframe Selector Bar
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.query_stats, size: 16, color: widget.isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669)),
-                  const SizedBox(width: 6),
-                  Text(
-                    'PERFORMANCE METRICS',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade700,
-                      letterSpacing: 0.8,
+                  Row(
+                    children: [
+                      Icon(Icons.query_stats, size: 16, color: widget.isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669)),
+                      const SizedBox(width: 6),
+                      Text(
+                        'PERFORMANCE METRICS',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade700,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Segmented Timeframe Switcher (Daily | Weekly | Monthly)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: widget.isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTimeframeChip(QuotaTimeframe.daily, 'Daily', timeframeVal),
+                        Container(width: 1, height: 16, color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                        _buildTimeframeChip(QuotaTimeframe.weekly, 'Weekly', timeframeVal),
+                        Container(width: 1, height: 16, color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                        _buildTimeframeChip(QuotaTimeframe.monthly, 'Monthly', timeframeVal),
+                      ],
                     ),
                   ),
                 ],
               ),
-              // Segmented Timeframe Switcher (Daily | Weekly | Monthly)
-              Container(
-                decoration: BoxDecoration(
-                  color: widget.isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTimeframeChip(QuotaTimeframe.daily, 'Daily'),
-                    Container(width: 1, height: 16, color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                    _buildTimeframeChip(QuotaTimeframe.weekly, 'Weekly'),
-                    Container(width: 1, height: 16, color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                    _buildTimeframeChip(QuotaTimeframe.monthly, 'Monthly'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-          // Main Stats Content Grid
-          widget.isMobile
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top Row: Active Dialer Badge + Commission Earned
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Main Stats Content Grid
+              widget.isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildActiveDialerBadge(),
-                        _buildCommissionBadge(accruedCommission, currency, commissionLabel),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildActiveDialerBadge(),
+                            _buildCommissionBadge(accruedCommission, currency, commissionLabel),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTargetProgressBar(confirmedCount, targetOrders, progressPct, progressRatio, targetLabel),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Target Progress Bar
-                    _buildTargetProgressBar(confirmedCount, targetOrders, progressPct, progressRatio, targetLabel),
-                  ],
-                )
-              : Row(
-                  children: [
-                    // Left Block: Target Progress Bar
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                targetLabel,
-                                style: GoogleFonts.inter(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
-                                  letterSpacing: 0.5,
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    targetLabel,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$confirmedCount of $targetOrders Orders ($progressPct%)',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '$confirmedCount of $targetOrders Orders ($progressPct%)',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: widget.isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: LinearProgressIndicator(
+                                  value: progressRatio,
+                                  minHeight: 8,
+                                  backgroundColor: widget.isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade200,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    progressPct >= 100
+                                        ? const Color(0xFF10B981)
+                                        : (widget.isDarkMode ? const Color(0xFF34D399) : const Color(0xFF0A2E23)),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-
-                          // Progress Bar Track
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: progressRatio,
-                              minHeight: 8,
-                              backgroundColor: widget.isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade200,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                progressPct >= 100
-                                    ? const Color(0xFF10B981)
-                                    : (widget.isDarkMode ? const Color(0xFF34D399) : const Color(0xFF0A2E23)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Container(
-                      width: 1,
-                      height: 40,
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300,
-                    ),
-
-                    // Center Block: Conversion Rate %
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CONFIRMATION RATE',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
-                            letterSpacing: 0.8,
-                          ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
+
+                        Container(
+                          width: 1,
+                          height: 40,
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300,
+                        ),
+
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '$confirmationRate%',
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
+                              'CONFIRMATION RATE',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: widget.isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                                color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                                letterSpacing: 0.8,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              double.parse(confirmationRate) >= 70.0 ? Icons.trending_up : Icons.trending_flat,
-                              size: 16,
-                              color: double.parse(confirmationRate) >= 70.0
-                                  ? const Color(0xFF10B981)
-                                  : Colors.amber.shade700,
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Text(
+                                  '$confirmationRate%',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: widget.isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  double.parse(confirmationRate) >= 70.0 ? Icons.trending_up : Icons.trending_flat,
+                                  size: 16,
+                                  color: double.parse(confirmationRate) >= 70.0
+                                      ? const Color(0xFF10B981)
+                                      : Colors.amber.shade700,
+                                ),
+                              ],
                             ),
+                          ],
+                        ),
+
+                        Container(
+                          width: 1,
+                          height: 40,
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300,
+                        ),
+
+                        Row(
+                          children: [
+                            _buildCommissionBadge(accruedCommission, currency, commissionLabel),
+                            const SizedBox(width: 12),
+                            _buildActiveDialerBadge(),
                           ],
                         ),
                       ],
                     ),
-
-                    Container(
-                      width: 1,
-                      height: 40,
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      color: widget.isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300,
-                    ),
-
-                    // Right Block: Accrued Commission & Dialer Status
-                    Row(
-                      children: [
-                        _buildCommissionBadge(accruedCommission, currency, commissionLabel),
-                        const SizedBox(width: 12),
-                        _buildActiveDialerBadge(),
-                      ],
-                    ),
-                  ],
-                ),
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTimeframeChip(QuotaTimeframe timeframe, String label) {
-    final isSelected = _selectedTimeframe == timeframe;
+  Widget _buildTimeframeChip(QuotaTimeframe timeframe, String label, QuotaTimeframe currentSelected) {
+    final isSelected = currentSelected == timeframe;
 
     return InkWell(
-      onTap: () => setState(() => _selectedTimeframe = timeframe),
+      onTap: () => _timeframeNotifier.value = timeframe,
       borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
