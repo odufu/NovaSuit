@@ -206,30 +206,6 @@ class _SupervisorReportTabState extends State<SupervisorReportTab> {
 
           const SizedBox(height: 24),
 
-          if (r.untaggedCrmCount > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'CRM Tagging Notice: ${r.untaggedCrmCount} delivered orders are yet to be tagged on the CRM system.',
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          const SizedBox(height: 24),
-
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -283,7 +259,7 @@ ${r.totalAssigned} Total Assigned
 
 ${r.confirmedCount} Confirmed
 
-${r.totalDelivered} Delivered (${r.untaggedCrmCount} yet to be tagged on the CRM)
+${r.totalDelivered} Delivered
 
 ${r.rescheduledCount} Rescheduled
 

@@ -226,14 +226,14 @@ class _ManageSuperviseesTabState extends State<ManageSuperviseesTab> {
                                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber)),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('COD Revenue', style: TextStyle(fontSize: 11, color: textMuted)),
-                                    Text('₦${(agent.codRevenueToday / 1000).toStringAsFixed(0)}k',
-                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: theme.primaryColor)),
-                                  ],
-                                ),
+                                 Column(
+                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                   children: [
+                                     Text('Commission', style: TextStyle(fontSize: 11, color: textMuted)),
+                                     Text('₦${agent.commissionEarnedToday.toStringAsFixed(0)}',
+                                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: theme.primaryColor)),
+                                   ],
+                                 ),
                               ],
                             ),
                           ),

@@ -106,12 +106,19 @@ erDiagram
 ### 1. Collapsible Left Side Navigation (`AdminMainShell` in `main.dart`)
 - Width: `74px` (collapsed) ↔ `260px` (expanded).
 - Top header tabs removed; sub-navigation items driven from left sidebar under `SUPERVISOR COMMAND SUITE`:
-  - `Team Performance KPIs` (Dashboard Overview in squad context)
-  - `Operational Daily Report`
-  - `Realtime Upsell Approvals`
-  - `1-Click Lead Reassignment`
-  - `Manage Supervisees`
-  - `My Personal Dialer Queue`
+  - `Squad Overview & KPIs` (Integrated Daily Operational Summary cards + Live Supervisee Leaderboard)
+  - `Realtime Approvals` (Upsell/Downsell authorization queue & cancellation reviews)
+  - `Team Order Directory` (Search, multi-filter, & 1-click batch lead reassignment suite)
+  - `My Dialer Queue` (Conditional personal call console active when HR `can_take_calls = true`)
+
+```mermaid
+graph TD
+    SUP[Supervisor Command Suite]
+    SUP --> T0["📊 Squad Overview & KPIs<br/>(Metrics Cards + Leaderboard Table)"]
+    SUP --> T1["⚡ Realtime Approvals<br/>(Upsell/Downsell Authorization)"]
+    SUP --> T2["📂 Team Order Directory<br/>(Multi-Filter, Search, & Batch Reassignment)"]
+    SUP -. "When HR can_take_calls = true" .-> T3["📞 My Dialer Queue<br/>(Frontline SIP Call Console)"]
+```
 
 ### 2. Responsive Leaderboard Table (`SupervisorKpiDashboardTab`)
 - **Location**: `apps/novasuite_admin/lib/features/sales_supervisor/presentation/widgets/supervisor_kpi_dashboard_tab.dart`

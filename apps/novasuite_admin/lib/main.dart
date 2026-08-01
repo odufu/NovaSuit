@@ -167,14 +167,11 @@ class _AdminMainShellState extends State<AdminMainShell> {
       _selectedIndex = 4;
     } else if (role == UserRole.financeManager) {
       _selectedIndex = 5;
-    } else if (role == UserRole.hrManager) {
-      _selectedIndex = 7;
-    } else if (role == UserRole.inventoryManager) {
-      _selectedIndex = 8;
     } else {
       _selectedIndex = 0;
     }
 
+    _loadInitialOrders();
     _orders = [
       OrderModel(
         id: 'ord-101',
@@ -333,6 +330,16 @@ class _AdminMainShellState extends State<AdminMainShell> {
         updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     ];
+  }
+
+  void _loadInitialOrders() async {
+    final repo = OrderRepository();
+    final list = await repo.fetchOrders(companyId: widget.currentUser.companyId);
+    if (mounted && list.isNotEmpty) {
+      setState(() {
+        _orders = list;
+      });
+    }
   }
 
   void _handleVerifyRemittance() async {
@@ -740,12 +747,11 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('SUPERVISOR COMMAND SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(2, 0, _supervisorSubNavIndex, Icons.dashboard_rounded, 'Team Performance KPIs', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 1, _supervisorSubNavIndex, Icons.assessment_rounded, 'Operational Daily Report', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 2, _supervisorSubNavIndex, Icons.bolt_rounded, 'Realtime Upsell Approvals', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 3, _supervisorSubNavIndex, Icons.swap_horiz_rounded, '1-Click Lead Reassignment', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 4, _supervisorSubNavIndex, Icons.manage_accounts_rounded, 'Manage Supervisees', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(2, 5, _supervisorSubNavIndex, Icons.phone_in_talk_rounded, 'My Personal Dialer Queue', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(2, 0, _supervisorSubNavIndex, Icons.dashboard_rounded, 'Squad Overview & KPIs', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(2, 1, _supervisorSubNavIndex, Icons.bolt_rounded, 'Realtime Approvals', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(2, 2, _supervisorSubNavIndex, Icons.folder_shared_rounded, 'Team Order Directory', isCollapsed: isCollapsed),
+                  if (user.canTakeCalls)
+                    _featureDirectNavItem(2, 3, _supervisorSubNavIndex, Icons.phone_in_talk_rounded, 'My Dialer Queue', isCollapsed: isCollapsed),
                 ] else if (user.role == UserRole.logisticsCallRep) ...[
                   _sidebarNavItem(0, Icons.dashboard_rounded, 'Dashboard Overview', isCollapsed: isCollapsed),
                   _sidebarNavItem(4, Icons.local_shipping_rounded, 'Logistics & Hubs', isCollapsed: isCollapsed),
@@ -1265,6 +1271,11 @@ class _AdminMainShellState extends State<AdminMainShell> {
     final role = widget.currentUser.role;
     final pendingUpsellsCount = _orders.where((o) => o.upsellStatus == UpsellStatus.pending).length;
     final isMobile = screenWidth < 800;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF132A22) : Colors.white;
+    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 14 : 20),
@@ -1378,17 +1389,21 @@ class _AdminMainShellState extends State<AdminMainShell> {
             if (isMobile) ...[
               _statCard('My Call Queue', '35 Orders', 'Auto Distribution Active', Icons.phone_in_talk, Colors.orange),
               const SizedBox(height: 12),
+              _statCard('My Commission Earned', '₦17,000', '17 Delivered Units (₦1k/unit)', Icons.payments, Colors.green),
+              const SizedBox(height: 12),
               _statCard('Upsells Pending Approval', '$pendingUpsellsCount Request(s)', 'Realtime Supervisor Alert', Icons.verified, Colors.purple),
               const SizedBox(height: 12),
-              _statCard('My Conversion Rate', '78.4%', '+5.2% vs last week', Icons.trending_up, Colors.green),
+              _statCard('My Conversion Rate', '78.4%', '+5.2% vs last week', Icons.trending_up, Colors.blue),
             ] else ...[
               Row(
                 children: [
                   Expanded(child: _statCard('My Call Queue', '35 Orders', 'Auto Distribution Active', Icons.phone_in_talk, Colors.orange)),
                   const SizedBox(width: 12),
+                  Expanded(child: _statCard('My Commission Earned', '₦17,000', '17 Delivered Units (₦1k/unit)', Icons.payments, Colors.green)),
+                  const SizedBox(width: 12),
                   Expanded(child: _statCard('Upsells Pending Approval', '$pendingUpsellsCount Request(s)', 'Realtime Supervisor Alert', Icons.verified, Colors.purple)),
                   const SizedBox(width: 12),
-                  Expanded(child: _statCard('My Conversion Rate', '78.4%', '+5.2% vs last week', Icons.trending_up, Colors.green)),
+                  Expanded(child: _statCard('My Conversion Rate', '78.4%', '+5.2% vs last week', Icons.trending_up, Colors.blue)),
                 ],
               ),
             ],
@@ -1452,6 +1467,13 @@ class _AdminMainShellState extends State<AdminMainShell> {
               ),
             ],
           ],
+          const SizedBox(height: 24),
+
+          // Analytics Tools Section: Trend Chart & Distribution Bars
+          _buildPerformanceTrendChart(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+          const SizedBox(height: 16),
+          _buildAnalyticsDistributionSection(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+
           const SizedBox(height: 30),
 
           // Live Orders Table
@@ -1460,6 +1482,180 @@ class _AdminMainShellState extends State<AdminMainShell> {
           _ordersTable(_orders),
         ],
       ),
+    );
+  }
+
+  Widget _buildPerformanceTrendChart(bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted, bool isMobile) {
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final commissions = [12.0, 15.0, 14.0, 18.0, 17.0, 22.0, 25.0];
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('📈 Weekly Commission & Call Volume Trends', style: GoogleFonts.outfit(fontSize: isMobile ? 14 : 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                  Text('7-day commission performance trajectory across active calls', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('₦123k Commission', style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          SizedBox(
+            height: 150,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(7, (index) {
+                final heightFactor = commissions[index] / 30.0;
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text('₦${commissions[index].toInt()}k', style: GoogleFonts.jetBrainsMono(fontSize: 9.5, color: textMuted, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: isMobile ? 18 : 28,
+                      height: 110 * heightFactor,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            theme.primaryColor,
+                            const Color(0xFF10B981),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(days[index], style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary)),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsDistributionSection(bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted, bool isMobile) {
+    return Column(
+      children: [
+        if (isMobile) ...[
+          _buildProductRevenueDistribution(isDark, theme, cardBg, borderColor, textPrimary, textMuted),
+          const SizedBox(height: 12),
+          _buildCallOutcomeDistribution(isDark, theme, cardBg, borderColor, textPrimary, textMuted),
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildProductRevenueDistribution(isDark, theme, cardBg, borderColor, textPrimary, textMuted)),
+              const SizedBox(width: 14),
+              Expanded(child: _buildCallOutcomeDistribution(isDark, theme, cardBg, borderColor, textPrimary, textMuted)),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProductRevenueDistribution(bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('🛍️ Product Revenue Share', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary)),
+          const SizedBox(height: 4),
+          Text('Revenue breakdown across active product lines', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+          const SizedBox(height: 14),
+
+          _buildProgressBar('Grazer Herbal Detox Tea', 0.48, '₦ 1,680,000', const Color(0xFF10B981), textPrimary, textMuted),
+          const SizedBox(height: 10),
+          _buildProgressBar('Herbal Vitality Booster', 0.32, '₦ 1,120,000', Colors.blue, textPrimary, textMuted),
+          const SizedBox(height: 10),
+          _buildProgressBar('Clear Skin Care Set', 0.20, '₦ 700,000', Colors.purple, textPrimary, textMuted),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCallOutcomeDistribution(bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('📞 Squad Call Outcomes Share', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary)),
+          const SizedBox(height: 4),
+          Text('Proportional status breakdown for daily calls', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+          const SizedBox(height: 14),
+
+          _buildProgressBar('Confirmed Orders', 0.60, '60%', const Color(0xFF10B981), textPrimary, textMuted),
+          const SizedBox(height: 10),
+          _buildProgressBar('Delivered Orders', 0.25, '25%', Colors.blue, textPrimary, textMuted),
+          const SizedBox(height: 10),
+          _buildProgressBar('Rescheduled / Call Back', 0.10, '10%', Colors.amber, textPrimary, textMuted),
+          const SizedBox(height: 10),
+          _buildProgressBar('Unanswered / Cancelled', 0.05, '5%', Colors.redAccent, textPrimary, textMuted),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressBar(String label, double percent, String valText, Color color, Color textPrimary, Color textMuted) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary)),
+            Text(valText, style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: percent,
+            minHeight: 6,
+            backgroundColor: color.withValues(alpha: 0.15),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+      ],
     );
   }
 

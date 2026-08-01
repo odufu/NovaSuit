@@ -1,7 +1,13 @@
--- Migration: 20260730000001_add_hr_dialer_toggles_and_hierarchy.sql
--- Description: Add HR controlled dialer toggles (can_take_calls, is_active_call_rep), upsell approval requests table, and sales target quotas table.
+-- 1. Ensure user_roles table exists & extend with HR Controlled Dialer Toggles & Notes
+CREATE TABLE IF NOT EXISTS public.user_roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    company_id UUID,
+    role TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- 1. Extend user_roles with HR Controlled Dialer Toggles & Notes
 ALTER TABLE public.user_roles 
 ADD COLUMN IF NOT EXISTS can_take_calls BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN IF NOT EXISTS is_active_call_rep BOOLEAN NOT NULL DEFAULT true,

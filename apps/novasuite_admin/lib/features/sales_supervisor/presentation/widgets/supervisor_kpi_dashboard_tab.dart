@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
+import 'package:intl/intl.dart';
 import 'agent_profile_modal.dart';
 
 class SupervisorKpiDashboardTab extends StatefulWidget {
   final List<SuperviseePerformanceModel> squad;
+  final List<OrderModel>? squadOrders;
+  final SupervisorDailyReportModel? dailyReport;
   final TenantTheme activeTheme;
   final bool isDarkMode;
   final Function(SuperviseePerformanceModel) onUpdateSupervisee;
+  final Function(DateTime selectedDate, String timeframe)? onDateOrTimeframeChanged;
+  final Function(List<String> orderIds, String targetRepId)? onReassignOrders;
 
   const SupervisorKpiDashboardTab({
     super.key,
     required this.squad,
+    this.squadOrders,
+    this.dailyReport,
     required this.activeTheme,
     required this.isDarkMode,
     required this.onUpdateSupervisee,
+    this.onDateOrTimeframeChanged,
+    this.onReassignOrders,
   });
 
   @override
@@ -66,6 +75,11 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (widget.dailyReport != null) ...[
+            _buildOperationalReportSummary(widget.dailyReport!, theme, isDark, cardBg, textPrimary, textMuted, borderColor, isMobile),
+            const SizedBox(height: 20),
+          ],
+
           // Leaderboard Container & Controls
           Container(
             decoration: BoxDecoration(
@@ -82,37 +96,69 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      if (isMobile) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '🏆 Supervisee Leaderboard',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  '🏆 Supervisee Leaderboard & Daily Report',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: isMobile ? 16 : 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
                                 Text(
                                   'Monday 27th July, 2026',
                                   style: GoogleFonts.jetBrainsMono(
-                                    fontSize: 11,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.bold,
                                     color: const Color(0xFF10B981),
                                   ),
                                 ),
+                                _buildTimeframeBar(isDark, theme, borderColor, textMuted),
                               ],
                             ),
-                          ),
-                          _buildTimeframeBar(isDark, theme, borderColor, textMuted),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ] else ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '🏆 Supervisee Leaderboard & Daily Report',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Monday 27th July, 2026',
+                                    style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF10B981),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildTimeframeBar(isDark, theme, borderColor, textMuted),
+                          ],
+                        ),
+                      ],
 
                       const SizedBox(height: 14),
 
@@ -434,9 +480,12 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                                           context: context,
                                           builder: (ctx) => AgentProfileModal(
                                             supervisee: agent,
+                                            squadOrders: widget.squadOrders,
+                                            squadReps: widget.squad,
                                             activeTheme: theme,
                                             isDarkMode: isDark,
                                             onSave: widget.onUpdateSupervisee,
+                                            onReassignOrders: widget.onReassignOrders,
                                           ),
                                         );
                                       },
@@ -679,6 +728,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                   context: context,
                   builder: (ctx) => AgentProfileModal(
                     supervisee: agent,
+                    squadOrders: widget.squadOrders,
                     activeTheme: theme,
                     isDarkMode: isDark,
                     onSave: widget.onUpdateSupervisee,
@@ -705,6 +755,196 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
       child: Text(
         text,
         style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold, color: color),
+      ),
+    );
+  }
+
+  Widget _buildOperationalReportSummary(
+    SupervisorDailyReportModel r,
+    TenantTheme theme,
+    bool isDark,
+    Color cardBg,
+    Color textPrimary,
+    Color textMuted,
+    Color borderColor,
+    bool isMobile,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isMobile) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📋 Squad Operational Status',
+                        style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          DateFormat('EEE d MMM, yyyy').format(r.date),
+                          style: GoogleFonts.jetBrainsMono(fontSize: 10.5, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Copy Log',
+                  icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF10B981)),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Operational daily report summary copied to clipboard!')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        '📋 Squad Operational Status Breakdown',
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          DateFormat('EEEE d MMMM, yyyy').format(r.date),
+                          style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Operational daily report summary copied to clipboard!')),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 14),
+                  label: Text('Copy Log', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 12),
+
+          // Balanced Medium KPI Cards Grid (5 cols desktop, 3 cols mobile with aspect ratio 1.35 for zero overflow)
+          GridView.count(
+            crossAxisCount: isMobile ? 3 : 5,
+            childAspectRatio: isMobile ? 1.35 : 2.4,
+            crossAxisSpacing: isMobile ? 6 : 10,
+            mainAxisSpacing: isMobile ? 6 : 10,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildMediumKpiCard('Total Assigned', '${r.totalAssigned}', theme.primaryColor, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Confirmed', '${r.confirmedCount}', const Color(0xFF10B981), isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Delivered', '${r.totalDelivered}', Colors.blue, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Rescheduled', '${r.rescheduledCount}', Colors.purple, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('In Progress', '${r.inProgressCount}', Colors.orange, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Switched Off', '${r.switchedOffCount}', Colors.deepOrange, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Not Picking', '${r.notPickingCount}', Colors.redAccent, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Cancelled', '${r.cancelledCount}', Colors.grey, isDark, borderColor, isMobile),
+              _buildMediumKpiCard('Not Ready', '${r.notReadyCount}', Colors.teal, isDark, borderColor, isMobile),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediumKpiCard(String label, String count, Color color, bool isDark, Color borderColor, bool isMobile) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: isMobile ? 6 : 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: isMobile ? 3 : 4,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          SizedBox(width: isMobile ? 6 : 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: isMobile ? 10 : 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    count,
+                    style: GoogleFonts.outfit(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -3,7 +3,7 @@
 
 -- 1. Ensure Sales Call Reps exist in user_roles
 INSERT INTO public.user_roles (user_id, role, can_take_calls, is_active_call_rep)
-SELECT id, 'sales_call_rep', true, true FROM auth.users WHERE email = 'salesrep.john@novacare.com'
+SELECT id, 'sales_call_rep', true, true FROM public.users WHERE email = 'salesrep.john@novacare.com'
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Seed Orders for Sales Call Rep (John)
@@ -37,7 +37,7 @@ VALUES
         'ORD-2026-9001',
         '11111111-1111-4111-8111-111111111111',
         'a1b2c3d4-0000-4000-8000-000000000001',
-        (SELECT id FROM auth.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1),
+        COALESCE((SELECT id FROM public.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1), '30000000-0000-4000-8000-000000000003'),
         'Alhaji Aminu Kano',
         '08031234567',
         'Kano',
@@ -61,7 +61,7 @@ VALUES
         'ORD-2026-9002',
         '11111111-1111-4111-8111-111111111111',
         'a1b2c3d4-0000-4000-8000-000000000001',
-        (SELECT id FROM auth.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1),
+        COALESCE((SELECT id FROM public.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1), '30000000-0000-4000-8000-000000000003'),
         'Mrs. Ngozi Ekwueme',
         '08029876543',
         'Rivers',
@@ -85,7 +85,7 @@ VALUES
         'ORD-2026-9003',
         '11111111-1111-4111-8111-111111111111',
         'a1b2c3d4-0000-4000-8000-000000000001',
-        (SELECT id FROM auth.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1),
+        COALESCE((SELECT id FROM public.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1), '30000000-0000-4000-8000-000000000003'),
         'Engr. Femi Otedola',
         '08051112233',
         'Lagos',
@@ -109,7 +109,7 @@ VALUES
         'ORD-2026-9004',
         '11111111-1111-4111-8111-111111111111',
         'a1b2c3d4-0000-4000-8000-000000000001',
-        (SELECT id FROM auth.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1),
+        COALESCE((SELECT id FROM public.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1), '30000000-0000-4000-8000-000000000003'),
         'Hajia Fatima Balarabe',
         '08184445566',
         'Abuja',
@@ -133,7 +133,7 @@ VALUES
         'ORD-2026-9005',
         '11111111-1111-4111-8111-111111111111',
         'a1b2c3d4-0000-4000-8000-000000000001',
-        (SELECT id FROM auth.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1),
+        COALESCE((SELECT id FROM public.users WHERE email = 'salesrep.john@novacare.com' LIMIT 1), '30000000-0000-4000-8000-000000000003'),
         'Chief Emeka Nnamani',
         '07039998877',
         'Oyo',

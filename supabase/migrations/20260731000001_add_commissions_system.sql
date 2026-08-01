@@ -39,7 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_commissions_company_id ON commissions(company_id)
 
 -- 4. PostgreSQL Trigger Function to auto-calculate Commissions when an Order is Delivered
 CREATE OR REPLACE FUNCTION process_order_delivered_commissions()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $BODY$
 DECLARE
     v_rep_commission_rate NUMERIC(10, 2);
     v_supervisor_commission_rate NUMERIC(10, 2);
@@ -58,7 +58,7 @@ BEGIN
         SELECT rep_commission_per_unit, supervisor_commission_per_unit 
         INTO v_rep_commission_rate, v_supervisor_commission_rate
         FROM products 
-        WHERE id::text = NEW.product_id OR name = NEW.product_id
+        WHERE id = NEW.product_id
         LIMIT 1;
 
         -- Defaults if product rates not explicitly set
@@ -80,7 +80,7 @@ BEGIN
                 product_id, quantity, unit_commission_rate, total_commission, status
             ) VALUES (
                 v_company_id, v_rep_id, v_supervisor_id, NEW.id, 'sales_call_rep',
-                NEW.product_id, v_qty, v_rep_commission_rate, (v_qty * v_rep_commission_rate), 'earned'
+                NEW.product_id::text, v_qty, v_rep_commission_rate, (v_qty * v_rep_commission_rate), 'earned'
             )
             ON CONFLICT (order_id, user_id, recipient_role) DO UPDATE SET
                 quantity = EXCLUDED.quantity,
@@ -95,7 +95,7 @@ BEGIN
                 product_id, quantity, unit_commission_rate, total_commission, status
             ) VALUES (
                 v_company_id, v_supervisor_id, v_supervisor_id, NEW.id, 'sales_supervisor',
-                NEW.product_id, v_qty, v_supervisor_commission_rate, (v_qty * v_supervisor_commission_rate), 'earned'
+                NEW.product_id::text, v_qty, v_supervisor_commission_rate, (v_qty * v_supervisor_commission_rate), 'earned'
             )
             ON CONFLICT (order_id, user_id, recipient_role) DO UPDATE SET
                 quantity = EXCLUDED.quantity,
@@ -105,8 +105,10 @@ BEGIN
 
     END IF;
     RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$BODY$ LANGUAGE plpgsql;
 
 -- Bind Trigger to Orders table
 DROP TRIGGER IF EXISTS trg_order_delivered_commissions ON orders;

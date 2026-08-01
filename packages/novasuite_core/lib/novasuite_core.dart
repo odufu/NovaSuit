@@ -5,6 +5,7 @@ export 'src/models/order.dart';
 export 'src/models/order_activity.dart';
 export 'src/models/user.dart';
 export 'src/models/commission.dart';
+export 'src/models/commission_config.dart';
 export 'src/models/marketing.dart';
 export 'src/models/inventory.dart';
 export 'src/models/remittance.dart';

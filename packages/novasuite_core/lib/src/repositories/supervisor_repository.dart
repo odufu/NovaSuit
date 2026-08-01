@@ -3,6 +3,7 @@ import '../models/order.dart';
 import '../models/user.dart';
 import '../models/commission.dart';
 import '../models/supervisor_daily_report_model.dart';
+import 'order_repository.dart';
 
 /// Performance metrics data for a supervisee (sales call rep)
 class SuperviseePerformanceModel {
@@ -161,21 +162,25 @@ class SupervisorRepository {
               : ['Grazer Herbal Detox Tea', 'Herbal Vitality Booster', 'Clear Skin Care Set'];
 
           final deliveredCount = orders.where((o) => o.status == OrderStatus.delivered).length;
-          final deliveredToday = orders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day == 27).length;
-          final deliveredPrev = orders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day < 27).length;
+          final deliveredToday = orders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day == DateTime.now().day).length;
+          final deliveredPrev = orders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day != DateTime.now().day).length;
           final untaggedCrm = orders.where((o) => !o.crmTagged).length;
 
-          // Sales Rep Per-Product Commission: N1,000 per delivered unit
-          // Supervisor Override Commission: N250 per cumulative team delivered unit
-          final effectiveDelivered = deliveredCount == 0 ? 17 : deliveredCount;
-          final repCommission = effectiveDelivered * 1000.0;
-          final supervisorOverride = effectiveDelivered * 250.0;
+          final repCommission = deliveredCount * 1000.0;
+          final supervisorOverride = deliveredCount * 250.0;
+
+          final rescheduled = orders.where((o) => o.status == OrderStatus.callBack).length;
+          final inProgress = orders.where((o) => o.status == OrderStatus.contacting || o.status == OrderStatus.assignedToRep || o.status == OrderStatus.newOrder).length;
+          final switchedOff = orders.where((o) => o.status == OrderStatus.notReachable || o.status == OrderStatus.switchedOff).length;
+          final notPicking = orders.where((o) => o.status == OrderStatus.notPicking).length;
+          final cancelled = orders.where((o) => o.status == OrderStatus.cancelled).length;
+          final notReady = orders.where((o) => o.status == OrderStatus.upsellPending || o.status == OrderStatus.notReady).length;
 
           squad.add(SuperviseePerformanceModel(
             user: user,
             assignedProducts: rawProducts,
             activeLeadCount: activeLeads,
-            callsPlacedToday: orders.length + 3,
+            callsPlacedToday: orders.length,
             confirmedOrdersToday: confirmedToday,
             confirmationRateToday: rate,
             codRevenueToday: totalRevenueToday,
@@ -183,17 +188,17 @@ class SupervisorRepository {
             supervisorOverrideEarnedToday: supervisorOverride,
             maxLeadCap: 20,
             autoAssignmentEnabled: true,
-            assignedCount: orders.isEmpty ? 35 : orders.length,
-            deliveredCount: effectiveDelivered,
-            deliveredTodayAssigned: deliveredToday == 0 ? 15 : deliveredToday,
-            deliveredPreviousDays: deliveredPrev == 0 ? 2 : deliveredPrev,
-            untaggedOnCrm: untaggedCrm == 0 ? 6 : untaggedCrm,
-            rescheduledCount: orders.where((o) => o.status == OrderStatus.callBack).length == 0 ? 7 : orders.where((o) => o.status == OrderStatus.callBack).length,
-            inProgressCount: orders.where((o) => o.status == OrderStatus.newOrder).length == 0 ? 6 : orders.where((o) => o.status == OrderStatus.newOrder).length,
-            switchedOffCount: 2,
-            notPickingCount: orders.where((o) => o.status == OrderStatus.notPicking).length == 0 ? 4 : orders.where((o) => o.status == OrderStatus.notPicking).length,
-            cancelledCount: orders.where((o) => o.status == OrderStatus.cancelled).length,
-            notReadyCount: 1,
+            assignedCount: orders.length,
+            deliveredCount: deliveredCount,
+            deliveredTodayAssigned: deliveredToday,
+            deliveredPreviousDays: deliveredPrev,
+            untaggedOnCrm: untaggedCrm,
+            rescheduledCount: rescheduled,
+            inProgressCount: inProgress,
+            switchedOffCount: switchedOff,
+            notPickingCount: notPicking,
+            cancelledCount: cancelled,
+            notReadyCount: notReady,
           ));
         }
       }
@@ -369,112 +374,114 @@ class SupervisorRepository {
   }
 
   List<SuperviseePerformanceModel> _generateMockSquad() {
-    return [
-      SuperviseePerformanceModel(
-        user: UserModel(
-          id: 'rep-01',
-          authUserId: 'auth-rep-01',
-          companyId: 'comp-101',
-          firstName: 'John',
-          lastName: 'CallRep',
-          email: 'john.rep@novasuite.com',
-          phone: '08031111111',
-          role: UserRole.salesCallRep,
-          isActive: true,
-          createdAt: DateTime.now(),
-        ),
-        assignedProducts: ['Grazer Herbal Detox Tea', 'Herbal Vitality Booster'],
-        activeLeadCount: 12,
-        callsPlacedToday: 18,
-        confirmedOrdersToday: 21,
-        confirmationRateToday: 60.0,
-        codRevenueToday: 315000.0,
-        commissionEarnedToday: 17000.0, // 17 delivered * N1,000 = N17,000 rep commission
-        supervisorOverrideEarnedToday: 4250.0, // 17 delivered * N250 = N4,250 supervisor override
-        maxLeadCap: 20,
-        autoAssignmentEnabled: true,
-        assignedCount: 35,
-        deliveredCount: 17,
-        deliveredTodayAssigned: 15,
-        deliveredPreviousDays: 2,
-        untaggedOnCrm: 6,
-        rescheduledCount: 7,
-        inProgressCount: 6,
-        switchedOffCount: 2,
-        notPickingCount: 4,
-        cancelledCount: 0,
-        notReadyCount: 1,
+    final reps = [
+      UserModel(
+        id: '30000000-0000-4000-8000-000000000003',
+        authUserId: 'auth-rep-01',
+        companyId: '11111111-1111-4111-8111-111111111111',
+        firstName: 'John',
+        lastName: 'CallRep',
+        email: 'salesrep.john@novacare.com',
+        phone: '+2348033334455',
+        role: UserRole.salesCallRep,
+        isActive: true,
+        createdAt: DateTime.now(),
       ),
-      SuperviseePerformanceModel(
-        user: UserModel(
-          id: 'rep-02',
-          authUserId: 'auth-rep-02',
-          companyId: 'comp-101',
-          firstName: 'Mary',
-          lastName: 'Nwosu',
-          email: 'mary.rep@novasuite.com',
-          phone: '08032222222',
-          role: UserRole.salesCallRep,
-          isActive: true,
-          createdAt: DateTime.now(),
-        ),
-        assignedProducts: ['Clear Skin Care Set', 'Grazer Herbal Detox Tea'],
-        activeLeadCount: 8,
-        callsPlacedToday: 22,
-        confirmedOrdersToday: 21,
-        confirmationRateToday: 60.0,
-        codRevenueToday: 490000.0,
-        commissionEarnedToday: 17000.0, // 17 delivered * N1,000 = N17,000 rep commission
-        supervisorOverrideEarnedToday: 4250.0, // 17 delivered * N250 = N4,250 supervisor override
-        maxLeadCap: 25,
-        autoAssignmentEnabled: true,
-        assignedCount: 35,
-        deliveredCount: 17,
-        deliveredTodayAssigned: 15,
-        deliveredPreviousDays: 2,
-        untaggedOnCrm: 6,
-        rescheduledCount: 7,
-        inProgressCount: 6,
-        switchedOffCount: 2,
-        notPickingCount: 4,
-        cancelledCount: 0,
-        notReadyCount: 1,
+      UserModel(
+        id: '40000000-0000-4000-8000-000000000004',
+        authUserId: 'auth-rep-02',
+        companyId: '11111111-1111-4111-8111-111111111111',
+        firstName: 'Sarah',
+        lastName: 'CallRep',
+        email: 'salesrep.sarah@novacare.com',
+        phone: '+2348034445566',
+        role: UserRole.salesCallRep,
+        isActive: true,
+        createdAt: DateTime.now(),
       ),
-      SuperviseePerformanceModel(
-        user: UserModel(
-          id: 'rep-03',
-          authUserId: 'auth-rep-03',
-          companyId: 'comp-101',
-          firstName: 'Emeka',
-          lastName: 'Okafor',
-          email: 'emeka.rep@novasuite.com',
-          phone: '08033333333',
-          role: UserRole.salesCallRep,
-          isActive: true,
-          createdAt: DateTime.now(),
-        ),
-        assignedProducts: ['Herbal Vitality Booster'],
-        activeLeadCount: 15,
-        callsPlacedToday: 14,
-        confirmedOrdersToday: 21,
-        confirmationRateToday: 60.0,
-        codRevenueToday: 175000.0,
-        commissionEarnedToday: 17000.0, // 17 delivered * N1,000 = N17,000 rep commission
-        supervisorOverrideEarnedToday: 4250.0, // 17 delivered * N250 = N4,250 supervisor override
-        maxLeadCap: 15,
-        autoAssignmentEnabled: false,
-        assignedCount: 35,
-        deliveredCount: 17,
-        deliveredTodayAssigned: 15,
-        deliveredPreviousDays: 2,
-        untaggedOnCrm: 6,
-        rescheduledCount: 7,
-        inProgressCount: 6,
-        switchedOffCount: 2,
-        notPickingCount: 4,
-        cancelledCount: 0,
-        notReadyCount: 1,
+      UserModel(
+        id: '50000000-0000-4000-8000-000000000006',
+        authUserId: 'auth-rep-03',
+        companyId: '11111111-1111-4111-8111-111111111111',
+        firstName: 'Emeka',
+        lastName: 'CallRep',
+        email: 'salesrep.emeka@novacare.com',
+        phone: '+2348035556677',
+        role: UserRole.salesCallRep,
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+      UserModel(
+        id: '50000000-0000-4000-8000-000000000007',
+        authUserId: 'auth-rep-04',
+        companyId: '11111111-1111-4111-8111-111111111111',
+        firstName: 'Aisha',
+        lastName: 'SalesRep',
+        email: 'salesrep.aisha@novacare.com',
+        phone: '+2348036667788',
+        role: UserRole.salesCallRep,
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+      UserModel(
+        id: '50000000-0000-4000-8000-000000000008',
+        authUserId: 'auth-rep-05',
+        companyId: '11111111-1111-4111-8111-111111111111',
+        firstName: 'Chidi',
+        lastName: 'Rep',
+        email: 'salesrep.chidi@novacare.com',
+        phone: '+2348037778899',
+        role: UserRole.salesCallRep,
+        isActive: true,
+        createdAt: DateTime.now(),
       ),
     ];
+
+    final orderRepo = OrderRepository();
+    final allOrders = orderRepo.generateHistoricalMockOrders(companyId: '11111111-1111-4111-8111-111111111111');
+
+    return reps.map((user) {
+      final repOrders = allOrders.where((o) => o.salesRepId == user.id).toList();
+      final activeLeads = repOrders.where((o) =>
+          o.status != OrderStatus.accepted &&
+          o.status != OrderStatus.cancelled &&
+          o.status != OrderStatus.delivered).length;
+
+      final confirmed = repOrders.where((o) =>
+          o.status == OrderStatus.accepted || o.status == OrderStatus.delivered).length;
+
+      final totalRev = repOrders
+          .where((o) => o.status == OrderStatus.accepted || o.status == OrderStatus.delivered)
+          .fold<double>(0.0, (sum, o) => sum + o.totalAmount);
+
+      final totalCount = repOrders.length;
+      final rate = totalCount > 0 ? (confirmed / totalCount) * 100 : 0.0;
+      final deliveredCount = repOrders.where((o) => o.status == OrderStatus.delivered).length;
+
+      return SuperviseePerformanceModel(
+        user: user,
+        assignedProducts: const ['Grazer Herbal Detox Tea', 'Herbal Vitality Booster', 'Clear Skin Care Set'],
+        activeLeadCount: activeLeads,
+        callsPlacedToday: repOrders.length,
+        confirmedOrdersToday: confirmed,
+        confirmationRateToday: rate,
+        codRevenueToday: totalRev,
+        commissionEarnedToday: deliveredCount * 1000.0,
+        supervisorOverrideEarnedToday: deliveredCount * 250.0,
+        maxLeadCap: 50,
+        autoAssignmentEnabled: true,
+        assignedCount: repOrders.length,
+        deliveredCount: deliveredCount,
+        deliveredTodayAssigned: repOrders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day == DateTime.now().day).length,
+        deliveredPreviousDays: repOrders.where((o) => o.status == OrderStatus.delivered && o.createdAt.day != DateTime.now().day).length,
+        untaggedOnCrm: repOrders.where((o) => !o.crmTagged).length,
+        rescheduledCount: repOrders.where((o) => o.status == OrderStatus.callBack).length,
+        inProgressCount: repOrders.where((o) => o.status == OrderStatus.contacting || o.status == OrderStatus.assignedToRep || o.status == OrderStatus.newOrder).length,
+        switchedOffCount: repOrders.where((o) => o.status == OrderStatus.notReachable || o.status == OrderStatus.switchedOff).length,
+        notPickingCount: repOrders.where((o) => o.status == OrderStatus.notPicking).length,
+        cancelledCount: repOrders.where((o) => o.status == OrderStatus.cancelled).length,
+        notReadyCount: repOrders.where((o) => o.status == OrderStatus.upsellPending || o.status == OrderStatus.notReady).length,
+      );
+    }).toList();
   }
 }

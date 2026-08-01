@@ -351,7 +351,7 @@ class _AgentProfileModalState extends State<AgentProfileModal> {
                         const SizedBox(width: 12),
                         _buildMetricCard('Conv. Rate', '${widget.supervisee.confirmationRateToday.toStringAsFixed(1)}%', Icons.insights, Colors.amber, isDark, borderColor),
                         const SizedBox(width: 12),
-                        _buildMetricCard('COD Revenue', '₦${(widget.supervisee.codRevenueToday / 1000).toStringAsFixed(0)}k', Icons.payments, theme.primaryColor, isDark, borderColor),
+                        _buildMetricCard('Commission Earned', '₦${widget.supervisee.commissionEarnedToday.toStringAsFixed(0)}', Icons.payments, theme.primaryColor, isDark, borderColor),
                       ],
                     ),
                   ],

@@ -3,8 +3,6 @@ import 'package:novasuite_core/novasuite_core.dart';
 import '../widgets/supervisor_kpi_dashboard_tab.dart';
 import '../widgets/supervisor_approvals_tab.dart';
 import '../widgets/supervisor_reassignment_tab.dart';
-import '../widgets/manage_supervisees_tab.dart';
-import '../widgets/supervisor_report_tab.dart';
 import '../../../sales_supervisee/presentation/widgets/call_rep_dashboard_overview.dart';
 import '../../../sales_supervisee/presentation/widgets/call_action_modal.dart';
 import '../../../sales_supervisee/presentation/widgets/nova_dialer_floating_bar.dart';
@@ -42,10 +40,11 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
   @override
   void initState() {
     super.initState();
+    final tabCount = widget.currentUser.canTakeCalls ? 4 : 3;
     _tabController = TabController(
-      length: 6,
+      length: tabCount,
       vsync: this,
-      initialIndex: widget.activeSubIndex.clamp(0, 5),
+      initialIndex: widget.activeSubIndex.clamp(0, tabCount - 1),
     );
     _loadSupervisorData();
   }
@@ -53,8 +52,9 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
   @override
   void didUpdateWidget(covariant SupervisorConsolePage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final tabCount = widget.currentUser.canTakeCalls ? 4 : 3;
     if (oldWidget.activeSubIndex != widget.activeSubIndex) {
-      _tabController.animateTo(widget.activeSubIndex.clamp(0, 5));
+      _tabController.animateTo(widget.activeSubIndex.clamp(0, tabCount - 1));
     }
   }
 
@@ -76,11 +76,17 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
       companyId: widget.currentUser.companyId,
     );
 
+    final report = await _supervisorRepo.fetchDailyOperationalReport(
+      companyId: widget.currentUser.companyId,
+      date: DateTime.now(),
+    );
+
     final pending = orders.where((o) => o.status == OrderStatus.upsellPending).toList();
 
     setState(() {
       _squad = squad;
       _squadOrders = orders;
+      _dailyReport = report;
       _pendingUpsells = pending;
       _isLoading = false;
     });
@@ -172,24 +178,16 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
                         controller: _tabController,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          // Tab 0: Team Performance KPIs & Dashboard Overview (Whole Squad Context)
+                          // Tab 0: Squad Overview & Operational KPIs (Merged Leaderboard & Daily Report)
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: SupervisorKpiDashboardTab(
                               squad: _squad,
+                              squadOrders: _squadOrders,
+                              dailyReport: _dailyReport,
                               activeTheme: theme,
                               isDarkMode: _isDarkMode,
                               onUpdateSupervisee: _handleUpdateSupervisee,
-                            ),
-                          ),
-
-                          // Tab 1: Operational Daily Summary Report
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: SupervisorReportTab(
-                              report: _dailyReport,
-                              activeTheme: theme,
-                              isDarkMode: _isDarkMode,
                               onDateOrTimeframeChanged: (selectedDate, timeframe) async {
                                 final report = await _supervisorRepo.fetchDailyOperationalReport(
                                   companyId: widget.currentUser.companyId,
@@ -201,7 +199,7 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
                             ),
                           ),
 
-                          // Tab 2: Realtime Upsell Approvals
+                          // Tab 1: Realtime Upsell Approvals
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: SupervisorApprovalsTab(
@@ -212,7 +210,7 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
                             ),
                           ),
 
-                          // Tab 3: 1-Click Lead Reassignment
+                          // Tab 2: Workload & Lead Reassignment
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: SupervisorReassignmentTab(
@@ -224,29 +222,19 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
                             ),
                           ),
 
-                          // Tab 4: Manage Supervisees Roster
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: ManageSuperviseesTab(
-                              squad: _squad,
-                              activeTheme: theme,
-                              isDarkMode: _isDarkMode,
-                              onUpdateSupervisee: _handleUpdateSupervisee,
+                          // Tab 3: My Personal Dialer Queue (When HR canTakeCalls == true)
+                          if (widget.currentUser.canTakeCalls)
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: CallRepDashboardOverview(
+                                currentUser: widget.currentUser,
+                                myOrders: _squadOrders,
+                                activeTheme: theme,
+                                isDarkMode: _isDarkMode,
+                                onStartCall: _startDirectCall,
+                                onOpenFullQueue: () {},
+                              ),
                             ),
-                          ),
-
-                          // Tab 5: My Personal Dialer Queue
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: CallRepDashboardOverview(
-                              currentUser: widget.currentUser,
-                              myOrders: _squadOrders,
-                              activeTheme: theme,
-                              isDarkMode: _isDarkMode,
-                              onStartCall: _startDirectCall,
-                              onOpenFullQueue: () {},
-                            ),
-                          ),
                         ],
                       ),
               ),

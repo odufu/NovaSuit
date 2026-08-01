@@ -1,6 +1,8 @@
 // ============================================================================
 // NOVASUITE SUPABASE EDGE FUNCTION: calculate-commissions
-// Computes & Ledger Sync for Sales Rep & Supervisor Cumulative Override Commissions
+// Multi-Tier Commission Ledger Engine (Sales Rep, Supervisor, AHOD, HOD)
+// Supports Direct Fixed Value per Unit or Percentage of Product Total Value
+// Controlled by Operations/GM Master Incentive Toggle
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -37,10 +39,30 @@ serve(async (req: Request) => {
       );
     }
 
-    // Fetch delivered orders to process commission ledger entries
+    // 1. Fetch Company Commission Settings (Operations / GM)
+    const { data: setting } = await supabaseClient
+      .from("company_commission_settings")
+      .select("*")
+      .eq("company_id", body.company_id)
+      .single();
+
+    const incentivesEnabled = setting ? setting.incentives_enabled : true;
+
+    if (!incentivesEnabled) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          incentives_enabled: false,
+          message: "Commission incentives are currently turned OFF by Operations / GM Department.",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // 2. Fetch Delivered Orders
     let query = supabaseClient
       .from("orders")
-      .select("id, company_id, sales_rep_id, product_id, quantity, status")
+      .select("id, company_id, sales_rep_id, product_id, quantity, total_amount, status")
       .eq("company_id", body.company_id)
       .eq("status", "delivered");
 
@@ -57,38 +79,38 @@ serve(async (req: Request) => {
       );
     }
 
-    let processedCount = 0;
-    let totalRepCommissionEarned = 0;
-    let totalSupervisorOverrideEarned = 0;
+    let processedOrders = 0;
+    let totalCommissionsDistributed = 0;
 
     for (const order of deliveredOrders) {
       const qty = order.quantity || 1;
+      const totalAmount = Number(order.total_amount || 0);
       const repId = order.sales_rep_id;
 
       if (!repId) continue;
 
-      // 1. Fetch Product Commission Rates
-      const { data: product } = await supabaseClient
-        .from("products")
-        .select("rep_commission_per_unit, supervisor_commission_per_unit")
-        .or(`id.eq.${order.product_id},name.eq.${order.product_id}`)
-        .single();
-
-      const repRate = product?.rep_commission_per_unit ? Number(product.rep_commission_per_unit) : 1000.0;
-      const supervisorRate = product?.supervisor_commission_per_unit ? Number(product.supervisor_commission_per_unit) : 250.0;
-
-      // 2. Fetch Rep's Supervisor
+      // Fetch hierarchy mappings (Supervisor, AHOD, HOD)
       const { data: userRole } = await supabaseClient
         .from("user_roles")
-        .select("supervisor_id")
+        .select("supervisor_id, ahod_id, hod_id")
         .eq("user_id", repId)
         .eq("company_id", body.company_id)
         .single();
 
       const supervisorId = userRole?.supervisor_id || null;
+      const ahodId = userRole?.ahod_id || null;
+      const hodId = userRole?.hod_id || null;
 
-      // 3. Upsert Sales Rep Commission
-      const repTotal = qty * repRate;
+      // Helper function to compute commission based on type
+      const computeComm = (type: string, value: number) => {
+        return type === "percentage" ? (totalAmount * value) / 100.0 : qty * value;
+      };
+
+      // 1. Sales Rep Commission
+      const repVal = setting?.rep_commission_value ? Number(setting.rep_commission_value) : 1000.0;
+      const repType = setting?.rep_commission_type || "fixed_per_unit";
+      const repComm = computeComm(repType, repVal);
+
       await supabaseClient.from("commissions").upsert({
         company_id: body.company_id,
         user_id: repId,
@@ -97,17 +119,19 @@ serve(async (req: Request) => {
         recipient_role: "sales_call_rep",
         product_id: order.product_id,
         quantity: qty,
-        unit_commission_rate: repRate,
-        total_commission: repTotal,
+        unit_commission_rate: repVal,
+        total_commission: repComm,
         status: "earned",
       }, { onConflict: "order_id,user_id,recipient_role" });
 
-      totalRepCommissionEarned += repTotal;
-      processedCount++;
+      totalCommissionsDistributed += repComm;
 
-      // 4. Upsert Supervisor Cumulative Team Override Commission
+      // 2. Supervisor Commission
       if (supervisorId) {
-        const supervisorTotal = qty * supervisorRate;
+        const supVal = setting?.supervisor_commission_value ? Number(setting.supervisor_commission_value) : 250.0;
+        const supType = setting?.supervisor_commission_type || "fixed_per_unit";
+        const supComm = computeComm(supType, supVal);
+
         await supabaseClient.from("commissions").upsert({
           company_id: body.company_id,
           user_id: supervisorId,
@@ -116,21 +140,67 @@ serve(async (req: Request) => {
           recipient_role: "sales_supervisor",
           product_id: order.product_id,
           quantity: qty,
-          unit_commission_rate: supervisorRate,
-          total_commission: supervisorTotal,
+          unit_commission_rate: supVal,
+          total_commission: supComm,
           status: "earned",
         }, { onConflict: "order_id,user_id,recipient_role" });
 
-        totalSupervisorOverrideEarned += supervisorTotal;
+        totalCommissionsDistributed += supComm;
       }
+
+      // 3. AHOD Commission
+      if (ahodId) {
+        const ahodVal = setting?.ahod_commission_value ? Number(setting.ahod_commission_value) : 150.0;
+        const ahodType = setting?.ahod_commission_type || "fixed_per_unit";
+        const ahodComm = computeComm(ahodType, ahodVal);
+
+        await supabaseClient.from("commissions").upsert({
+          company_id: body.company_id,
+          user_id: ahodId,
+          supervisor_id: supervisorId,
+          order_id: order.id,
+          recipient_role: "ahod",
+          product_id: order.product_id,
+          quantity: qty,
+          unit_commission_rate: ahodVal,
+          total_commission: ahodComm,
+          status: "earned",
+        }, { onConflict: "order_id,user_id,recipient_role" });
+
+        totalCommissionsDistributed += ahodComm;
+      }
+
+      // 4. HOD Commission
+      if (hodId) {
+        const hodVal = setting?.hod_commission_value ? Number(setting.hod_commission_value) : 100.0;
+        const hodType = setting?.hod_commission_type || "fixed_per_unit";
+        const hodComm = computeComm(hodType, hodVal);
+
+        await supabaseClient.from("commissions").upsert({
+          company_id: body.company_id,
+          user_id: hodId,
+          supervisor_id: supervisorId,
+          order_id: order.id,
+          recipient_role: "hod",
+          product_id: order.product_id,
+          quantity: qty,
+          unit_commission_rate: hodVal,
+          total_commission: hodComm,
+          status: "earned",
+        }, { onConflict: "order_id,user_id,recipient_role" });
+
+        totalCommissionsDistributed += hodComm;
+      }
+
+      processedOrders++;
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        orders_processed: processedCount,
-        total_rep_commission_earned: totalRepCommissionEarned,
-        total_supervisor_override_earned: totalSupervisorOverrideEarned,
+        incentives_enabled: true,
+        orders_processed: processedOrders,
+        total_commissions_distributed: totalCommissionsDistributed,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
