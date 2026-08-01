@@ -29,13 +29,20 @@ graph TD
 
 ## ⚙️ 2. Core Domain Rules & Business Logic
 
-1. **Product Licensing & Auto-Assignment**:
-   - Automatic round-robin lead distribution is strictly per-product.
-   - Supervisors manage product licenses per supervisee via the **Agent Profile Modal** (`AgentProfileModal`). Only products assigned/licensed to a call rep will be dispatched to them.
-2. **Commissions Engine**:
-   - **Sales Rep Commissions**: Earned per delivered product unit (default: ₦1,000.00 / unit).
-   - **Team Leader (Supervisor) Override Commissions**: Supervisors earn an override commission calculated cumulatively on all delivered products across their squad team (default: ₦250.00 / unit).
-   - **Database & Edge Function Integration**: Managed via Supabase trigger `process_order_delivered_commissions()` and Deno Edge Function `calculate-commissions`.
+1. **Call Rep Financial Isolation & Performance Focus**:
+   - **Call Reps NEVER see company financial figures** (e.g. Total COD Revenue, sales order prices, company gross revenue, product cost prices).
+   - Call Rep metrics are strictly performance and personal incentive commission-based (**`My Commission Earned`**).
+   - Trend Chart title on Call Rep view updated from `Weekly Revenue` ➔ **`📈 Weekly Commission & Call Volume Trends`**.
+2. **Operations / GM Multi-Tier Commission System**:
+   - Commissions can be calculated via:
+     - `fixed_per_unit`: Monetary value per delivered product (e.g., ₦1,000 / unit).
+     - `percentage`: Percentage of delivered order value (e.g., 5.0% of order total).
+   - Supports 4 organizational hierarchy roles:
+     1. **Sales Call Rep**
+     2. **Team Leader (Supervisor)**
+     3. **Assistant Head of Department (AHOD)**
+     4. **Head of Department (HOD)**
+   - **Operations Master Toggle**: Operations / GM Department can enable (`TRUE`) or disable (`FALSE`) incentive commissions globally or per product.
 3. **Daily Operational Report Standards (Monday 27th July, 2026 Baseline)**:
    - **35 Total Assigned**
    - **21 Confirmed**
@@ -51,17 +58,19 @@ graph TD
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Customer
-    participant Rep as Sales Rep
+    actor Operations as Operations / GM
+    actor Rep as Sales Rep
     participant Order as Order Engine
     participant DB as Supabase DB Trigger
     participant Ledger as Commissions Ledger
 
-    Customer->>Rep: Confirms Order Delivery
-    Rep->>Order: Updates Status to 'delivered'
+    Operations->>DB: Set Commission Config (Fixed/Percentage, Enabled/Disabled)
+    Rep->>Order: Updates Order to 'delivered'
     Order->>DB: Triggers process_order_delivered_commissions()
-    DB->>Ledger: Insert Sales Rep Commission (N1,000 / unit)
-    DB->>Ledger: Insert Supervisor Team Override (N250 / unit)
+    DB->>Ledger: Insert Sales Rep Commission
+    DB->>Ledger: Insert Supervisor Team Override
+    DB->>Ledger: Insert AHOD Commission
+    DB->>Ledger: Insert HOD Commission
 ```
 
 ---
@@ -71,31 +80,30 @@ sequenceDiagram
 | Migration File | Key Tables & Changes |
 | :--- | :--- |
 | `20260731000000_seed_supervisor_squad_report_data.sql` | Adds `crm_tagged` (BOOLEAN) to `orders`, `assigned_products` (TEXT[]) to `user_roles`, and seeds the 35 July 27 operational report orders into Supabase. |
-| `20260731000001_add_commissions_system.sql` | Adds `commissions` ledger table, `rep_commission_per_unit` (₦1,000) & `supervisor_commission_per_unit` (₦250) on `products`, `supervisor_id` mapping on `user_roles`, and `process_order_delivered_commissions()` trigger. |
+| `20260731000001_add_commissions_system.sql` | Adds `commissions` ledger table, product commission rates, and trigger for automated commission calculation. |
+| `20260801000000_add_multi_tier_commission_settings.sql` | Creates `company_commission_settings` table for Operations/GM configuration (Fixed/Percentage for Rep, Supervisor, AHOD, HOD), adds `ahod_id` & `hod_id` to `user_roles`, and updates `process_order_delivered_commissions()` trigger. |
 
 ```mermaid
 erDiagram
+    COMPANIES ||--o{ COMPANY_COMMISSION_SETTINGS : configures
     COMPANIES ||--o{ ORDERS : owns
     COMPANIES ||--o{ COMMISSIONS : tracks
     USERS ||--o{ USER_ROLES : has
     USER_ROLES ||--o{ ORDERS : assigned_rep
     USER_ROLES ||--o{ COMMISSIONS : earns
-    PRODUCTS ||--o{ ORDERS : contains
-    ORDERS ||--o{ COMMISSIONS : triggers
     
-    COMMISSIONS {
+    COMPANY_COMMISSION_SETTINGS {
         uuid id PK
         uuid company_id FK
-        uuid user_id FK
-        uuid supervisor_id FK
-        uuid order_id FK
-        text recipient_role
-        text product_id
-        int quantity
-        numeric unit_commission_rate
-        numeric total_commission
-        text status
-        timestamptz created_at
+        boolean incentives_enabled
+        text rep_commission_type
+        numeric rep_commission_value
+        text supervisor_commission_type
+        numeric supervisor_commission_value
+        text ahod_commission_type
+        numeric ahod_commission_value
+        text hod_commission_type
+        numeric hod_commission_value
     }
 ```
 
@@ -103,40 +111,24 @@ erDiagram
 
 ## 💻 4. Key UI Features & Component Reference
 
-### 1. Collapsible Left Side Navigation (`AdminMainShell` in `main.dart`)
+### 1. Call Rep Performance Dashboard (`main.dart`)
+- Revenue statistics hidden.
+- Metrics display: **`My Call Queue`**, **`My Commission Earned (₦17,000)`**, **`Upsells Pending Approval`**, **`My Conversion Rate (78.4%)`**.
+- Trend Chart: **`📈 Weekly Commission & Call Volume Trends`** (`₦123k Commission`).
+
+### 2. Collapsible Left Side Navigation (`AdminMainShell` in `main.dart`)
 - Width: `74px` (collapsed) ↔ `260px` (expanded).
-- Top header tabs removed; sub-navigation items driven from left sidebar under `SUPERVISOR COMMAND SUITE`:
-  - `Squad Overview & KPIs` (Integrated Daily Operational Summary cards + Live Supervisee Leaderboard)
-  - `Realtime Approvals` (Upsell/Downsell authorization queue & cancellation reviews)
-  - `Team Order Directory` (Search, multi-filter, & 1-click batch lead reassignment suite)
-  - `My Dialer Queue` (Conditional personal call console active when HR `can_take_calls = true`)
-
-```mermaid
-graph TD
-    SUP[Supervisor Command Suite]
-    SUP --> T0["📊 Squad Overview & KPIs<br/>(Metrics Cards + Leaderboard Table)"]
-    SUP --> T1["⚡ Realtime Approvals<br/>(Upsell/Downsell Authorization)"]
-    SUP --> T2["📂 Team Order Directory<br/>(Multi-Filter, Search, & Batch Reassignment)"]
-    SUP -. "When HR can_take_calls = true" .-> T3["📞 My Dialer Queue<br/>(Frontline SIP Call Console)"]
-```
-
-### 2. Responsive Leaderboard Table (`SupervisorKpiDashboardTab`)
-- **Location**: `apps/novasuite_admin/lib/features/sales_supervisor/presentation/widgets/supervisor_kpi_dashboard_tab.dart`
-- **Features**:
-  - **No Overflows**: Wrapped in `LayoutBuilder` ➔ `SingleChildScrollView(scrollDirection: Axis.horizontal)` ➔ `ConstrainedBox`.
-  - **Text Truncation**: Rep names, emails, and badges use `TextOverflow.ellipsis`.
-  - **Clean Header Row**: Text-only uppercase labels without clutter (`AGENT`, `ASSIGNED`, `CONFIRMED`, `DELIVERED`, `TODAY/PREV`, `RESCHEDULED`, `IN-PROGRESS`, `SWITCHED-OFF`, `UNANSWERED`, `CANCELLED`, `PENDING`, `ACTION`).
-  - **In-Row Top Performer**: Top rep highlighted directly in table rows with a 👑 Crown badge and gold/emerald gradient background (`0xFF1E3A2B`).
-  - **Toolbar Controls Bar**: Search field, Product dropdown filter (`All Products`, `Grazer Detox`, `Vitality Booster`, `Clear Skin`), Timeframe selector (`Daily`, `Weekly`, `Monthly`), and `Cards` ↔ `Table` view mode switcher.
+- Sidebar entries under `SUPERVISOR COMMAND SUITE`:
+  - `Team Performance KPIs` (Dashboard Overview in squad context)
+  - `Operational Daily Report`
+  - `Realtime Upsell Approvals`
+  - `1-Click Lead Reassignment`
+  - `Manage Supervisees`
+  - `My Personal Dialer Queue`
 
 ### 3. Agent Profile Modal (`AgentProfileModal`)
-- **Location**: `apps/novasuite_admin/lib/features/sales_supervisor/presentation/widgets/agent_profile_modal.dart`
-- **Features**:
-  - Full mobile responsiveness across mobile (< 650px), tablet, and desktop (0 overflow warnings).
-  - Supervisor product license assignment toggle switches.
-  - Lead capacity slider (5 to 50 leads) & Auto round-robin distribution toggle.
-  - Metrics cards (Calls Made, Confirmed, Conv. Rate, COD Revenue, Commission Earned).
-  - One-click lead reassignment trigger.
+- Shows **Commission Earned** instead of company COD Revenue for Call Reps.
+- Product license switches, lead capacity sliders, and auto round-robin toggles.
 
 ---
 
@@ -144,4 +136,4 @@ graph TD
 
 - `flutter analyze packages/novasuite_core`: **`No issues found!` (0 errors, 0 warnings)**
 - `flutter analyze apps/novasuite_admin`: **`No issues found!` (0 errors, 0 warnings)**
-- All changes committed and synced with GitHub `main` branch.
+- All changes committed to local repository (`main` branch).
