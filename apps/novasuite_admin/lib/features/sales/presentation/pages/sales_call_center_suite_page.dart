@@ -333,6 +333,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       return ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: true,
         padding: const EdgeInsets.all(12),
         itemCount: orders.length,
         itemBuilder: (context, index) {
@@ -349,6 +351,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               mainAxisExtent: 245,
@@ -370,6 +374,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       return ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: true,
         padding: const EdgeInsets.all(12),
         itemCount: orders.length,
         itemBuilder: (context, index) {
@@ -386,6 +392,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               mainAxisExtent: 350,
