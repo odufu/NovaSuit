@@ -22,16 +22,16 @@ This document outlines the **technical root cause** (Browser Security Sandbox pr
 
 ```mermaid
 graph TD
-    subgraph Flow 1: MicroSIP Desktop Softphone (SUCCESSFUL)
-        MicroSIP["💻 MicroSIP (C++ Softphone)"] -->|1. Direct OS Raw UDP Socket| UDPPort["UDP Port 5060"]
-        UDPPort -->|2. Standard SIP REGISTER/INVITE| ITSkyASTPP["🇳🇬 IT Sky ASTPP Host (95.217.244.97:5060)"]
-        ITSkyASTPP -->|3. PSTN Routing| Phone["📱 Customer Cell Phone (0803...)"]
+    subgraph S1["Flow 1: MicroSIP Desktop Softphone (SUCCESSFUL)"]
+        MicroSIP["💻 MicroSIP (C++ Softphone)"] -->|"1. Direct OS Raw UDP Socket"| UDPPort["UDP Port 5060"]
+        UDPPort -->|"2. Standard SIP REGISTER/INVITE"| ITSkyASTPP["🇳🇬 IT Sky ASTPP Host (95.217.244.97:5060)"]
+        ITSkyASTPP -->|"3. PSTN Routing"| Phone["📱 Customer Cell Phone (0803...)"]
     end
 
-    subgraph Flow 2: Web Browser CRM (BLOCKED BY BROWSER)
-        WebCRM["🌐 NovaCare Web CRM (Chrome/Edge Browser)"] -.-X|4. W3C Security Rule: Raw UDP Sockets Forbidden| BrowserSandbox["⛔ Browser Sandbox Constraint"]
-        WebCRM -->|5. Requires WSS WebSockets + WebRTC SRTP| WebRTCBridge["⚡ WebRTC WSS Gateway (Port 8089/443)"]
-        WebRTCBridge -->|6. SIP-over-UDP 5060| ITSkyASTPP
+    subgraph S2["Flow 2: Web Browser CRM (BLOCKED BY BROWSER)"]
+        WebCRM["🌐 NovaCare Web CRM (Chrome/Edge Browser)"] -.->"4. W3C Security Rule: Raw UDP Sockets Forbidden"| BrowserSandbox["⛔ Browser Sandbox Constraint"]
+        WebCRM -->|"5. Requires WSS WebSockets + WebRTC SRTP"| WebRTCBridge["⚡ WebRTC WSS Gateway (Port 8089/443)"]
+        WebRTCBridge -->|"6. SIP-over-UDP 5060"| ITSkyASTPP
     end
 ```
 

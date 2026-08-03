@@ -37,18 +37,18 @@ The following diagram illustrates how incoming and outgoing voice, WhatsApp, and
 
 ```mermaid
 graph TD
-    subgraph Frontend Layer
+    subgraph SG1["Frontend Layer"]
         App["📱 NovaSuite Call Rep / Supervisor Web Console"]
         DialerWidget["📞 Integrated Dialer & Chat Widget"]
     end
 
-    subgraph Deno Edge Gateway & Realtime Engine
+    subgraph SG2["Deno Edge Gateway & Realtime Engine"]
         EdgeGateway["⚡ Supabase Deno Edge Functions (/api/v1/omnichannel)"]
         RealtimeEngine["🔄 Supabase Realtime Engine (WebSocket Channels)"]
         Db[("🗄️ Supabase PostgreSQL DB")]
     end
 
-    subgraph Telemetry & External Gateways
+    subgraph SG3["Telemetry & External Gateways"]
         ITSky["🇳🇬 IT Sky SIP Telecom Gateway (95.217.244.97:5060)"]
         MetaWA["💬 Meta WhatsApp Business Cloud API / Webhook Engine"]
         SMSGateway["📱 Termii / Twilio Direct SMS Gateway"]
