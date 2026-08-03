@@ -8,6 +8,7 @@ import '../widgets/supervisor_report_tab.dart';
 import '../widgets/call_rep_dashboard_overview.dart';
 import '../widgets/call_action_modal.dart';
 import '../widgets/nova_dialer_floating_bar.dart';
+import '../../../omnichannel_chat/presentation/widgets/omnichannel_unified_chat_sheet.dart';
 
 class SupervisorConsolePage extends StatefulWidget {
   final UserModel currentUser;
@@ -22,7 +23,6 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
   late TabController _tabController;
   final SupervisorRepository _supervisorRepo = SupervisorRepository();
   final OrderRepository _orderRepo = OrderRepository();
-  final NovaSipTelephonyService _telephonyService = NovaSipTelephonyService();
   final TextEditingController _noteController = TextEditingController();
 
   late ValueNotifier<List<SuperviseePerformanceModel>> _squadNotifier;
@@ -119,30 +119,31 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
   }
 
   void _startDirectCall(OrderModel order) {
-    _activeCallOrderNotifier.value = order;
-    _telephonyService.initiateCall(order);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => CallActionModal(
-        order: order,
-        activeTheme: TenantTheme.defaultNovaCare(),
-        currentUser: widget.currentUser,
-        noteController: _noteController,
-        onUpdateOrder: (updated) {
-          final list = List<OrderModel>.from(_squadOrdersNotifier.value);
-          final idx = list.indexWhere((o) => o.id == updated.id);
-          if (idx != -1) {
-            list[idx] = updated;
-            _squadOrdersNotifier.value = list;
-          }
-        },
-        onRecordActivity: ({required order, required activityType, required title, required details, newStatus}) {},
-        onOpenReschedule: (order) {},
-        onOpenCancellationReason: (order) {},
-        onShowRequestUpsell: (order) {},
-      ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    OmnichannelUnifiedChatSheet.show(
+      context,
+      order: order,
+      currentUser: widget.currentUser,
+      activeTheme: TenantTheme.defaultNovaCare(),
+      isDarkMode: isDarkMode,
+      onStartCall: () {
+        _activeCallOrderNotifier.value = order;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => CallActionModal(
+            order: order,
+            activeTheme: TenantTheme.defaultNovaCare(),
+            currentUser: widget.currentUser,
+            noteController: _noteController,
+            onUpdateOrder: (updated) {},
+            onRecordActivity: ({required order, required activityType, required title, required details, newStatus}) {},
+            onOpenReschedule: (order) {},
+            onOpenCancellationReason: (order) {},
+            onShowRequestUpsell: (order) {},
+          ),
+        );
+      },
     );
   }
 

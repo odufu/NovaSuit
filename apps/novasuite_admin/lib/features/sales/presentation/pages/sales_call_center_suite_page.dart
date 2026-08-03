@@ -2538,7 +2538,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
         currency: widget.activeTheme.currencySymbol,
         onStartCall: () {
           Navigator.pop(context);
-          _openCallActionModal(order);
+          _openOrderActivitiesModal(order, isDarkMode);
         },
         onOpenTimeline: () {
           Navigator.pop(context);
@@ -3529,6 +3529,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       currentUser: widget.currentUser,
       activeTheme: widget.activeTheme,
       isDarkMode: isDarkMode,
+      onStartCall: () => _openCallActionModal(order),
     );
   }
 
@@ -3713,7 +3714,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       activeTheme: widget.activeTheme,
       isDarkMode: isDarkMode,
       isMobile: isMobile,
-      onStartCall: (order) => _openCallActionModal(order),
+      onStartCall: (order) => _openOrderActivitiesModal(order, isDarkMode),
       onOpenFullQueue: () {
         _activeSubTab = 0;
       },
@@ -3878,7 +3879,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
         currency: widget.activeTheme.currencySymbol,
         onStartCall: () {
           Navigator.pop(context);
-          _openCallActionModal(order);
+          _openOrderActivitiesModal(order, Theme.of(context).brightness == Brightness.dark);
         },
         onOpenTimeline: () {
           Navigator.pop(context);

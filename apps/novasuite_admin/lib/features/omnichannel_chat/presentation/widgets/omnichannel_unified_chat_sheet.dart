@@ -9,6 +9,7 @@ class OmnichannelUnifiedChatSheet extends StatefulWidget {
   final UserModel currentUser;
   final TenantTheme activeTheme;
   final bool isDarkMode;
+  final VoidCallback? onStartCall;
 
   const OmnichannelUnifiedChatSheet({
     super.key,
@@ -16,6 +17,7 @@ class OmnichannelUnifiedChatSheet extends StatefulWidget {
     required this.currentUser,
     required this.activeTheme,
     required this.isDarkMode,
+    this.onStartCall,
   });
 
   static void show(
@@ -24,6 +26,7 @@ class OmnichannelUnifiedChatSheet extends StatefulWidget {
     required UserModel currentUser,
     required TenantTheme activeTheme,
     required bool isDarkMode,
+    VoidCallback? onStartCall,
   }) {
     showModalBottomSheet(
       context: context,
@@ -41,6 +44,7 @@ class OmnichannelUnifiedChatSheet extends StatefulWidget {
           currentUser: currentUser,
           activeTheme: activeTheme,
           isDarkMode: isDarkMode,
+          onStartCall: onStartCall,
         ),
       ),
     );
@@ -189,21 +193,86 @@ class _OmnichannelUnifiedChatSheetState extends State<OmnichannelUnifiedChatShee
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : provider.filteredMessages.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No messages found for selected filter.',
-                          style: GoogleFonts.inter(fontSize: 13, color: textMuted),
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // Voice Call Dedicated CTA Banner (shown when All or voice_call filter active)
+                      if (provider.selectedChannelFilter == 'All' || provider.selectedChannelFilter == 'voice_call')
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'IT Sky Voice Telephony • 07003100077',
+                                      style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: textPrimary),
+                                    ),
+                                    Text(
+                                      'Start a voice call or review recorded call history below.',
+                                      style: GoogleFonts.inter(fontSize: 11, color: textMuted),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  if (widget.onStartCall != null) {
+                                    widget.onStartCall!();
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF10B981),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  elevation: 2,
+                                ),
+                                icon: const Icon(Icons.phone, size: 14),
+                                label: Text(
+                                  'Start Call Now 📞',
+                                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: provider.filteredMessages.length,
-                        itemBuilder: (ctx, index) {
-                          final msg = provider.filteredMessages[index];
-                          return _buildMessageBubble(msg, isDark, theme, cardBg, textPrimary, textMuted, borderColor);
-                        },
-                      ),
+
+                      if (provider.filteredMessages.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Center(
+                            child: Text(
+                              'No messages found for selected filter.',
+                              style: GoogleFonts.inter(fontSize: 13, color: textMuted),
+                            ),
+                          ),
+                        )
+                      else
+                        ...provider.filteredMessages.map(
+                          (msg) => _buildMessageBubble(msg, isDark, theme, cardBg, textPrimary, textMuted, borderColor),
+                        ),
+                    ],
+                  ),
           ),
 
           // Message Composer Input Bar

@@ -8,6 +8,7 @@ import '../widgets/supervisor_approvals_tab.dart';
 import '../widgets/supervisor_reassignment_tab.dart';
 import '../../../sales_supervisee/presentation/widgets/call_rep_dashboard_overview.dart';
 import '../../../sales_supervisee/presentation/widgets/call_action_modal.dart';
+import '../../../omnichannel_chat/presentation/widgets/omnichannel_unified_chat_sheet.dart';
 import '../../../sales_supervisee/presentation/widgets/nova_dialer_floating_bar.dart';
 
 class SupervisorConsolePage extends StatefulWidget {
@@ -27,7 +28,6 @@ class SupervisorConsolePage extends StatefulWidget {
 class _SupervisorConsolePageState extends State<SupervisorConsolePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupervisorRepository _supervisorRepo = SupervisorRepository();
-  final NovaSipTelephonyService _telephonyService = NovaSipTelephonyService();
   final TextEditingController _noteController = TextEditingController();
   final ValueNotifier<OrderModel?> _activeCallOrder = ValueNotifier<OrderModel?>(null);
 
@@ -94,25 +94,13 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
   }
 
   void _startDirectCall(OrderModel order) {
-    _activeCallOrder.value = order;
-    _telephonyService.initiateCall(order);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => CallActionModal(
-        order: order,
-        activeTheme: TenantTheme.defaultNovaCare(),
-        currentUser: widget.currentUser,
-        noteController: _noteController,
-        onUpdateOrder: (updated) {
-          context.read<SalesCallCenterProvider>().updateOrder(updated);
-        },
-        onRecordActivity: ({required order, required activityType, required title, required details, newStatus}) {},
-        onOpenReschedule: (order) {},
-        onOpenCancellationReason: (order) {},
-        onShowRequestUpsell: (order) {},
-      ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    OmnichannelUnifiedChatSheet.show(
+      context,
+      order: order,
+      currentUser: widget.currentUser,
+      activeTheme: TenantTheme.defaultNovaCare(),
+      isDarkMode: isDarkMode,
     );
   }
 
