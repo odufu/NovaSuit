@@ -95,6 +95,10 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
     final UaSettings settings = UaSettings();
     settings.webSocketUrl = currentUrl;
+    settings.webSocketSettings.allowBadCertificate = true;
+    settings.webSocketSettings.extraHeaders = {
+      'Sec-WebSocket-Protocol': 'sip',
+    };
     settings.uri = 'sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}';
     settings.authorizationUser = ItSkySipConfig.username;
     settings.password = ItSkySipConfig.password;

@@ -60,13 +60,12 @@ class ItSkySipConfig {
   static const String wsDirectIpUrl = 'ws://95.217.244.97:8089/ws';
   static const String wsPort5060Url = 'ws://95.217.244.97:5060';
 
-  /// All Fallback Transport Endpoints
+  /// All Fallback Transport Endpoints (WebSockets Only)
   static const List<String> fallbackWebSocketUrls = [
     wssPort7443Url,
     wssWebRtcUrl,
     wsWebRtcUrl,
     wsDirectIpUrl,
-    wsPort5060Url,
   ];
 
   /// Authentication Strategy

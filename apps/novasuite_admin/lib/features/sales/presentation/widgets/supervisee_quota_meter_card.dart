@@ -122,20 +122,25 @@ class _SuperviseeQuotaMeterCardState extends State<SuperviseeQuotaMeterCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.query_stats, size: 16, color: widget.isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'PERFORMANCE METRICS',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade700,
-                          letterSpacing: 0.8,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.query_stats, size: 16, color: widget.isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669)),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'PERFORMANCE METRICS',
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: widget.isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade700,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   // Segmented Timeframe Switcher (Daily | Weekly | Monthly)
                   Container(
