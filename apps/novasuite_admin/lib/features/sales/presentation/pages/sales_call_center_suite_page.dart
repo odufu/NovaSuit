@@ -6,13 +6,13 @@ import 'package:novasuite_core/novasuite_core.dart';
 import '../../../../core/constants/constants.dart';
 import '../widgets/request_upsell_dialog.dart';
 import '../widgets/create_call_script_dialog.dart';
-import '../widgets/order_activity_log_dialog.dart';
 import '../widgets/master_order_details_dialog.dart';
 import '../widgets/all_orders_directory_card.dart';
 import '../widgets/call_action_modal.dart';
 import '../widgets/supervisee_quota_meter_card.dart';
 import '../widgets/call_rep_dashboard_overview.dart';
 import '../../../logistics/presentation/widgets/reassign_logistics_rep_dialog.dart';
+import '../../../omnichannel_chat/presentation/widgets/omnichannel_unified_chat_sheet.dart';
 
 enum CallStage {
   connectingProvider, // Stage 1: Connecting to Provider
@@ -106,8 +106,6 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   set _simulatedRole(UserRole val) => _simulatedRoleNotifier.value = val;
 
   List<Map<String, dynamic>> get _customCallScripts => _customCallScriptsNotifier.value;
-
-  Map<String, List<OrderActivityModel>> get _orderActivityStore => _orderActivityStoreNotifier.value;
 
   late List<Map<String, dynamic>> _ahodTeams;
   final _noteController = TextEditingController();
@@ -3525,15 +3523,12 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   }
 
   void _openOrderActivitiesModal(OrderModel order, bool isDarkMode) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.65),
-      builder: (context) => OrderActivityLogDialog(
-        order: order,
-        currentUser: widget.currentUser,
-        currency: widget.activeTheme.currencySymbol,
-        loggedActivities: _orderActivityStore[order.id] ?? [],
-      ),
+    OmnichannelUnifiedChatSheet.show(
+      context,
+      order: order,
+      currentUser: widget.currentUser,
+      activeTheme: widget.activeTheme,
+      isDarkMode: isDarkMode,
     );
   }
 

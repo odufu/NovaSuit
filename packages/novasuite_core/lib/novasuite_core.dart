@@ -24,3 +24,6 @@ export 'src/supabase_config.dart';
 export 'src/it_sky_sip_config.dart';
 export 'src/services/nova_sip_telephony_service.dart';
 export 'src/services/nova_udp_sip_engine.dart';
+export 'src/models/conversation.dart';
+export 'src/models/chat_message.dart';
+export 'src/repositories/omnichannel_repository.dart';
