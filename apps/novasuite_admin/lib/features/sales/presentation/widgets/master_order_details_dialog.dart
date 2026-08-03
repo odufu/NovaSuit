@@ -400,28 +400,28 @@ class MasterOrderDetailsDialog extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: onStartCall,
+                        onPressed: onOpenTimeline,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF0A2E23),
+                          backgroundColor: const Color(0xFF10B981),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        icon: const Icon(Icons.phone, size: 16),
-                        label: const Text('Start Call Now', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        icon: const Icon(Icons.forum_outlined, size: 16),
+                        label: const Text('Follow-Up & Connect 💬📞', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
-                      onPressed: onOpenTimeline,
+                      onPressed: onStartCall,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                        side: BorderSide(color: isDarkMode ? const Color(0xFF0284C7) : const Color(0xFF7DD3FC)),
+                        foregroundColor: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669),
+                        side: BorderSide(color: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669)),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(Icons.history_toggle_off_rounded, size: 16),
-                      label: const Text('Timeline', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.phone_outlined, size: 16),
+                      label: const Text('Direct Call', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 6),
                     quickStatusMenu,

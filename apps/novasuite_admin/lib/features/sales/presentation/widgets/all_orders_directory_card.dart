@@ -329,66 +329,42 @@ class AllOrdersDirectoryCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Row 5: Omnichannel Timeline Button
+            // Single Unified Omnichannel Follow-Up CTA
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: onOpenActivities,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.15),
-                  foregroundColor: const Color(0xFF10B981),
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
+                  elevation: 2,
                 ),
-                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 14),
+                icon: const Icon(Icons.forum_outlined, size: 16),
                 label: Text(
-                  'Omnichannel Timeline & WhatsApp Chat',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11),
+                  'Follow-Up & Connect 💬📞',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
 
-            // Row 6: Secondary Actions (Call Client, WhatsApp 💬, Quick Status Menu, View Details)
+            // Secondary Quick Actions (Quick Status Dropdown & Details)
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onStartCall,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: isDarkMode ? const Color(0xFF10B981) : theme.primaryColor,
-                      side: BorderSide(color: isDarkMode ? const Color(0xFF10B981) : theme.primaryColor),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    icon: const Icon(Icons.phone_outlined, size: 13),
-                    label: const Text('Call Client', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
-                  ),
-                ),
+                Expanded(child: quickStatusMenu),
                 const SizedBox(width: 6),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onOpenActivities,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    icon: const Icon(Icons.chat_outlined, size: 13),
-                    label: const Text('WhatsApp 💬', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                quickStatusMenu,
-                const SizedBox(width: 4),
-                IconButton(
+                OutlinedButton.icon(
                   onPressed: onOpenDetails,
-                  icon: Icon(Icons.visibility_outlined, size: 16, color: isDarkMode ? Colors.white60 : Colors.grey.shade700),
-                  tooltip: 'View Full Order Details',
-                  visualDensity: VisualDensity.compact,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDarkMode ? Colors.white70 : const Color(0xFF334155),
+                    side: BorderSide(color: isDarkMode ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(Icons.visibility_outlined, size: 14),
+                  label: const Text('Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

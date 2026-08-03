@@ -373,14 +373,14 @@ class _CallRepDashboardOverviewState extends State<CallRepDashboardOverview> {
                                 ElevatedButton.icon(
                                   onPressed: () => widget.onStartCall(order),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
-                                    foregroundColor: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                                    backgroundColor: const Color(0xFF10B981),
+                                    foregroundColor: Colors.white,
                                     elevation: 0,
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   ),
-                                  icon: const Icon(Icons.phone, size: 14),
-                                  label: const Text('Start Call', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                  icon: const Icon(Icons.forum_outlined, size: 14),
+                                  label: const Text('Follow-Up 💬📞', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),
