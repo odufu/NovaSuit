@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
 
 void main() async {
   print('================================================================');
@@ -10,7 +9,6 @@ void main() async {
   const sipServerIp = '95.217.244.97';
   const sipPort = 5060;
   const username = '07003100077';
-  const password = 'C)Jz2(yC';
   const domain = '07003100077.astpp.itskysolutions.com';
 
   print('📡 Binding Local Windows OS UDP Socket...');
