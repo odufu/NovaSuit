@@ -12,6 +12,31 @@ class ItSkySipConfig {
   static const String assignedDidNumber = '07003100077';
   static const String defaultDisplayName = 'NovaSuite Live Agent';
 
+  /// 1. CURRENT CONFIGURATION (Native MicroSIP / Desktop UDP 5060)
+  static Map<String, dynamic> get currentUdpConfig => {
+        'transport': 'UDP',
+        'sipHost': providerSipHost,
+        'sipDomain': providerSipDomain,
+        'sipPort': providerSipPort,
+        'username': assignedUsername,
+        'password': assignedPassword,
+        'did': assignedDidNumber,
+        'userAgent': 'MicroSIP/3.21.3',
+      };
+
+  /// 2. TARGET WSS CONFIGURATION (Web Browser WebRTC)
+  static Map<String, dynamic> get targetWssConfig => {
+        'transport': 'WSS',
+        'webSocketUri': wssWebRtcUrl,
+        'sipDomain': providerSipDomain,
+        'sipPort': wssWebRtcPort,
+        'username': assignedUsername,
+        'password': assignedPassword,
+        'did': assignedDidNumber,
+        'userAgent': 'NovaCare-WebRTC/1.0 (SIP.js)',
+        'stunServer': 'stun:stun.l.google.com:19302',
+      };
+
   /// Convenient Alias Getters
   static String get username => assignedUsername;
   static String get password => assignedPassword;
