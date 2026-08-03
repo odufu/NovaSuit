@@ -73,9 +73,9 @@ sequenceDiagram
     Note over Rep,Customer: Scenario B: Proposed WebRTC Web App Integration
     Rep->>Browser: 5. Click "Call Customer" in Web CRM
     Browser->>WSS: 6. WSS Connection: wss://07003100077.astpp.itskysolutions.com:8089/ws
-    WSS->>ASTPP: 7. Translate WSS ➔ UDP 5060 SIP INVITE
+    WSS->>ASTPP: 7. Translate WSS to UDP 5060 SIP INVITE
     ASTPP->>Customer: 8. PSTN Call Connects (Caller ID: 07003100077)
-    Browser<-->>WSS: 9. WebRTC Audio Stream (DTLS-SRTP ➔ RTP G.711u)
+    WSS-->>Browser: 9. WebRTC Audio Stream (DTLS-SRTP to RTP G.711u)
 ```
 
 ---
