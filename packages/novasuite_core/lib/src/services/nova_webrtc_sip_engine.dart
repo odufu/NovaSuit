@@ -43,7 +43,7 @@ class NovaWebRtcSipEngine implements SipUaHelperListener {
   }) async {
     _setState(WebRtcCallState.registering);
 
-    final targetWsUrl = wsUrl ?? 'wss://astpp.itskysolutions.com:7443/ws';
+    final targetWsUrl = wsUrl ?? ItSkySipConfig.wssPort7443Url;
     final targetUser = username ?? ItSkySipConfig.username;
     final targetPass = password ?? ItSkySipConfig.password;
     final targetDomain = domain ?? ItSkySipConfig.domain;

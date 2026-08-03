@@ -27,7 +27,7 @@ class ItSkySipConfig {
   /// 2. TARGET WSS CONFIGURATION (Web Browser WebRTC)
   static Map<String, dynamic> get targetWssConfig => {
         'transport': 'WSS',
-        'webSocketUri': wssWebRtcUrl,
+        'webSocketUri': wssPort7443Url,
         'sipDomain': providerSipDomain,
         'sipPort': wssWebRtcPort,
         'username': assignedUsername,
