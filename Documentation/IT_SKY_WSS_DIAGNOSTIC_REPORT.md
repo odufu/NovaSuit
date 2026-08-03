@@ -25,13 +25,13 @@ graph TD
     end
 ```
 
-### Detailed Test Results Table
+### Detailed Empirical Test Comparison Table
 
 | Endpoint Tested | Server Response | Root Cause Analysis | Action Required by IT Sky |
 | :--- | :--- | :--- | :--- |
-| `wss://astpp.itskysolutions.com:7443` | **HTTP 400 Bad Request** | Port 7443 is active, but Nginx is returning 400 because `Upgrade: websocket` headers are not being proxied to FreeSWITCH / ASTPP | Add `proxy_set_header Upgrade $http_upgrade` in Nginx |
-| `wss://astpp.itskysolutions.com:443/ws` | **HTTP 200 OK (Not Upgraded)** | Nginx on Port 443 is serving standard web content, but `/ws` is not configured for WebSocket Upgrade | Add `/ws` location block to Port 443 Nginx config |
-| `wss://astpp.itskysolutions.com:8089/ws` | **Connection Refused (Errno 1225)** | Port 8089 is currently closed or blocked by server firewall | Open Port 8089 in firewall OR use Nginx proxy on 443/7443 |
+| `wss://astpp.itskysolutions.com:7443` | **HTTP 400 Bad Request** | Port 7443 is active, but Nginx returns 400 because `Upgrade: websocket` headers are missing | Add `proxy_set_header Upgrade $http_upgrade;` to Port 7443 block |
+| `wss://astpp.itskysolutions.com/ws` *(no port / Port 443)* | **HTTP 200 OK (Not Upgraded)** | Standard Port 443 serves web portal HTML, without WebSockets upgrade route | N/A (Keep WebSockets on 7443) |
+| `wss://07003100077.astpp.itskysolutions.com:7443` | **HTTP 400 Bad Request** | Port 7443 receives request but does not upgrade to WebSockets 101 | Add `proxy_set_header Upgrade $http_upgrade;` to Port 7443 block |
 
 ---
 
