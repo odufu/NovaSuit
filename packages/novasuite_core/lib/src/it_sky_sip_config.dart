@@ -53,7 +53,8 @@ class ItSkySipConfig {
 
   /// Signaling Ports & WebRTC Proxy Endpoints
   static const int udpSignalingPort = 5060;
-  static const int wssWebRtcPort = 8089;
+  static const int wssWebRtcPort = 7443;
+  static const String wssPort7443Url = 'wss://astpp.itskysolutions.com:7443/ws';
   static const String wssWebRtcUrl = 'wss://07003100077.astpp.itskysolutions.com:8089/ws';
   static const String wsWebRtcUrl = 'ws://07003100077.astpp.itskysolutions.com:8089/ws';
   static const String wsDirectIpUrl = 'ws://95.217.244.97:8089/ws';
@@ -61,6 +62,7 @@ class ItSkySipConfig {
 
   /// All Fallback Transport Endpoints
   static const List<String> fallbackWebSocketUrls = [
+    wssPort7443Url,
     wssWebRtcUrl,
     wsWebRtcUrl,
     wsDirectIpUrl,
