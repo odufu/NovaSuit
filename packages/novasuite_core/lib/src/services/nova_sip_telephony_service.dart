@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:sip_ua/sip_ua.dart';
 import '../it_sky_sip_config.dart';
 import '../models/order.dart';
+import 'nova_udp_sip_engine.dart';
 
 enum SipRegistrationStatus {
   unregistered,
@@ -27,6 +30,30 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
   NovaSipTelephonyService._internal() {
     _sipHelper.addSipUaHelperListener(this);
+    if (!kIsWeb && Platform.isWindows) {
+      NovaUdpSipEngine().statusStream.listen((udpStatus) {
+        switch (udpStatus) {
+          case UdpSipStatus.unregistered:
+            _notifyRegistrationStatus(SipRegistrationStatus.unregistered);
+            break;
+          case UdpSipStatus.registering:
+            _notifyRegistrationStatus(SipRegistrationStatus.registering);
+            break;
+          case UdpSipStatus.registered:
+            _notifyRegistrationStatus(SipRegistrationStatus.registered);
+            if (_registrationCompleter != null && !_registrationCompleter!.isCompleted) {
+              _registrationCompleter!.complete(true);
+            }
+            break;
+          case UdpSipStatus.registrationFailed:
+            _notifyRegistrationStatus(SipRegistrationStatus.registrationFailed);
+            if (_registrationCompleter != null && !_registrationCompleter!.isCompleted) {
+              _registrationCompleter!.complete(false);
+            }
+            break;
+        }
+      });
+    }
   }
 
   SipRegistrationStatus _registrationStatus = SipRegistrationStatus.unregistered;
@@ -82,6 +109,10 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
   /// Registers NovaSuite Softphone with IT Sky ASTPP SIP Server over multi-transport endpoints
   Future<bool> registerSipTrunk({int urlIndex = 0}) async {
+    if (!kIsWeb && Platform.isWindows) {
+      return await NovaUdpSipEngine().registerUdpTrunk();
+    }
+
     if (_registrationStatus == SipRegistrationStatus.registered && _sipHelper.registered) {
       return true;
     }
@@ -135,6 +166,11 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     _isMuted = false;
     _isOnHold = false;
     _lastError = null;
+
+    if (!kIsWeb && Platform.isWindows) {
+      await NovaUdpSipEngine().initiateCall(order);
+      return;
+    }
 
     _notifyCallState(SipCallSessionState.connectingProvider);
 
@@ -212,6 +248,10 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
   /// Ends the active SIP call session
   void endCall() {
+    if (!kIsWeb && Platform.isWindows) {
+      NovaUdpSipEngine().endCall();
+      return;
+    }
     _durationTimer?.cancel();
     if (_activeSipCall != null) {
       try {
@@ -219,8 +259,7 @@ class NovaSipTelephonyService implements SipUaHelperListener {
       } catch (_) {}
     }
     _notifyCallState(SipCallSessionState.callEnded);
-
-    Timer(const Duration(milliseconds: 1200), () {
+    Timer(const Duration(milliseconds: 1500), () {
       _notifyCallState(SipCallSessionState.disconnected);
     });
   }
