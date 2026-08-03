@@ -329,28 +329,29 @@ class AllOrdersDirectoryCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Row 5: Primary Action - Activities & Next Steps
+            // Row 5: Omnichannel Timeline Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: onOpenActivities,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDarkMode ? const Color(0xFF0284C7) : const Color(0xFF0284C7),
-                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  foregroundColor: const Color(0xFF10B981),
+                  visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   elevation: 0,
                 ),
-                icon: const Icon(Icons.history_toggle_off_rounded, size: 14),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 14),
                 label: Text(
-                  'Activities & Next Steps',
+                  'Omnichannel Timeline & WhatsApp Chat',
                   style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               ),
             ),
             const SizedBox(height: 6),
 
-            // Row 6: Secondary Actions (Call Client, Quick Status Menu, View Details)
+            // Row 6: Secondary Actions (Call Client, WhatsApp 💬, Quick Status Menu, View Details)
             Row(
               children: [
                 Expanded(
@@ -364,6 +365,20 @@ class AllOrdersDirectoryCard extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.phone_outlined, size: 13),
                     label: const Text('Call Client', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onOpenActivities,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.chat_outlined, size: 13),
+                    label: const Text('WhatsApp 💬', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 6),
