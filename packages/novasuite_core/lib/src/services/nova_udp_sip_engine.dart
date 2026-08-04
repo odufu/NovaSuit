@@ -59,6 +59,7 @@ class NovaUdpSipEngine {
   OrderModel? get activeOrder => _activeOrder;
   int get callDuration => _callDuration;
   String? get lastError => _lastError;
+  String? get incomingCallerNumber => _incomingCallerNumber;
 
   void _notifyStatus(UdpSipStatus newStatus) {
     _status = newStatus;
@@ -180,6 +181,7 @@ class NovaUdpSipEngine {
         print('🎉 [UDP SIP] Received 200 OK Response from OpenSIPS!');
         if (_status == UdpSipStatus.registering) {
           _notifyStatus(UdpSipStatus.registered);
+          _startKeepAliveTimer();
           if (_registerCompleter != null && !_registerCompleter!.isCompleted) {
             _registerCompleter!.complete(true);
           }
@@ -243,8 +245,6 @@ class NovaUdpSipEngine {
   String? _incomingCallerNumber;
   String? _activeToTag;
 
-  String? get incomingCallerNumber => _incomingCallerNumber;
-
   void _handleIncomingInviteRequest(String inviteMsg) {
     print('📞 [UDP SIP] INCOMING CALL DETECTED FROM OPENSIPS PBX!');
 
@@ -305,6 +305,18 @@ class NovaUdpSipEngine {
     print('📡 [UDP SIP] Sent 180 Ringing response for incoming call.');
   }
 
+  Timer? _keepAliveTimer;
+
+  void _startKeepAliveTimer() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+      if (_status == UdpSipStatus.registered && _socket != null) {
+        // Send CRLF keep-alive ping to maintain NAT binding (RFC 5626)
+        _socket?.send(utf8.encode('\r\n\r\n'), InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+      }
+    });
+  }
+
   Future<void> answerIncomingCall() async {
     print('📞 [UDP SIP] Answering Inbound Call from $_incomingCallerNumber...');
     _stopRingbackTone();
@@ -312,6 +324,33 @@ class NovaUdpSipEngine {
     _startRtpAudioSession();
     _notifyCallState(UdpCallState.active);
     _startTimer();
+  }
+
+  void rejectIncomingCall() {
+    print('⛔ [UDP SIP] Rejecting Inbound Call from $_incomingCallerNumber...');
+    _stopRingbackTone();
+    _sendSipResponse('486 Busy Here');
+    _notifyCallState(UdpCallState.ended);
+    Timer(const Duration(milliseconds: 1000), () {
+      _notifyCallState(UdpCallState.disconnected);
+    });
+  }
+
+  void _sendSipResponse(String statusCode) {
+    final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
+    final StringBuffer sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 $statusCode');
+    sipMsg.writeln('Via: SIP/2.0/UDP ${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort};rport;branch=$viaBranch');
+    sipMsg.writeln('From: <sip:${_incomingCallerNumber}@${ItSkySipConfig.domain}>;tag=$_activeFromTag');
+    sipMsg.writeln('To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$_activeToTag');
+    sipMsg.writeln('Call-ID: $_activeCallId');
+    sipMsg.writeln('CSeq: 1 INVITE');
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln('');
+
+    final bytes = utf8.encode(sipMsg.toString());
+    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
 
   Future<void> _send200OKAnswerResponse() async {

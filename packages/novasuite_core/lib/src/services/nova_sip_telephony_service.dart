@@ -308,6 +308,16 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     }
   }
 
+  void rejectIncomingCall() {
+    if (!kIsWeb && Platform.isWindows) {
+      NovaUdpSipEngine().rejectIncomingCall();
+      return;
+    }
+    if (_activeSipCall != null) {
+      _activeSipCall!.hangup();
+    }
+  }
+
   /// Ends the active SIP call session
   void endCall() {
     if (!kIsWeb && Platform.isWindows) {

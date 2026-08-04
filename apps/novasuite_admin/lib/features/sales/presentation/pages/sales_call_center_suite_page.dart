@@ -9,6 +9,7 @@ import '../widgets/create_call_script_dialog.dart';
 import '../widgets/master_order_details_dialog.dart';
 import '../widgets/all_orders_directory_card.dart';
 import '../widgets/call_action_modal.dart';
+import '../widgets/incoming_call_modal.dart';
 import '../widgets/supervisee_quota_meter_card.dart';
 import '../widgets/call_rep_dashboard_overview.dart';
 import '../../../logistics/presentation/widgets/reassign_logistics_rep_dialog.dart';
@@ -344,10 +345,35 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
         'color': Colors.blue,
       },
     ];
+
+    _listenForIncomingCalls();
+  }
+
+  StreamSubscription<SipCallSessionState>? _incomingCallSub;
+  final NovaSipTelephonyService _telephonyService = NovaSipTelephonyService();
+
+  void _listenForIncomingCalls() {
+    _incomingCallSub = _telephonyService.callStateStream.listen((state) {
+      if (state == SipCallSessionState.incomingCall && mounted) {
+        final caller = _telephonyService.incomingCallerNumber ?? 'Customer Call';
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => IncomingCallModal(
+            callerNumber: caller,
+            onAnswered: () {
+              Navigator.of(ctx).pop();
+            },
+            onDeclined: () {},
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _incomingCallSub?.cancel();
     _activeSubTabNotifier.dispose();
     _searchQueryNotifier.dispose();
     _stateFilterNotifier.dispose();
