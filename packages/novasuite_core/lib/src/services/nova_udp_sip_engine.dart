@@ -340,8 +340,12 @@ class NovaUdpSipEngine {
     try {
       final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4, includeLinkLocal: false);
       for (final interface in interfaces) {
+        final name = interface.name.toLowerCase();
+        if (name.contains('vethernet') || name.contains('virtual') || name.contains('vmnet') || name.contains('wsl')) {
+          continue;
+        }
         for (final addr in interface.addresses) {
-          if (!addr.isLoopback) {
+          if (!addr.isLoopback && !addr.address.startsWith('192.168.137.')) {
             return addr.address;
           }
         }
@@ -358,29 +362,30 @@ class NovaUdpSipEngine {
     final fromTag = _activeFromTag ?? 'nova${DateTime.now().millisecondsSinceEpoch}';
     final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
     final localIp = await _getLocalIpAddress();
+    final rtpPort = _socket?.port ?? 5060;
 
     final StringBuffer sipMsg = StringBuffer();
     sipMsg.writeln('INVITE sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
-    sipMsg.writeln('Via: SIP/2.0/UDP $localIp:${_socket?.port ?? 5060};rport;branch=$viaBranch');
+    sipMsg.writeln('Via: SIP/2.0/UDP $localIp:$rtpPort;rport;branch=$viaBranch');
     sipMsg.writeln('Max-Forwards: 70');
     sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$fromTag');
     sipMsg.writeln('To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
     sipMsg.writeln('Call-ID: $callId');
     sipMsg.writeln('CSeq: $_cseq INVITE');
-    sipMsg.writeln('Contact: <sip:${ItSkySipConfig.username}@$localIp:${_socket?.port ?? 5060}>');
+    sipMsg.writeln('Contact: <sip:${ItSkySipConfig.username}@$localIp:$rtpPort>');
     if (proxyAuthHeader != null) {
       sipMsg.writeln('Proxy-Authorization: Digest $proxyAuthHeader');
     }
     sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
     sipMsg.writeln('Content-Type: application/sdp');
 
-    // Real LAN IP SDP Audio Offer
-    final sdp = 'v=0\r\no=- ${DateTime.now().millisecondsSinceEpoch} 1 IN IP4 $localIp\r\ns=NovaSuite Voice\r\nc=IN IP4 $localIp\r\nt=0 0\r\nm=audio 8000 RTP/AVP 0 8 101\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:101 telephone-event/8000\r\n';
+    // Real Bound LAN Port SDP 2-Way Audio Offer
+    final sdp = 'v=0\r\no=- ${DateTime.now().millisecondsSinceEpoch} 1 IN IP4 $localIp\r\ns=NovaSuite Voice\r\nc=IN IP4 $localIp\r\nt=0 0\r\nm=audio $rtpPort RTP/AVP 0 8 101\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:101 telephone-event/8000\r\na=sendrecv\r\n';
     sipMsg.writeln('Content-Length: ${sdp.length}');
     sipMsg.writeln('');
     sipMsg.write(sdp);
 
-    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone (Call-ID: $callId, CSeq: $_cseq, Local IP: $localIp)');
+    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone (Call-ID: $callId, CSeq: $_cseq, Local IP: $localIp:$rtpPort)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
