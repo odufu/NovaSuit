@@ -106,6 +106,8 @@ class _CallActionModalState extends State<CallActionModal> {
 
   StreamSubscription? _telephonySubscription;
   StreamSubscription? _durationSubscription;
+  StreamSubscription? _providerReasonSubscription;
+  late ValueNotifier<String?> _providerReasonNotifier;
 
   @override
   void initState() {
@@ -119,6 +121,7 @@ class _CallActionModalState extends State<CallActionModal> {
     _showNotes = ValueNotifier<bool>(false);
     _selectedCategory = ValueNotifier<String?>('confirmed');
     _selectedSubStatus = ValueNotifier<Map<String, dynamic>?>(null);
+    _providerReasonNotifier = ValueNotifier<String?>(null);
 
     _startCallWorkflow();
   }
@@ -152,6 +155,23 @@ class _CallActionModalState extends State<CallActionModal> {
       _secondsElapsed.value = duration;
     });
 
+    _providerReasonSubscription = _telephonyService.providerReasonStream.listen((reason) {
+      if (!mounted) return;
+      _providerReasonNotifier.value = reason;
+
+      // Auto-preselect CRM Disposition when provider returns specific telecom reason
+      if (reason.contains('486') || reason.contains('Busy')) {
+        _selectedCategory.value = 'unreachable';
+        _selectedSubStatus.value = _outcomeCategories[2]['statuses'][2]; // Busy / Line Engaged
+      } else if (reason.contains('480') || reason.contains('Switched Off')) {
+        _selectedCategory.value = 'unreachable';
+        _selectedSubStatus.value = _outcomeCategories[2]['statuses'][1]; // Switched Off
+      } else if (reason.contains('404') || reason.contains('Invalid')) {
+        _selectedCategory.value = 'unreachable';
+        _selectedSubStatus.value = _outcomeCategories[2]['statuses'][0]; // Not Picking / Unreachable
+      }
+    });
+
     _telephonyService.initiateCall(widget.order);
   }
 
@@ -164,6 +184,7 @@ class _CallActionModalState extends State<CallActionModal> {
   void dispose() {
     _telephonySubscription?.cancel();
     _durationSubscription?.cancel();
+    _providerReasonSubscription?.cancel();
     _stage.dispose();
     _secondsElapsed.dispose();
     _isMuted.dispose();
@@ -173,6 +194,7 @@ class _CallActionModalState extends State<CallActionModal> {
     _showNotes.dispose();
     _selectedCategory.dispose();
     _selectedSubStatus.dispose();
+    _providerReasonNotifier.dispose();
     super.dispose();
   }
 
@@ -294,6 +316,41 @@ class _CallActionModalState extends State<CallActionModal> {
                             ),
                           ),
                           const SizedBox(height: 16),
+
+                          // Live Telecom Network Provider Feedback Badge
+                          ValueListenableBuilder<String?>(
+                            valueListenable: _providerReasonNotifier,
+                            builder: (context, reasonVal, _) {
+                              if (reasonVal == null) return const SizedBox.shrink();
+                              return Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: reasonVal.contains('486') || reasonVal.contains('Busy')
+                                      ? (isDarkMode ? const Color(0xFF3F2010) : const Color(0xFFFEF3C7))
+                                      : (isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: reasonVal.contains('486') ? Colors.amber.shade700 : const Color(0xFF0284C7),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.cell_tower_rounded, size: 16, color: Color(0xFF0284C7)),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Telecom Feedback: $reasonVal',
+                                        style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : const Color(0xFF0F172A)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
 
                           // Robust Error Notice Banner
                           if (_telephonyService.lastError != null || stageVal == CallStage.disconnected) ...[

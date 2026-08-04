@@ -44,10 +44,12 @@ class NovaUdpSipEngine {
   final StreamController<UdpSipStatus> _statusController = StreamController.broadcast();
   final StreamController<UdpCallState> _callStateController = StreamController.broadcast();
   final StreamController<int> _durationController = StreamController.broadcast();
+  final StreamController<String> _providerReasonController = StreamController.broadcast();
 
   Stream<UdpSipStatus> get statusStream => _statusController.stream;
   Stream<UdpCallState> get callStateStream => _callStateController.stream;
   Stream<int> get durationStream => _durationController.stream;
+  Stream<String> get providerReasonStream => _providerReasonController.stream;
 
   UdpSipStatus get status => _status;
   UdpCallState get callState => _callState;
@@ -189,11 +191,13 @@ class NovaUdpSipEngine {
         }
       } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
         print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
+        _notifyProviderReason(firstLine, message);
         _parseSdpAnswer(message);
         _startRingbackTone();
         _notifyCallState(UdpCallState.ringing);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
         print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
+        _notifyProviderReason(firstLine, message);
         _stopRingbackTone();
         _sendBye200OKResponse(message);
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
@@ -206,6 +210,7 @@ class NovaUdpSipEngine {
       } else if (message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
           print('⏹️ [UDP SIP] Call Terminated by Remote / PBX (Reason: $firstLine). Sending ACK...');
+          _notifyProviderReason(firstLine, message);
           _sendAckPacket(message);
           _notifyCallState(UdpCallState.ended);
           _durationTimer?.cancel();
@@ -214,6 +219,27 @@ class NovaUdpSipEngine {
           });
         }
       }
+    }
+  }
+
+  void _notifyProviderReason(String firstLine, String message) {
+    String humanReason = firstLine;
+    if (message.contains('486 Busy') || message.contains('Busy Here')) {
+      humanReason = '🔴 Customer Busy on Another Call (486)';
+    } else if (message.contains('480 Temporarily Unavailable') || message.contains('Unavailable')) {
+      humanReason = '🟡 Customer Line Switched Off / Out of Coverage (480)';
+    } else if (message.contains('404 Not Found')) {
+      humanReason = '❌ Invalid / Unassigned Phone Number (404)';
+    } else if (message.contains('603 Decline')) {
+      humanReason = '⛔ Call Rejected by Customer (603)';
+    } else if (message.contains('183 Session Progress')) {
+      humanReason = '📢 Telecom Operator Announcement (183)';
+    } else if (message.contains('180 Ringing')) {
+      humanReason = '🔔 Customer Phone Ringing (180)';
+    }
+    _lastError = humanReason;
+    if (!_providerReasonController.isClosed) {
+      _providerReasonController.add(humanReason);
     }
   }
 

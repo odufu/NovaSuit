@@ -80,6 +80,13 @@ class NovaSipTelephonyService implements SipUaHelperListener {
       NovaUdpSipEngine().durationStream.listen((duration) {
         _notifyDuration(duration);
       });
+
+      NovaUdpSipEngine().providerReasonStream.listen((reason) {
+        _lastError = reason;
+        if (!_providerReasonController.isClosed) {
+          _providerReasonController.add(reason);
+        }
+      });
     }
   }
 
@@ -99,10 +106,12 @@ class NovaSipTelephonyService implements SipUaHelperListener {
   final StreamController<SipRegistrationStatus> _regStatusController = StreamController.broadcast();
   final StreamController<SipCallSessionState> _callStateController = StreamController.broadcast();
   final StreamController<int> _durationController = StreamController.broadcast();
+  final StreamController<String> _providerReasonController = StreamController.broadcast();
 
   Stream<SipRegistrationStatus> get registrationStatusStream => _regStatusController.stream;
   Stream<SipCallSessionState> get callStateStream => _callStateController.stream;
   Stream<int> get durationStream => _durationController.stream;
+  Stream<String> get providerReasonStream => _providerReasonController.stream;
 
   SipRegistrationStatus get registrationStatus => _registrationStatus;
   SipCallSessionState get callState => _callState;
