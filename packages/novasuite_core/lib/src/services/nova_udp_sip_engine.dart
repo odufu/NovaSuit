@@ -251,7 +251,7 @@ class NovaUdpSipEngine {
     final incomingCallId = callIdMatch?.group(1)!.trim();
 
     // Guard against duplicate re-transmitted INVITE packets for the active incoming call
-    if (_activeCallId != null && _activeCallId == incomingCallId && _callState == UdpCallState.incomingCall) {
+    if (_activeCallId != null && _activeCallId == incomingCallId && (_callState == UdpCallState.incomingCall || _callState == UdpCallState.active)) {
       print('🔁 [UDP SIP] Re-transmitting 180 Ringing response for active Call-ID ($incomingCallId)...');
       _send180RingingResponse(inviteMsg);
       return;

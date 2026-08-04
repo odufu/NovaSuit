@@ -352,21 +352,75 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   StreamSubscription<SipCallSessionState>? _incomingCallSub;
   final NovaSipTelephonyService _telephonyService = NovaSipTelephonyService();
 
+  bool _isIncomingCallModalOpen = false;
+
   void _listenForIncomingCalls() {
     _incomingCallSub = _telephonyService.callStateStream.listen((state) {
-      if (state == SipCallSessionState.incomingCall && mounted) {
+      if (!mounted) return;
+
+      if (state == SipCallSessionState.incomingCall) {
+        if (_isIncomingCallModalOpen) return;
+
+        _isIncomingCallModalOpen = true;
         final caller = _telephonyService.incomingCallerNumber ?? 'Customer Call';
+        final callerDigits = caller.replaceAll(RegExp(r'\D'), '');
+        final last7 = callerDigits.length >= 7 ? callerDigits.substring(callerDigits.length - 7) : callerDigits;
+
+        OrderModel? matchingOrder;
+        for (final o in widget.orders) {
+          final phoneDigits = o.customerPhone.replaceAll(RegExp(r'\D'), '');
+          if (phoneDigits.contains(last7) || last7.contains(phoneDigits)) {
+            matchingOrder = o;
+            break;
+          }
+        }
+
+        final targetOrder = matchingOrder ?? (widget.orders.isNotEmpty ? widget.orders.first : OrderModel(
+          id: 'inc-${DateTime.now().millisecondsSinceEpoch}',
+          orderNumber: 'INC-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+          companyId: 'comp-1',
+          productId: 'tea-pack-1',
+          salesRepId: widget.currentUser.id,
+          customerName: 'Customer ($caller)',
+          customerPhone: caller,
+          deliveryState: 'Lagos',
+          deliveryCity: 'Ikeja',
+          deliveryAddress: 'Inbound PSTN Call',
+          status: OrderStatus.pending,
+          quantity: 1,
+          basePrice: 25000,
+          upsellAmount: 0,
+          downsellDiscount: 0,
+          totalAmount: 25000,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ));
+
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => IncomingCallModal(
             callerNumber: caller,
+            order: targetOrder,
             onAnswered: () {
+              _isIncomingCallModalOpen = false;
               Navigator.of(ctx).pop();
+              _openCallActionModal(targetOrder);
             },
-            onDeclined: () {},
+            onDeclined: () {
+              _isIncomingCallModalOpen = false;
+            },
           ),
-        );
+        ).then((_) {
+          _isIncomingCallModalOpen = false;
+        });
+      } else if (state == SipCallSessionState.callEnded || state == SipCallSessionState.disconnected) {
+        if (_isIncomingCallModalOpen) {
+          _isIncomingCallModalOpen = false;
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        }
       }
     });
   }
