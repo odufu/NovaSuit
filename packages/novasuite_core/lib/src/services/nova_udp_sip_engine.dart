@@ -171,10 +171,15 @@ class NovaUdpSipEngine {
       } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
         print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
         _notifyCallState(UdpCallState.ringing);
-      } else if (message.contains('BYE') || message.contains('486 Busy') || message.contains('603 Decline')) {
-        print('⏹️ [UDP SIP] Call Terminated by Remote / PBX.');
-        _notifyCallState(UdpCallState.ended);
-        _durationTimer?.cancel();
+      } else if (message.contains('BYE') || message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
+        print('⏹️ [UDP SIP] Call Terminated by Remote / PBX (Reason: $firstLine).');
+        if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
+          _notifyCallState(UdpCallState.ended);
+          _durationTimer?.cancel();
+          Timer(const Duration(milliseconds: 1200), () {
+            _notifyCallState(UdpCallState.disconnected);
+          });
+        }
       }
     }
   }
