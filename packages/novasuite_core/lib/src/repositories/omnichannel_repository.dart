@@ -41,31 +41,56 @@ class OmnichannelRepository {
     required String destinationNumber,
     required int durationSeconds,
     String? recordingUrl,
-    required String disposition, // 'answered', 'busy', 'no_answer', 'failed'
+    required String disposition, // 'answered', 'busy', 'no_answer', 'missed', 'declined', 'inbound_answered'
+    String direction = 'outbound', // 'inbound' or 'outbound'
+    String? callerId,
     String? notes,
   }) async {
     try {
+      final effectiveCallerId = callerId ?? (direction == 'inbound' ? destinationNumber : '07003100077');
+      final effectiveDestination = direction == 'inbound' ? '07003100077' : destinationNumber;
+
       final response = await _client.from('call_logs').insert({
         'conversation_id': conversationId,
         'order_id': orderId,
         'sales_rep_id': salesRepId,
-        'caller_id': '07003100077',
-        'destination_number': destinationNumber,
+        'caller_id': effectiveCallerId,
+        'destination_number': effectiveDestination,
         'duration_seconds': durationSeconds,
         'recording_url': recordingUrl,
         'disposition': disposition,
-        'notes': notes ?? 'PSTN Call Session Logged',
+        'notes': notes ?? '${direction.toUpperCase()} Call Session Logged',
         'started_at': DateTime.now().subtract(Duration(seconds: durationSeconds)).toIso8601String(),
         'ended_at': DateTime.now().toIso8601String(),
       }).select().single();
 
-      // Update conversation status & summary in Supabase
+      final summaryIcon = direction == 'inbound'
+          ? (disposition.contains('answered') ? '📞 Inbound Call Answered' : (disposition == 'declined' ? '❌ Declined Call' : '📵 Missed Call'))
+          : (disposition == 'answered' ? '📞 Outbound Call Answered' : '📵 Outbound Call No Answer');
+          
+      final formattedTime = '${durationSeconds ~/ 60}:${(durationSeconds % 60).toString().padLeft(2, '0')}';
+      final summaryText = '$summaryIcon • $formattedTime';
+
+      // Update or create conversation status & summary in Supabase
       if (conversationId != null) {
         await _client.from('conversations').update({
-          'status': disposition == 'answered' ? 'answered' : (disposition == 'busy' ? 'busy' : 'missed'),
-          'last_message_summary': '📞 PSTN Call ($disposition) • ${durationSeconds}s',
+          'status': disposition.contains('answered') ? 'answered' : (disposition == 'busy' ? 'busy' : 'missed'),
+          'last_message_summary': summaryText,
           'last_message_at': DateTime.now().toIso8601String(),
         }).eq('id', conversationId);
+      } else {
+        final conv = await fetchOrCreateConversation(
+          companyId: 'comp-1',
+          orderId: orderId,
+          customerPhone: destinationNumber,
+          customerName: 'Customer ($destinationNumber)',
+          repId: salesRepId,
+        );
+        await _client.from('conversations').update({
+          'status': disposition.contains('answered') ? 'answered' : (disposition == 'busy' ? 'busy' : 'missed'),
+          'last_message_summary': summaryText,
+          'last_message_at': DateTime.now().toIso8601String(),
+        }).eq('id', conv.id);
       }
 
       return response;

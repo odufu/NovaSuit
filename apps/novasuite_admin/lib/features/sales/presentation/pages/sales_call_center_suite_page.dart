@@ -425,8 +425,9 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                 salesRepId: widget.currentUser.id,
                 destinationNumber: caller,
                 durationSeconds: 0,
-                disposition: 'missed',
-                notes: 'Inbound call declined or missed by ${widget.currentUser.fullName}',
+                disposition: 'declined',
+                direction: 'inbound',
+                notes: 'Inbound PSTN call declined by ${widget.currentUser.fullName}',
               );
             },
           ),
@@ -435,7 +436,16 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
         });
       } else if (state == SipCallSessionState.callEnded || state == SipCallSessionState.disconnected) {
         if (_isIncomingCallModalOpen) {
-          debugPrint('⏹️ [UI] Remote caller cancelled call / hung up. Dismissing IncomingCallModal...');
+          debugPrint('⏹️ [UI] Remote caller cancelled call / missed. Dismissing IncomingCallModal & logging missed call history...');
+          final caller = _telephonyService.incomingCallerNumber ?? 'Unknown Caller';
+          OmnichannelRepository().saveCallLog(
+            salesRepId: widget.currentUser.id,
+            destinationNumber: caller,
+            durationSeconds: 0,
+            disposition: 'missed',
+            direction: 'inbound',
+            notes: 'Inbound PSTN call missed / cancelled by caller ($caller)',
+          );
           _isIncomingCallModalOpen = false;
           Navigator.of(context, rootNavigator: true).pop();
         }

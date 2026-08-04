@@ -779,12 +779,19 @@ class _CallActionModalState extends State<CallActionModal> {
 
                                                 widget.onUpdateOrder(updated);
 
-                                                widget.onRecordActivity(
-                                                  order: updated,
-                                                  activityType: 'status_update',
-                                                  title: 'Status updated to "$chosenLabel"',
-                                                  details: widget.noteController.text.isNotEmpty ? widget.noteController.text : 'Pipeline stage updated via call outcome console.',
-                                                  newStatus: chosenStatus.dbValue,
+                                                final categoryId = _selectedCategory.value ?? 'confirmed';
+                                                OmnichannelRepository().saveCallLog(
+                                                  orderId: widget.order.id,
+                                                  salesRepId: widget.currentUser.id,
+                                                  destinationNumber: widget.order.customerPhone,
+                                                  durationSeconds: _secondsElapsed.value,
+                                                  disposition: widget.isIncomingCall
+                                                      ? 'inbound_answered'
+                                                      : (categoryId == 'unreachable' ? 'no_answer' : 'answered'),
+                                                  direction: widget.isIncomingCall ? 'inbound' : 'outbound',
+                                                  notes: widget.noteController.text.isNotEmpty
+                                                      ? '${categoryId.toUpperCase()}: ${widget.noteController.text}'
+                                                      : 'Call Outcome: $chosenLabel (${_secondsElapsed.value}s)',
                                                 );
 
                                                 ScaffoldMessenger.of(context).showSnackBar(
