@@ -153,6 +153,9 @@ class NovaUdpSipEngine {
       if (message.contains('SIP/2.0 401 Unauthorized')) {
         print('🔒 [UDP SIP] Received 401 Unauthorized Challenge -> Resolving MD5 Digest...');
         _handle401Challenge(message);
+      } else if (message.contains('SIP/2.0 407 Proxy Authentication Required')) {
+        print('🔒 [UDP SIP] Received 407 Proxy Authentication Challenge -> Resolving INVITE MD5 Digest...');
+        _handle407Challenge(message);
       } else if (message.contains('SIP/2.0 200 OK')) {
         print('🎉 [UDP SIP] Received 200 OK Response from OpenSIPS!');
         if (_status == UdpSipStatus.registering) {
@@ -208,6 +211,39 @@ class NovaUdpSipEngine {
     }
   }
 
+  /// Handles 407 Proxy Authentication Required Digest MD5 Challenge from OpenSIPS for INVITE calls
+  void _handle407Challenge(String message) {
+    final nonceMatch = RegExp(r'nonce="([^"]+)"').firstMatch(message);
+    if (nonceMatch != null && _activeOrder != null) {
+      final nonce = nonceMatch.group(1)!;
+      final realmMatch = RegExp(r'realm="([^"]+)"').firstMatch(message) ?? RegExp(r'realm=([^\s,]+)').firstMatch(message);
+      final qopMatch = RegExp(r'qop="([^"]+)"').firstMatch(message);
+
+      final realm = realmMatch?.group(1) ?? ItSkySipConfig.domain;
+      final qop = qopMatch?.group(1);
+      final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
+      final uri = 'sip:$formattedPhone@${ItSkySipConfig.domain}';
+      final cnonce = 'nova${DateTime.now().millisecondsSinceEpoch}';
+      const nc = '00000001';
+
+      final ha1 = md5.convert(utf8.encode('${ItSkySipConfig.username}:$realm:${ItSkySipConfig.password}')).toString();
+      final ha2 = md5.convert(utf8.encode('INVITE:$uri')).toString();
+      
+      String responseHash;
+      String authHeader;
+
+      if (qop == 'auth' || qop == 'auth,auth-int') {
+        responseHash = md5.convert(utf8.encode('$ha1:$nonce:$nc:$cnonce:auth:$ha2')).toString();
+        authHeader = 'username="${ItSkySipConfig.username}", realm="$realm", nonce="$nonce", uri="$uri", response="$responseHash", cnonce="$cnonce", nc=$nc, qop=auth, algorithm=MD5';
+      } else {
+        responseHash = md5.convert(utf8.encode('$ha1:$nonce:$ha2')).toString();
+        authHeader = 'username="${ItSkySipConfig.username}", realm="$realm", nonce="$nonce", uri="$uri", response="$responseHash", algorithm=MD5';
+      }
+
+      _sendInvitePacket(authHeader);
+    }
+  }
+
   /// Initiates an outbound UDP SIP INVITE call to customer phone number
   Future<void> initiateCall(OrderModel order) async {
     _activeOrder = order;
@@ -226,7 +262,13 @@ class NovaUdpSipEngine {
       }
     }
 
+    _sendInvitePacket();
+  }
+
+  void _sendInvitePacket([String? proxyAuthHeader]) {
+    if (_activeOrder == null) return;
     _cseq++;
+    final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
     final callId = 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '0.0.0.0'}';
     final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
 
@@ -239,6 +281,9 @@ class NovaUdpSipEngine {
     sipMsg.writeln('Call-ID: $callId');
     sipMsg.writeln('CSeq: $_cseq INVITE');
     sipMsg.writeln('Contact: <sip:${ItSkySipConfig.username}@${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060}>');
+    if (proxyAuthHeader != null) {
+      sipMsg.writeln('Proxy-Authorization: Digest $proxyAuthHeader');
+    }
     sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
     sipMsg.writeln('Content-Type: application/sdp');
 
@@ -248,7 +293,7 @@ class NovaUdpSipEngine {
     sipMsg.writeln('');
     sipMsg.write(sdp);
 
-    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone');
+    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone (CSeq: $_cseq)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
