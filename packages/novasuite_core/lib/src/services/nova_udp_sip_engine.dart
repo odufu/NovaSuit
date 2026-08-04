@@ -215,6 +215,8 @@ class NovaUdpSipEngine {
         _notifyCallState(UdpCallState.ringing);
       } else if (message.startsWith('INVITE') || message.contains('\r\nINVITE ')) {
         _handleIncomingInviteRequest(message);
+      } else if (message.startsWith('CANCEL') || message.contains('\r\nCANCEL ')) {
+        _handleIncomingCancelRequest(message);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
         print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
         _notifyProviderReason(firstLine, message);
@@ -299,6 +301,64 @@ class NovaUdpSipEngine {
 
     // 4. Force Windows app to un-minimize, restore to foreground focus, and flash taskbar icon!
     NovaWindowsFocusService().bringAppToForegroundAndFlash();
+  }
+
+  void _handleIncomingCancelRequest(String cancelMsg) {
+    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS (Caller Cancelled Call / Hung Up). Responding with 200 OK & 487 Request Terminated...');
+    _stopRingbackTone();
+
+    _sendCancel200OKResponse(cancelMsg);
+    _send487RequestTerminatedResponse(cancelMsg);
+
+    _activeCallId = null;
+    _activeFromTag = null;
+    _activeToTag = null;
+
+    _notifyCallState(UdpCallState.ended);
+    Timer(const Duration(milliseconds: 200), () {
+      _notifyCallState(UdpCallState.disconnected);
+    });
+  }
+
+  void _sendCancel200OKResponse(String cancelMsg) {
+    final viaMatch = RegExp(r'Via: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final toMatch = RegExp(r'To: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final cseqMatch = RegExp(r'CSeq: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+
+    final sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 200 OK');
+    if (viaMatch != null) sipMsg.writeln(viaMatch.group(0));
+    if (fromMatch != null) sipMsg.writeln(fromMatch.group(0));
+    if (toMatch != null) sipMsg.writeln(toMatch.group(0));
+    if (callIdMatch != null) sipMsg.writeln(callIdMatch.group(0));
+    if (cseqMatch != null) sipMsg.writeln(cseqMatch.group(0));
+    sipMsg.writeln('User-Agent: NovaSuite Engine v1.0 (Windows)');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln();
+
+    _sendDatagram(sipMsg.toString());
+  }
+
+  void _send487RequestTerminatedResponse(String cancelMsg) {
+    final viaMatch = RegExp(r'Via: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final toMatch = RegExp(r'To: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+    final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(cancelMsg);
+
+    final sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 487 Request Terminated');
+    if (viaMatch != null) sipMsg.writeln(viaMatch.group(0));
+    if (fromMatch != null) sipMsg.writeln(fromMatch.group(0));
+    if (toMatch != null) sipMsg.writeln(toMatch.group(0));
+    if (callIdMatch != null) sipMsg.writeln(callIdMatch.group(0));
+    sipMsg.writeln('CSeq: 1 INVITE');
+    sipMsg.writeln('User-Agent: NovaSuite Engine v1.0 (Windows)');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln();
+
+    _sendDatagram(sipMsg.toString());
   }
 
   void _sendDatagram(String sipMsg) {

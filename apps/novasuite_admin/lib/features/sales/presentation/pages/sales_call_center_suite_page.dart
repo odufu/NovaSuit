@@ -432,10 +432,9 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
         });
       } else if (state == SipCallSessionState.callEnded || state == SipCallSessionState.disconnected) {
         if (_isIncomingCallModalOpen) {
+          debugPrint('⏹️ [UI] Remote caller cancelled call / hung up. Dismissing IncomingCallModal...');
           _isIncomingCallModalOpen = false;
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          }
+          Navigator.of(context, rootNavigator: true).pop();
         }
       }
     });
