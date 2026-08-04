@@ -74,26 +74,42 @@ class NovaUdpSipEngine {
     }
   }
 
+  Completer<bool>? _registerCompleter;
+
   /// Initializes UDP Socket on Port 5060 or ephemeral port and registers with OpenSIPS/ASTPP PBX
   Future<bool> registerUdpTrunk() async {
     if (_status == UdpSipStatus.registered) return true;
 
+    print('📡 [UDP SIP] Starting registration with IT Sky SIP server (${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort})...');
     _notifyStatus(UdpSipStatus.registering);
     _lastError = null;
+    _registerCompleter = Completer<bool>();
 
     try {
       if (_socket == null) {
         _socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+        print('✅ [UDP SIP] Local UDP Socket bound on port: ${_socket!.port}');
         _socket!.listen(_handleIncomingDatagram);
       }
 
       _sendRegisterPacket();
-      return true;
+      
+      // Safety timeout after 5 seconds
+      Timer(const Duration(seconds: 5), () {
+        if (_registerCompleter != null && !_registerCompleter!.isCompleted) {
+          print('⚠️ [UDP SIP] Registration timed out waiting for 200 OK response');
+          _notifyStatus(UdpSipStatus.registrationFailed);
+          _registerCompleter!.complete(false);
+        }
+      });
     } catch (e) {
+      print('❌ [UDP SIP] Socket Error: $e');
       _lastError = 'UDP Socket Error: $e';
       _notifyStatus(UdpSipStatus.registrationFailed);
-      return false;
+      _registerCompleter?.complete(false);
     }
+
+    return _registerCompleter!.future;
   }
 
   /// Sends raw SIP REGISTER packet to OpenSIPS Host 95.217.244.97:5060
@@ -119,6 +135,7 @@ class NovaUdpSipEngine {
     sipMsg.writeln('Content-Length: 0');
     sipMsg.writeln('');
 
+    print('📡 [UDP SIP] Outbound REGISTER packet sent (CSeq: $_cseq)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
@@ -130,19 +147,29 @@ class NovaUdpSipEngine {
       if (datagram == null) return;
 
       final message = utf8.decode(datagram.data);
+      final firstLine = message.split('\r\n').first;
+      print('📥 [UDP SIP] Received Datagram: $firstLine');
 
       if (message.contains('SIP/2.0 401 Unauthorized')) {
+        print('🔒 [UDP SIP] Received 401 Unauthorized Challenge -> Resolving MD5 Digest...');
         _handle401Challenge(message);
       } else if (message.contains('SIP/2.0 200 OK')) {
+        print('🎉 [UDP SIP] Received 200 OK Response from OpenSIPS!');
         if (_status == UdpSipStatus.registering) {
           _notifyStatus(UdpSipStatus.registered);
+          if (_registerCompleter != null && !_registerCompleter!.isCompleted) {
+            _registerCompleter!.complete(true);
+          }
         } else if (_callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
+          print('📞 [UDP SIP] Call Answered! Audio stream active.');
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
-      } else if (message.contains('180 Ringing')) {
+      } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
+        print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
         _notifyCallState(UdpCallState.ringing);
       } else if (message.contains('BYE') || message.contains('486 Busy') || message.contains('603 Decline')) {
+        print('⏹️ [UDP SIP] Call Terminated by Remote / PBX.');
         _notifyCallState(UdpCallState.ended);
         _durationTimer?.cancel();
       }
@@ -174,7 +201,7 @@ class NovaUdpSipEngine {
         authHeader = 'Digest username="${ItSkySipConfig.username}", realm="$realm", nonce="$_lastNonce", uri="$uri", response="$responseHash", cnonce="$cnonce", nc=$nc, qop=auth, algorithm=MD5';
       } else {
         responseHash = md5.convert(utf8.encode('$ha1:$_lastNonce:$ha2')).toString();
-        authHeader = 'Digest username="${ItSkySipConfig.username}", realm="$realm", nonce="$nonceMatch", uri="$uri", response="$responseHash", algorithm=MD5';
+        authHeader = 'Digest username="${ItSkySipConfig.username}", realm="$realm", nonce="$_lastNonce", uri="$uri", response="$responseHash", algorithm=MD5';
       }
 
       _sendRegisterPacket(authHeader);
@@ -187,12 +214,19 @@ class NovaUdpSipEngine {
     _callDuration = 0;
     _notifyCallState(UdpCallState.connecting);
 
+    final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
+    print('📞 [UDP SIP] Initiating Call to Customer Phone: $formattedPhone (${order.customerName})...');
+
     if (_status != UdpSipStatus.registered) {
-      await registerUdpTrunk();
+      final registered = await registerUdpTrunk();
+      if (!registered) {
+        print('❌ [UDP SIP] Registration failed. Cannot place call.');
+        _notifyCallState(UdpCallState.disconnected);
+        return;
+      }
     }
 
     _cseq++;
-    final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
     final callId = 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '0.0.0.0'}';
     final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
 
@@ -214,6 +248,7 @@ class NovaUdpSipEngine {
     sipMsg.writeln('');
     sipMsg.write(sdp);
 
+    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
@@ -226,6 +261,7 @@ class NovaUdpSipEngine {
   }
 
   void endCall() {
+    print('⏹️ [UDP SIP] Hanging up call...');
     _durationTimer?.cancel();
     _notifyCallState(UdpCallState.ended);
     Timer(const Duration(milliseconds: 1000), () {
