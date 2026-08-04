@@ -414,7 +414,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
             onAnswered: () {
               _isIncomingCallModalOpen = false;
               Navigator.of(ctx).pop();
-              _openCallActionModal(targetOrder);
+              _openCallActionModal(targetOrder, isIncomingCall: true);
             },
             onDeclined: () {
               _isIncomingCallModalOpen = false;
@@ -2655,7 +2655,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
 
   bool _isCallActionModalOpen = false;
 
-  void _openCallActionModal(OrderModel order) {
+  void _openCallActionModal(OrderModel order, {bool isIncomingCall = false}) {
     if (_isCallActionModalOpen) return;
     _isCallActionModalOpen = true;
 
@@ -2664,6 +2664,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => CallActionModal(
         order: order,
+        isIncomingCall: isIncomingCall,
         activeTheme: widget.activeTheme,
         currentUser: widget.currentUser,
         noteController: _noteController,

@@ -13,6 +13,7 @@ enum CallStage {
 
 class CallActionModal extends StatefulWidget {
   final OrderModel order;
+  final bool isIncomingCall;
   final TenantTheme activeTheme;
   final UserModel currentUser;
   final TextEditingController noteController;
@@ -31,6 +32,7 @@ class CallActionModal extends StatefulWidget {
   const CallActionModal({
     super.key,
     required this.order,
+    this.isIncomingCall = false,
     required this.activeTheme,
     required this.currentUser,
     required this.noteController,
@@ -112,7 +114,7 @@ class _CallActionModalState extends State<CallActionModal> {
   @override
   void initState() {
     super.initState();
-    _stage = ValueNotifier<CallStage>(CallStage.connectingProvider);
+    _stage = ValueNotifier<CallStage>(widget.isIncomingCall ? CallStage.callInProgress : CallStage.connectingProvider);
     _secondsElapsed = ValueNotifier<int>(0);
     _isMuted = ValueNotifier<bool>(false);
     _isOnHold = ValueNotifier<bool>(false);
@@ -172,7 +174,11 @@ class _CallActionModalState extends State<CallActionModal> {
       }
     });
 
-    _telephonyService.initiateCall(widget.order);
+    if (widget.isIncomingCall) {
+      _stage.value = CallStage.callInProgress;
+    } else {
+      _telephonyService.initiateCall(widget.order);
+    }
   }
 
   void _endCall() {
