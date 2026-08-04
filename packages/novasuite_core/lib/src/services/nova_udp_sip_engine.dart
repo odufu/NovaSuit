@@ -306,10 +306,17 @@ class NovaUdpSipEngine {
   }
 
   void _handleIncomingCancelRequest(String cancelMsg) {
-    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS (Caller Cancelled Call / Hung Up). Responding with 200 OK & 487 Request Terminated...');
+    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS. Sending 200 OK response...');
     _stopRingbackTone();
 
     _sendCancel200OKResponse(cancelMsg);
+
+    // Per SIP RFC 3261 Section 9.2: CANCEL has no effect if 200 OK final response was already sent!
+    if (_callState == UdpCallState.active) {
+      print('ℹ️ [UDP SIP] Call is ALREADY ACTIVE (200 OK answered). Ignoring late CANCEL request.');
+      return;
+    }
+
     _send487RequestTerminatedResponse(cancelMsg);
 
     _activeCallId = null;
