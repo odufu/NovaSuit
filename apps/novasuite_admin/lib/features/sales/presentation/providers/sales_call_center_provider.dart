@@ -130,11 +130,9 @@ class SalesCallCenterProvider extends ChangeNotifier {
   }
 
   void updateOrder(OrderModel updatedOrder) {
-    final index = _orders.indexWhere((o) => o.id == updatedOrder.id);
-    if (index != -1) {
-      _orders[index] = updatedOrder;
-      notifyListeners();
-    }
+    _orders.removeWhere((o) => o.id == updatedOrder.id);
+    _orders.insert(0, updatedOrder);
+    notifyListeners();
   }
 
   void setActiveTabIndex(int index) {

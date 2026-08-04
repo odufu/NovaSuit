@@ -11,7 +11,6 @@ import 'features/logistics/presentation/providers/logistics_provider.dart';
 import 'features/marketing/presentation/providers/marketing_provider.dart';
 import 'features/finance/presentation/providers/finance_provider.dart';
 import 'features/auth/presentation/pages/login_screen.dart';
-import 'features/sales/presentation/widgets/request_upsell_dialog.dart';
 import 'features/sales/presentation/pages/sales_call_center_suite_page.dart';
 import 'features/sales_supervisor/presentation/pages/supervisor_console_page.dart';
 import 'features/marketing/presentation/widgets/fund_marketer_dialog.dart';
@@ -228,51 +227,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
     }
   }
 
-  void _handleRequestUpsell(OrderModel order) async {
-    final salesProvider = context.read<SalesCallCenterProvider>();
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => RequestUpsellDialog(
-        order: order,
-        activeTheme: widget.activeTheme,
-      ),
-    );
 
-    if (result != null) {
-      final updatedOrder = OrderModel(
-        id: order.id,
-        orderNumber: order.orderNumber,
-        companyId: order.companyId,
-        productId: order.productId,
-        salesRepId: order.salesRepId,
-        customerName: order.customerName,
-        customerPhone: order.customerPhone,
-        deliveryState: order.deliveryState,
-        deliveryCity: order.deliveryCity,
-        deliveryAddress: order.deliveryAddress,
-        status: OrderStatus.upsellPending,
-        quantity: order.quantity,
-        basePrice: order.basePrice,
-        upsellAmount: result['upsell_amount'] as double,
-        downsellDiscount: result['downsell_discount'] as double,
-        totalAmount: result['new_total_amount'] as double,
-        upsellStatus: UpsellStatus.pending,
-        upsellNotes: result['notes'] as String,
-        paymentStatus: order.paymentStatus,
-        createdAt: order.createdAt,
-        updatedAt: DateTime.now(),
-      );
-      salesProvider.updateOrder(updatedOrder);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: widget.activeTheme.primaryColor,
-          content: Text('Up-sell request for #${order.orderNumber} sent to Supervisor Realtime Queue!'),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1265,13 +1220,6 @@ class _AdminMainShellState extends State<AdminMainShell> {
           _buildPerformanceTrendChart(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
           const SizedBox(height: 16),
           _buildAnalyticsDistributionSection(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
-
-          const SizedBox(height: 30),
-
-          // Live Orders Table
-          Text('Recent Incoming Orders', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _ordersTable(orders),
         ],
       ),
     );
@@ -1886,139 +1834,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
     );
   }
 
-  Widget _ordersTable(List<OrderModel> orders) {
-    final currency = widget.activeTheme.currencySymbol;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final tableBg = isDark ? const Color(0xFF132A22) : Colors.white;
-    final tableBorder = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
-    final mutedColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: tableBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: tableBorder, width: 1),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(
-            isDark ? const Color(0xFF0E2419) : const Color(0xFFF8FAFC),
-          ),
-          columns: [
-            DataColumn(label: Text('Order #', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor, letterSpacing: 0.4))),
-            DataColumn(label: Text('Customer', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor, letterSpacing: 0.4))),
-            DataColumn(label: Text('State/City', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor, letterSpacing: 0.4))),
-            DataColumn(label: Text('Total', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor, letterSpacing: 0.4))),
-            DataColumn(label: Text('Status', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor, letterSpacing: 0.4))),
-            DataColumn(label: Text('Actions', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12, color: mutedColor, letterSpacing: 0.4))),
-          ],
-          rows: orders.map((order) {
-            return DataRow(
-              cells: [
-                DataCell(Text(
-                  order.orderNumber,
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 13, color: cs.onSurface),
-                )),
-                DataCell(Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      order.customerName,
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13, color: cs.onSurface),
-                    ),
-                    Text(
-                      order.customerPhone,
-                      style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
-                    ),
-                  ],
-                )),
-                DataCell(Text(
-                  '${order.deliveryState} / ${order.deliveryCity ?? "-"}',
-                  style: GoogleFonts.outfit(fontSize: 13, color: cs.onSurface),
-                )),
-                DataCell(Text(
-                  '$currency ${order.totalAmount}',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF10B981),
-                    fontSize: 13,
-                  ),
-                )),
-                DataCell(_statusChip(order.status)),
-                DataCell(
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.phone_forwarded_rounded, color: Color(0xFF3B82F6), size: 18),
-                        onPressed: () {},
-                        tooltip: 'Dial Client',
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_note_rounded, color: Color(0xFFF59E0B), size: 18),
-                        onPressed: () => _handleRequestUpsell(order),
-                        tooltip: 'Add Upsell / Downsell',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
 
-  Widget _statusChip(OrderStatus status) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    Color bg;
-    Color fg;
-    Color borderColor;
-
-    switch (status) {
-      case OrderStatus.upsellPending:
-        fg = const Color(0xFF8B5CF6);
-        bg = isDark ? const Color(0xFF8B5CF6).withValues(alpha: 0.15) : const Color(0xFFF5F3FF);
-        borderColor = const Color(0xFF8B5CF6).withValues(alpha: isDark ? 0.4 : 0.2);
-        break;
-      case OrderStatus.accepted:
-        fg = const Color(0xFF10B981);
-        bg = isDark ? const Color(0xFF10B981).withValues(alpha: 0.15) : const Color(0xFFECFDF5);
-        borderColor = const Color(0xFF10B981).withValues(alpha: isDark ? 0.4 : 0.2);
-        break;
-      case OrderStatus.inTransit:
-        fg = const Color(0xFF3B82F6);
-        bg = isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.15) : const Color(0xFFEFF6FF);
-        borderColor = const Color(0xFF3B82F6).withValues(alpha: isDark ? 0.4 : 0.2);
-        break;
-      default:
-        fg = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-        bg = isDark ? const Color(0xFF1E3E33) : const Color(0xFFF1F5F9);
-        borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: 1),
-      ),
-      child: Text(
-        status.label,
-        style: GoogleFonts.outfit(
-          color: fg,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
 }

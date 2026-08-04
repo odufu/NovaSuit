@@ -3072,8 +3072,16 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           context,
                           currentUser: widget.currentUser,
                           onSaved: (newOrder) {
+                            widget.orders.removeWhere((o) => o.id == newOrder.id);
+                            widget.orders.insert(0, newOrder);
                             widget.onUpdateOrder(newOrder);
                             setState(() {});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: const Color(0xFF10B981),
+                                content: Text('🎉 Order #${newOrder.orderNumber} created live for ${newOrder.customerName}! Registered in Database.'),
+                              ),
+                            );
                           },
                         );
                       },
@@ -3840,6 +3848,40 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                         if (o.upsellNotes != null) ...[
                           const SizedBox(height: 6),
                           Text('Rep Note: ${o.upsellNotes}', style: const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 12)),
+                        ],
+                        if (isPending && (widget.currentUser.role == UserRole.supervisor || widget.currentUser.role == UserRole.hod || widget.currentUser.role == UserRole.superAdmin)) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  final updated = o.copyWith(upsellStatus: UpsellStatus.approved);
+                                  widget.onUpdateOrder(updated);
+                                  setState(() {});
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(backgroundColor: const Color(0xFF10B981), content: Text('✅ Upsell approved for Order #${o.orderNumber}!')),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+                                icon: const Icon(Icons.check_circle_outline, size: 16),
+                                label: const Text('Approve Upsell'),
+                              ),
+                              const SizedBox(width: 10),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  final updated = o.copyWith(upsellStatus: UpsellStatus.rejected);
+                                  widget.onUpdateOrder(updated);
+                                  setState(() {});
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(backgroundColor: Colors.red, content: Text('❌ Upsell rejected for Order #${o.orderNumber}')),
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                                icon: const Icon(Icons.cancel_outlined, size: 16),
+                                label: const Text('Reject Upsell'),
+                              ),
+                            ],
+                          ),
                         ],
                       ],
                     ),
