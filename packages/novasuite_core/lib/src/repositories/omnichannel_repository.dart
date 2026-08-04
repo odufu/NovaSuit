@@ -8,18 +8,69 @@ class OmnichannelRepository {
   OmnichannelRepository({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
 
-  /// Fetch all active conversations for company (both order-bound and open-ended)
-  Future<List<ConversationModel>> fetchAllConversations({required String companyId}) async {
+  /// Fetch active conversations filtered by user role (Call Rep vs Supervisor vs Admin)
+  Future<List<ConversationModel>> fetchAllConversations({
+    required String companyId,
+    required String userRole,
+    required String userId,
+    List<String> teamMemberIds = const [],
+  }) async {
     try {
-      final response = await _client
-          .from('conversations')
-          .select()
-          .eq('company_id', companyId)
-          .order('last_message_at', ascending: false);
+      var query = _client.from('conversations').select().eq('company_id', companyId);
 
+      if (userRole == 'sales_call_rep') {
+        // Sales Reps can only view conversations assigned to them
+        query = query.eq('assigned_rep_id', userId);
+      } else if (userRole == 'supervisor' && teamMemberIds.isNotEmpty) {
+        // Supervisors can view their team members' conversations
+        query = query.inFilter('assigned_rep_id', [...teamMemberIds, userId]);
+      }
+
+      final response = await query.order('last_message_at', ascending: false);
       return (response as List).map((json) => ConversationModel.fromMap(json)).toList();
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Persist Call Telemetry & Log into Supabase Database `call_logs` table
+  Future<Map<String, dynamic>?> saveCallLog({
+    String? conversationId,
+    String? orderId,
+    required String salesRepId,
+    required String destinationNumber,
+    required int durationSeconds,
+    String? recordingUrl,
+    required String disposition, // 'answered', 'busy', 'no_answer', 'failed'
+    String? notes,
+  }) async {
+    try {
+      final response = await _client.from('call_logs').insert({
+        'conversation_id': conversationId,
+        'order_id': orderId,
+        'sales_rep_id': salesRepId,
+        'caller_id': '07003100077',
+        'destination_number': destinationNumber,
+        'duration_seconds': durationSeconds,
+        'recording_url': recordingUrl,
+        'disposition': disposition,
+        'notes': notes ?? 'PSTN Call Session Logged',
+        'started_at': DateTime.now().subtract(Duration(seconds: durationSeconds)).toIso8601String(),
+        'ended_at': DateTime.now().toIso8601String(),
+      }).select().single();
+
+      // Update conversation status & summary in Supabase
+      if (conversationId != null) {
+        await _client.from('conversations').update({
+          'status': disposition == 'answered' ? 'answered' : (disposition == 'busy' ? 'busy' : 'missed'),
+          'last_message_summary': '📞 PSTN Call ($disposition) • ${durationSeconds}s',
+          'last_message_at': DateTime.now().toIso8601String(),
+        }).eq('id', conversationId);
+      }
+
+      return response;
+    } catch (_) {
+      return null;
     }
   }
 

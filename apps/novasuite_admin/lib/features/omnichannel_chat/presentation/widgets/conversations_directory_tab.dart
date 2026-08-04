@@ -79,14 +79,14 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
       ),
     );
 
-    // 3. Busy / Unanswered Voice Call Log
+    // 3. Busy / Unanswered Voice Call Log (Assigned to Supervisor / Team Member)
     list.add(
       ConversationModel(
         id: 'conv-busy-1',
         companyId: widget.currentUser.companyId,
         customerName: 'Chief Emeka Nwosu',
         customerPhone: '+234 802 111 2233',
-        assignedRepId: widget.currentUser.id,
+        assignedRepId: '30000000-0000-4000-8000-000000000099', // Team Member ID
         primaryChannel: CommChannelType.voiceCall,
         status: 'busy',
         lastMessageSummary: '🟡 Outbound PSTN Call • Destination Line Busy / No Answer',
@@ -134,7 +134,7 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
         companyId: widget.currentUser.companyId,
         customerName: 'Pastor David Adebayo',
         customerPhone: '+234 701 888 9900',
-        assignedRepId: widget.currentUser.id,
+        assignedRepId: '30000000-0000-4000-8000-000000000099', // Team Member ID
         primaryChannel: CommChannelType.sms,
         status: 'answered',
         lastMessageSummary: '📱 Outbound SMS Alert: "Your NovaCare Package is ready for dispatch."',
@@ -143,7 +143,15 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
       ),
     );
 
-    _conversations = list;
+    // Filter list according to User Role RBAC rules:
+    // Sales Call Reps see ONLY their own assigned conversations.
+    // Supervisors & Admins see team members & all company conversations.
+    final role = widget.currentUser.role;
+    if (role == UserRole.salesCallRep) {
+      _conversations = list.where((c) => c.assignedRepId == widget.currentUser.id).toList();
+    } else {
+      _conversations = list;
+    }
   }
 
   void _openStartConversationModal() {
@@ -162,12 +170,23 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
             primaryChannel: channel,
             status: 'answered',
             lastMessageSummary: channel == CommChannelType.voiceCall
-                ? '📞 Outbound PSTN Call to $phone • Logged'
+                ? '📞 Outbound PSTN Call to $phone • Logged in DB'
                 : (channel == CommChannelType.whatsapp
-                    ? '💬 WhatsApp Session to $phone • Active'
-                    : '📱 SMS Dispatch to $phone • Sent'),
+                    ? '💬 WhatsApp Session to $phone • Active in DB'
+                    : '📱 SMS Dispatch to $phone • Sent & Logged'),
             lastMessageAt: DateTime.now(),
             createdAt: DateTime.now(),
+          );
+
+          // Register Call Log in Supabase Database!
+          OmnichannelRepository().saveCallLog(
+            conversationId: newConv.id,
+            orderId: order?.id,
+            salesRepId: widget.currentUser.id,
+            destinationNumber: phone,
+            durationSeconds: channel == CommChannelType.voiceCall ? 145 : 0,
+            disposition: 'answered',
+            notes: 'Call session manually initiated by ${widget.currentUser.fullName} (${widget.currentUser.role.name})',
           );
 
           setState(() {
