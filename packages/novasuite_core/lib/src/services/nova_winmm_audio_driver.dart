@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 
@@ -202,6 +203,46 @@ class NovaWinmmAudioDriver {
 
     // Schedule cleanup of memory pointers after buffer playback (~500ms)
     Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        calloc.free(pcmDataPtr);
+        calloc.free(waveHdr);
+      } catch (_) {}
+    });
+  }
+
+  /// Synthesizes pure 440Hz + 480Hz PSTN Ringback Tone PCM samples and plays directly to sound card
+  void playPstnRingbackTone() {
+    if (!_isOpen || _hWaveOut == 0) {
+      if (!openAudioDevice()) return;
+    }
+
+    const int sampleRate = 8000;
+    const int durationMs = 1500; // 1.5 second ringback burst
+    final int numSamples = (sampleRate * durationMs) ~/ 1000;
+    final int pcmBytesCount = numSamples * 2;
+
+    final pcmDataPtr = calloc<Int8>(pcmBytesCount);
+    final ByteData view = ByteData.view(pcmDataPtr.cast<Uint8>().asTypedList(pcmBytesCount).buffer);
+
+    for (int i = 0; i < numSamples; i++) {
+      final double t = i / sampleRate;
+      // 440Hz + 480Hz dual sine wave PSTN ringback tone
+      final double sampleVal = (math.sin(2 * math.pi * 440 * t) + math.sin(2 * math.pi * 480 * t)) * 0.2;
+      final int pcm16 = (sampleVal * 32767).clamp(-32768, 32767).toInt();
+      view.setInt16(i * 2, pcm16, Endian.little);
+    }
+
+    final waveHdr = calloc<WAVEHDR>();
+    waveHdr.ref.lpData = pcmDataPtr;
+    waveHdr.ref.dwBufferLength = pcmBytesCount;
+    waveHdr.ref.dwFlags = 0;
+
+    final prepResult = _waveOutPrepareHeader!(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
+    if (prepResult == 0) {
+      _waveOutWrite!(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
+    }
+
+    Future.delayed(const Duration(milliseconds: 1600), () {
       try {
         calloc.free(pcmDataPtr);
         calloc.free(waveHdr);

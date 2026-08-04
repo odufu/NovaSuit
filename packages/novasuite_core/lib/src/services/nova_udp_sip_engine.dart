@@ -482,7 +482,7 @@ class NovaUdpSipEngine {
 
   void _playBeepTone() {
     if (!kIsWeb && Platform.isWindows) {
-      Process.run('powershell', ['-c', '[System.Console]::Beep(440, 500); [System.Console]::Beep(480, 500)']);
+      NovaWinmmAudioDriver().playPstnRingbackTone();
     }
   }
 
