@@ -180,8 +180,10 @@ class NovaUdpSipEngine {
           }
         } else if (_callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
           print('📞 [UDP SIP] Call Answered! Audio stream active.');
+          _parseSdpAnswer(message);
           _stopRingbackTone();
           _sendAckPacket(message);
+          _startRtpAudioSession();
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
@@ -493,5 +495,56 @@ class NovaUdpSipEngine {
     }
     // Stream live G.711 u-law RTP audio bytes directly into Windows WASAPI sound card
     NovaWinmmAudioDriver().playG711RtpPayload(rtpData);
+  }
+
+  int? _remoteRtpPort;
+  String? _remoteRtpHost;
+  Timer? _rtpKeepaliveTimer;
+
+  void _parseSdpAnswer(String sdpMessage) {
+    final mAudioMatch = RegExp(r'm=audio (\d+)', caseSensitive: false).firstMatch(sdpMessage);
+    if (mAudioMatch != null) {
+      _remoteRtpPort = int.tryParse(mAudioMatch.group(1)!);
+    }
+    final cIpMatch = RegExp(r'c=IN IP4 ([^\s\r\n]+)', caseSensitive: false).firstMatch(sdpMessage);
+    if (cIpMatch != null) {
+      _remoteRtpHost = cIpMatch.group(1);
+    }
+    print('🎵 [RTP Media Setup] Remote Media Gateway Target: ${_remoteRtpHost ?? ItSkySipConfig.providerSipHost}:${_remoteRtpPort ?? 8000}');
+  }
+
+  void _startRtpAudioSession() {
+    NovaWinmmAudioDriver().openAudioDevice();
+    
+    // Symmetric RTP NAT Hole-Punching: Send RTP silence frames to OpenSIPS RTP port
+    _sendRtpSilenceFrame();
+    _rtpKeepaliveTimer?.cancel();
+    _rtpKeepaliveTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
+      if (_callState == UdpCallState.active) {
+        _sendRtpSilenceFrame();
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void _sendRtpSilenceFrame() {
+    if (_remoteRtpPort == null || _socket == null) return;
+
+    // Build 12-byte standard RTP v2 Header + 160-byte G.711 u-law silence payload (0xFF)
+    final rtpPacket = Uint8List(172);
+    rtpPacket[0] = 0x80; // RTP v2
+    rtpPacket[1] = 0x00; // Payload type 0 (PCMU)
+    final seq = (_cseq++) & 0xFFFF;
+    rtpPacket[2] = (seq >> 8) & 0xFF;
+    rtpPacket[3] = seq & 0xFF;
+    
+    // G.711 u-law silence byte is 0xFF
+    for (int i = 12; i < 172; i++) {
+      rtpPacket[i] = 0xFF;
+    }
+
+    final targetHost = _remoteRtpHost ?? ItSkySipConfig.providerSipHost;
+    _socket?.send(rtpPacket, InternetAddress(targetHost), _remoteRtpPort!);
   }
 }
