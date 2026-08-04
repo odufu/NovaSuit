@@ -222,9 +222,15 @@ class _CallActionModalState extends State<CallActionModal> {
               orElse: () => _outcomeCategories.first,
             );
 
-            return Dialog(
-              insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              backgroundColor: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
+            return PopScope(
+              onPopInvokedWithResult: (didPop, result) {
+                if (didPop) {
+                  _endCall();
+                }
+              },
+              child: Dialog(
+                insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                backgroundColor: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
                 side: BorderSide(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200, width: 1.5),
@@ -264,6 +270,7 @@ class _CallActionModalState extends State<CallActionModal> {
                             ),
                             IconButton(
                               onPressed: () {
+                                _endCall();
                                 Navigator.pop(context);
                               },
                               icon: Icon(Icons.close, color: isDarkMode ? Colors.white60 : Colors.grey),

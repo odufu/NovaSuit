@@ -450,6 +450,10 @@ class NovaUdpSipEngine {
 
   /// Handles 407 Proxy Authentication Required Digest MD5 Challenge from OpenSIPS for INVITE calls
   void _handle407Challenge(String message) {
+    if (_callState == UdpCallState.ended || _callState == UdpCallState.disconnected || _callState == UdpCallState.idle) {
+      print('⏹️ [UDP SIP] Call was cancelled before 407 challenge completed. Aborting 2nd INVITE.');
+      return;
+    }
     final nonceMatch = RegExp(r'nonce="([^"]+)"').firstMatch(message);
     if (nonceMatch != null && _activeOrder != null) {
       final nonce = nonceMatch.group(1)!;
@@ -526,7 +530,10 @@ class NovaUdpSipEngine {
   }
 
   void _sendInvitePacket([String? proxyAuthHeader]) async {
-    if (_activeOrder == null) return;
+    if (_activeOrder == null || _callState == UdpCallState.ended || _callState == UdpCallState.disconnected || _callState == UdpCallState.idle) {
+      print('⏹️ [UDP SIP] Call state is no longer active. Aborting outbound INVITE.');
+      return;
+    }
     _cseq++;
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
     final callId = _activeCallId ?? 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@127.0.0.1';
@@ -572,10 +579,13 @@ class NovaUdpSipEngine {
     print('⏹️ [UDP SIP] Hanging up call session cleanly...');
     _durationTimer?.cancel();
 
+    final previousState = _callState;
+    _notifyCallState(UdpCallState.ended);
+
     if (_activeOrder != null && _activeCallId != null) {
       final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
       final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
-      final method = (_callState == UdpCallState.active) ? 'BYE' : 'CANCEL';
+      final method = (previousState == UdpCallState.active) ? 'BYE' : 'CANCEL';
       _cseq++;
 
       final StringBuffer sipMsg = StringBuffer();
