@@ -165,13 +165,24 @@ class NovaUdpSipEngine {
           }
         } else if (_callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
           print('📞 [UDP SIP] Call Answered! Audio stream active.');
+          _sendAckPacket();
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
       } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
         print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
         _notifyCallState(UdpCallState.ringing);
-      } else if (message.contains('BYE') || message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
+      } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
+        print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
+        _sendBye200OKResponse(message);
+        if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
+          _notifyCallState(UdpCallState.ended);
+          _durationTimer?.cancel();
+          Timer(const Duration(milliseconds: 1200), () {
+            _notifyCallState(UdpCallState.disconnected);
+          });
+        }
+      } else if (message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
         print('⏹️ [UDP SIP] Call Terminated by Remote / PBX (Reason: $firstLine).');
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
           _notifyCallState(UdpCallState.ended);
@@ -182,6 +193,51 @@ class NovaUdpSipEngine {
         }
       }
     }
+  }
+
+  /// Sends SIP ACK packet to OpenSIPS after 200 OK answer
+  void _sendAckPacket() {
+    if (_activeOrder == null) return;
+    final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
+    final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
+
+    final StringBuffer sipMsg = StringBuffer();
+    sipMsg.writeln('ACK sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
+    sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
+    sipMsg.writeln('Max-Forwards: 70');
+    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=nova${DateTime.now().millisecondsSinceEpoch}');
+    sipMsg.writeln('To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
+    sipMsg.writeln('Call-ID: novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '0.0.0.0'}');
+    sipMsg.writeln('CSeq: $_cseq ACK');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln('');
+
+    print('📡 [UDP SIP] Outbound ACK sent for $formattedPhone');
+    final bytes = utf8.encode(sipMsg.toString());
+    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+  }
+
+  /// Responds SIP 200 OK to incoming BYE request to terminate transaction cleanly
+  void _sendBye200OKResponse(String byeMessage) {
+    final viaMatch = RegExp(r'Via: ([^\r\n]+)').firstMatch(byeMessage);
+    final fromMatch = RegExp(r'From: ([^\r\n]+)').firstMatch(byeMessage);
+    final toMatch = RegExp(r'To: ([^\r\n]+)').firstMatch(byeMessage);
+    final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)').firstMatch(byeMessage);
+    final cseqMatch = RegExp(r'CSeq: ([^\r\n]+)').firstMatch(byeMessage);
+
+    final StringBuffer sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 200 OK');
+    if (viaMatch != null) sipMsg.writeln('Via: ${viaMatch.group(1)}');
+    if (fromMatch != null) sipMsg.writeln('From: ${fromMatch.group(1)}');
+    if (toMatch != null) sipMsg.writeln('To: ${toMatch.group(1)}');
+    if (callIdMatch != null) sipMsg.writeln('Call-ID: ${callIdMatch.group(1)}');
+    if (cseqMatch != null) sipMsg.writeln('CSeq: ${cseqMatch.group(1)}');
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln('');
+
+    final bytes = utf8.encode(sipMsg.toString());
+    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
 
   /// Handles 401 Unauthorized Digest MD5 Challenge from OpenSIPS (with qop=auth support)
