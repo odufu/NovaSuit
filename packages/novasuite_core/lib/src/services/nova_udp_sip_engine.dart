@@ -88,6 +88,10 @@ class NovaUdpSipEngine {
   /// Initializes UDP Socket on Port 5060 or ephemeral port and registers with OpenSIPS/ASTPP PBX
   Future<bool> registerUdpTrunk() async {
     if (_status == UdpSipStatus.registered) return true;
+    if (_status == UdpSipStatus.registering && _registerCompleter != null && !_registerCompleter!.isCompleted) {
+      print('📡 [UDP SIP] Registration already in progress... reusing existing listener completer.');
+      return _registerCompleter!.future;
+    }
 
     print('📡 [UDP SIP] Starting registration with IT Sky SIP server (${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort})...');
     _notifyStatus(UdpSipStatus.registering);
