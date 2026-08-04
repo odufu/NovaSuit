@@ -6,6 +6,8 @@ import 'package:crypto/crypto.dart';
 import '../it_sky_sip_config.dart';
 import '../models/order.dart';
 import 'nova_winmm_audio_driver.dart';
+import '../telephony/data/recorders/wave_call_recorder.dart';
+import '../telephony/data/storage/supabase_media_storage_service.dart';
 
 enum UdpSipStatus {
   unregistered,
@@ -591,6 +593,18 @@ class NovaUdpSipEngine {
       _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
     }
 
+    // Finalize 2-way call audio recording & upload asynchronously to cloud storage
+    WaveCallRecorder().stopRecording(durationSeconds: _callDuration).then((recording) {
+      if (recording != null) {
+        final localFile = File(recording.localFilePath);
+        SupabaseMediaStorageService().uploadCallRecording(
+          file: localFile,
+          callId: recording.callId,
+          customerPhone: _activeOrder?.customerPhone ?? _incomingCallerNumber ?? '000',
+        );
+      }
+    });
+
     _activeCallId = null;
     _activeFromTag = null;
     _activeOrder = null;
@@ -636,6 +650,10 @@ class NovaUdpSipEngine {
     if (_rtpPacketCount % 50 == 1) {
       print('🎧 [Windows Native Audio Stream] Playing G.711 RTP Audio Packet #$_rtpPacketCount (${rtpData.length} bytes) to sound card...');
     }
+    // Record incoming customer voice audio for 2-way call QA recording
+    if (rtpData.length > 12) {
+      WaveCallRecorder().recordCustomerIncomingFrame(rtpData.sublist(12));
+    }
     // Stream live G.711 u-law RTP audio bytes directly into Windows WASAPI sound card
     NovaWinmmAudioDriver().playG711RtpPayload(rtpData);
   }
@@ -658,6 +676,12 @@ class NovaUdpSipEngine {
   void _startRtpAudioSession() {
     NovaWinmmAudioDriver().openAudioDevice();
     
+    // Start 2-way audio call recording
+    WaveCallRecorder().startRecording(
+      callId: _activeCallId ?? 'call_${DateTime.now().millisecondsSinceEpoch}',
+      customerPhone: _activeOrder?.customerPhone ?? _incomingCallerNumber ?? '000',
+    );
+
     // Send initial single RTP silence frame to open NAT pinhole
     _sendRtpSilenceFrame();
 
@@ -671,6 +695,9 @@ class NovaUdpSipEngine {
 
   void _sendRtpAudioFrame(Uint8List micPayload) {
     if (_remoteRtpPort == null || _socket == null) return;
+
+    // Record agent microphone voice audio for 2-way call QA recording
+    WaveCallRecorder().recordAgentMicrophoneFrame(micPayload);
 
     final rtpPacket = Uint8List(12 + micPayload.length);
     rtpPacket[0] = 0x80; // RTP v2

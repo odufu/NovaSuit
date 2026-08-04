@@ -201,6 +201,8 @@ class NovaWinmmAudioDriver {
     return (sign != 0) ? -sample : sample;
   });
 
+  static int uLawToPcm16(int uLaw) => _uLawToPcmTable[uLaw & 0xFF];
+
   /// Initializes Windows winmm.dll FFI bindings and opens 8000Hz 16-bit Mono WaveOut device
   bool openAudioDevice() {
     if (_isOpen) return true;
