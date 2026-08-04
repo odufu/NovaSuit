@@ -183,91 +183,172 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
       return matchesChannel && matchesQuery;
     }).toList();
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
+
+        return Padding(
+          padding: EdgeInsets.all(isMobile ? 12 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'OMNICHANNEL CONVERSATIONS DIRECTORY (${_conversations.length})',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+              // Top Header Row (Responsive)
+              if (isMobile) ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'OMNICHANNEL CONVERSATIONS DIRECTORY (${_conversations.length})',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Unified inbox for Voice Calls, WhatsApp, and SMS sessions.',
-                    style: GoogleFonts.inter(fontSize: 12, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: _openStartConversationModal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                icon: const Icon(Icons.add_comment_rounded, size: 18),
-                label: Text(
-                  'Start New Conversation',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Operations Channel Control Panel
-          OperationsChannelControlCard(isDarkMode: isDarkMode),
-          const SizedBox(height: 16),
-
-          // Filter & Search Controls Bar
-          Row(
-            children: [
-              // Search Input
-              Expanded(
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                  ),
-                  child: TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.white : Colors.black),
-                    decoration: InputDecoration(
-                      hintText: 'Search conversations by name, phone, or message content...',
-                      hintStyle: TextStyle(fontSize: 12, color: isDarkMode ? const Color(0xFF64748B) : Colors.grey),
-                      prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF10B981)),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    Text(
+                      'Unified inbox for Voice Calls, WhatsApp, and SMS sessions.',
+                      style: GoogleFonts.inter(fontSize: 11, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
                     ),
-                  ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _openStartConversationModal,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.add_comment_rounded, size: 16),
+                        label: Text(
+                          'Start New Conversation',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
+              ] else ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'OMNICHANNEL CONVERSATIONS DIRECTORY (${_conversations.length})',
+                          style: GoogleFonts.outfit(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          'Unified inbox for Voice Calls, WhatsApp, and SMS sessions.',
+                          style: GoogleFonts.inter(fontSize: 12, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _openStartConversationModal,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.add_comment_rounded, size: 18),
+                      label: Text(
+                        'Start New Conversation',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 14),
 
-              // Channel Filter Chips
-              _buildChannelFilterChip('All', 'All Channels', isDarkMode),
-              const SizedBox(width: 6),
-              _buildChannelFilterChip('voice', '📞 Voice Calls', isDarkMode),
-              const SizedBox(width: 6),
-              _buildChannelFilterChip('whatsapp', '💬 WhatsApp', isDarkMode),
-              const SizedBox(width: 6),
-              _buildChannelFilterChip('sms', '📱 SMS', isDarkMode),
-            ],
-          ),
+              // Operations Channel Control Panel
+              OperationsChannelControlCard(isDarkMode: isDarkMode),
+              const SizedBox(height: 14),
+
+              // Filter & Search Controls Bar (Responsive)
+              if (isMobile) ...[
+                Column(
+                  children: [
+                    Container(
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                      ),
+                      child: TextField(
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        style: TextStyle(fontSize: 12, color: isDarkMode ? Colors.white : Colors.black),
+                        decoration: InputDecoration(
+                          hintText: 'Search by name, phone, or message content...',
+                          hintStyle: TextStyle(fontSize: 11, color: isDarkMode ? const Color(0xFF64748B) : Colors.grey),
+                          prefixIcon: const Icon(Icons.search, size: 16, color: Color(0xFF10B981)),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          _buildChannelFilterChip('All', 'All Channels', isDarkMode),
+                          const SizedBox(width: 6),
+                          _buildChannelFilterChip('voice', '📞 Voice Calls', isDarkMode),
+                          const SizedBox(width: 6),
+                          _buildChannelFilterChip('whatsapp', '💬 WhatsApp', isDarkMode),
+                          const SizedBox(width: 6),
+                          _buildChannelFilterChip('sms', '📱 SMS', isDarkMode),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                        ),
+                        child: TextField(
+                          onChanged: (val) => setState(() => _searchQuery = val),
+                          style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.white : Colors.black),
+                          decoration: InputDecoration(
+                            hintText: 'Search conversations by name, phone, or message content...',
+                            hintStyle: TextStyle(fontSize: 12, color: isDarkMode ? const Color(0xFF64748B) : Colors.grey),
+                            prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF10B981)),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildChannelFilterChip('All', 'All Channels', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildChannelFilterChip('voice', '📞 Voice Calls', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildChannelFilterChip('whatsapp', '💬 WhatsApp', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildChannelFilterChip('sms', '📱 SMS', isDarkMode),
+                  ],
+                ),
+              ],
           const SizedBox(height: 16),
 
           // Conversations List View
@@ -294,7 +375,9 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
         ],
       ),
     );
-  }
+  },
+);
+}
 
   Widget _buildChannelFilterChip(String key, String label, bool isDarkMode) {
     final isSelected = _selectedChannelFilter == key;
