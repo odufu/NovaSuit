@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS public.conversations (
     company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
     order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+    customer_name VARCHAR(255),
+    customer_phone VARCHAR(50),
     assigned_rep_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
     primary_channel public.comm_channel_type NOT NULL DEFAULT 'whatsapp',
     status VARCHAR(50) NOT NULL DEFAULT 'active',

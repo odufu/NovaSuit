@@ -8,29 +8,62 @@ class OmnichannelRepository {
   OmnichannelRepository({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
 
-  /// Fetch or create a conversation thread for a given order & customer
-  Future<ConversationModel> fetchOrCreateConversation({
-    required String companyId,
-    required String orderId,
-    required String repId,
-  }) async {
+  /// Fetch all active conversations for company (both order-bound and open-ended)
+  Future<List<ConversationModel>> fetchAllConversations({required String companyId}) async {
     try {
       final response = await _client
           .from('conversations')
           .select()
-          .eq('order_id', orderId)
-          .maybeSingle();
+          .eq('company_id', companyId)
+          .order('last_message_at', ascending: false);
 
-      if (response != null) {
-        return ConversationModel.fromMap(response);
+      return (response as List).map((json) => ConversationModel.fromMap(json)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Fetch or create a conversation thread for a given order, customer, or phone
+  Future<ConversationModel> fetchOrCreateConversation({
+    required String companyId,
+    String? orderId,
+    String? customerId,
+    String? customerName,
+    String? customerPhone,
+    required String repId,
+  }) async {
+    try {
+      if (orderId != null && orderId.isNotEmpty) {
+        final response = await _client
+            .from('conversations')
+            .select()
+            .eq('order_id', orderId)
+            .maybeSingle();
+
+        if (response != null) {
+          return ConversationModel.fromMap(response);
+        }
+      } else if (customerPhone != null && customerPhone.isNotEmpty) {
+        final response = await _client
+            .from('conversations')
+            .select()
+            .eq('customer_phone', customerPhone)
+            .maybeSingle();
+
+        if (response != null) {
+          return ConversationModel.fromMap(response);
+        }
       }
 
-      // Create new conversation thread
+      // Create new conversation thread (Order-Bound or Open-Ended)
       final newConv = await _client
           .from('conversations')
           .insert({
             'company_id': companyId,
             'order_id': orderId,
+            'customer_id': customerId,
+            'customer_name': customerName,
+            'customer_phone': customerPhone,
             'assigned_rep_id': repId,
             'primary_channel': 'whatsapp',
             'status': 'active',
@@ -42,7 +75,7 @@ class OmnichannelRepository {
       return ConversationModel.fromMap(newConv);
     } catch (_) {
       // Fallback mock conversation
-      return getMockConversation(orderId: orderId, repId: repId);
+      return getMockConversation(orderId: orderId ?? 'open-inquiry', repId: repId);
     }
   }
 
