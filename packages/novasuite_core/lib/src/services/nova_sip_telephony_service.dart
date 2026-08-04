@@ -194,12 +194,12 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     _isOnHold = false;
     _lastError = null;
 
+    _notifyCallState(SipCallSessionState.connectingProvider);
+
     if (!kIsWeb && Platform.isWindows) {
       await NovaUdpSipEngine().initiateCall(order);
       return;
     }
-
-    _notifyCallState(SipCallSessionState.connectingProvider);
 
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
     final destinationUri = 'sip:$formattedPhone@${ItSkySipConfig.domain}';
