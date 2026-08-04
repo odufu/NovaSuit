@@ -237,7 +237,11 @@ class NovaUdpSipEngine {
     } else if (message.contains('180 Ringing')) {
       humanReason = '🔔 Customer Phone Ringing (180)';
     }
-    _lastError = humanReason;
+    if (message.contains('486') || message.contains('480') || message.contains('404') || message.contains('603')) {
+      _lastError = humanReason;
+    } else {
+      _lastError = null;
+    }
     if (!_providerReasonController.isClosed) {
       _providerReasonController.add(humanReason);
     }

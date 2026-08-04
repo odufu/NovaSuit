@@ -352,8 +352,8 @@ class _CallActionModalState extends State<CallActionModal> {
                             },
                           ),
 
-                          // Robust Error Notice Banner
-                          if (_telephonyService.lastError != null || stageVal == CallStage.disconnected) ...[
+                          // Robust Error Notice Banner (Only shown if disconnected due to an error)
+                          if (stageVal == CallStage.disconnected && _telephonyService.lastError != null) ...[
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
