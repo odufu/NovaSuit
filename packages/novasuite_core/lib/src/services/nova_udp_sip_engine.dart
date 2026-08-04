@@ -516,7 +516,14 @@ class NovaUdpSipEngine {
   void _startRtpAudioSession() {
     NovaWinmmAudioDriver().openAudioDevice();
     
-    // Symmetric RTP NAT Hole-Punching: Send RTP silence frames to OpenSIPS RTP port
+    // Start capturing live headset microphone voice audio
+    NovaWinmmAudioDriver().startMicrophoneCapture((micFrame) {
+      if (_callState == UdpCallState.active) {
+        _sendRtpAudioFrame(micFrame);
+      }
+    });
+
+    // Send initial RTP frame to open NAT pinhole
     _sendRtpSilenceFrame();
     _rtpKeepaliveTimer?.cancel();
     _rtpKeepaliveTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
@@ -526,6 +533,22 @@ class NovaUdpSipEngine {
         timer.cancel();
       }
     });
+  }
+
+  void _sendRtpAudioFrame(Uint8List micPayload) {
+    if (_remoteRtpPort == null || _socket == null) return;
+
+    final rtpPacket = Uint8List(12 + micPayload.length);
+    rtpPacket[0] = 0x80; // RTP v2
+    rtpPacket[1] = 0x00; // Payload type 0 (PCMU)
+    final seq = (_cseq++) & 0xFFFF;
+    rtpPacket[2] = (seq >> 8) & 0xFF;
+    rtpPacket[3] = seq & 0xFF;
+
+    rtpPacket.setRange(12, 12 + micPayload.length, micPayload);
+
+    final targetHost = _remoteRtpHost ?? ItSkySipConfig.providerSipHost;
+    _socket?.send(rtpPacket, InternetAddress(targetHost), _remoteRtpPort!);
   }
 
   void _sendRtpSilenceFrame() {
