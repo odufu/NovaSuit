@@ -269,8 +269,10 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
               ],
               const SizedBox(height: 14),
 
-              // Operations Channel Control Panel
-              OperationsChannelControlCard(isDarkMode: isDarkMode),
+              OperationsChannelControlCard(
+                currentUser: widget.currentUser,
+                isDarkMode: isDarkMode,
+              ),
               const SizedBox(height: 14),
 
               // Filter & Search Controls Bar (Responsive)
