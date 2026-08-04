@@ -90,6 +90,8 @@ class OrderModel extends Equatable {
   final String companyId;
   final String productId;
   final String? salesRepId;
+  final String? marketerId;
+  final String? campaignId;
   final String? logisticsRepId;
   final String? deliveryAgentId;
   final String? warehouseId;
@@ -135,6 +137,8 @@ class OrderModel extends Equatable {
     required this.companyId,
     required this.productId,
     this.salesRepId,
+    this.marketerId,
+    this.campaignId,
     this.logisticsRepId,
     this.deliveryAgentId,
     this.warehouseId,
@@ -167,6 +171,86 @@ class OrderModel extends Equatable {
     required this.updatedAt,
   });
 
+  OrderModel copyWith({
+    String? id,
+    String? orderNumber,
+    String? companyId,
+    String? productId,
+    String? salesRepId,
+    String? marketerId,
+    String? campaignId,
+    String? logisticsRepId,
+    String? deliveryAgentId,
+    String? warehouseId,
+    String? customerName,
+    String? customerPhone,
+    String? customerAltPhone,
+    String? deliveryState,
+    String? deliveryCity,
+    String? deliveryAddress,
+    OrderStatus? status,
+    int? quantity,
+    double? basePrice,
+    double? upsellAmount,
+    double? downsellDiscount,
+    double? totalAmount,
+    int? upsellQuantity,
+    double? upsellUnitPrice,
+    UpsellStatus? upsellStatus,
+    String? upsellNotes,
+    String? approvedBySupervisorId,
+    CancellationReason? cancellationReason,
+    DateTime? cancellationFollowUpAt,
+    String? paymentStatus,
+    bool? crmTagged,
+    String? proofOfDeliveryUrl,
+    String? deliveryNotes,
+    DateTime? scheduledCallbackAt,
+    String? rescheduleNote,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      orderNumber: orderNumber ?? this.orderNumber,
+      companyId: companyId ?? this.companyId,
+      productId: productId ?? this.productId,
+      salesRepId: salesRepId ?? this.salesRepId,
+      marketerId: marketerId ?? this.marketerId,
+      campaignId: campaignId ?? this.campaignId,
+      logisticsRepId: logisticsRepId ?? this.logisticsRepId,
+      deliveryAgentId: deliveryAgentId ?? this.deliveryAgentId,
+      warehouseId: warehouseId ?? this.warehouseId,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      customerAltPhone: customerAltPhone ?? this.customerAltPhone,
+      deliveryState: deliveryState ?? this.deliveryState,
+      deliveryCity: deliveryCity ?? this.deliveryCity,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      status: status ?? this.status,
+      quantity: quantity ?? this.quantity,
+      basePrice: basePrice ?? this.basePrice,
+      upsellAmount: upsellAmount ?? this.upsellAmount,
+      downsellDiscount: downsellDiscount ?? this.downsellDiscount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      upsellQuantity: upsellQuantity ?? this.upsellQuantity,
+      upsellUnitPrice: upsellUnitPrice ?? this.upsellUnitPrice,
+      upsellStatus: upsellStatus ?? this.upsellStatus,
+      upsellNotes: upsellNotes ?? this.upsellNotes,
+      approvedBySupervisorId: approvedBySupervisorId ?? this.approvedBySupervisorId,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
+      cancellationFollowUpAt: cancellationFollowUpAt ?? this.cancellationFollowUpAt,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      crmTagged: crmTagged ?? this.crmTagged,
+      proofOfDeliveryUrl: proofOfDeliveryUrl ?? this.proofOfDeliveryUrl,
+      deliveryNotes: deliveryNotes ?? this.deliveryNotes,
+      scheduledCallbackAt: scheduledCallbackAt ?? this.scheduledCallbackAt,
+      rescheduleNote: rescheduleNote ?? this.rescheduleNote,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     return OrderModel(
       id: map['id'] ?? '',
@@ -174,6 +258,8 @@ class OrderModel extends Equatable {
       companyId: map['company_id'] ?? '',
       productId: map['product_id'] ?? '',
       salesRepId: map['sales_rep_id'],
+      marketerId: map['marketer_id'],
+      campaignId: map['campaign_id'],
       logisticsRepId: map['logistics_rep_id'],
       deliveryAgentId: map['delivery_agent_id'],
       warehouseId: map['warehouse_id'],
@@ -202,8 +288,8 @@ class OrderModel extends Equatable {
       deliveryNotes: map['delivery_notes'],
       scheduledCallbackAt: map['scheduled_callback_at'] != null ? DateTime.parse(map['scheduled_callback_at']) : null,
       rescheduleNote: map['reschedule_note'],
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: DateTime.parse(map['updated_at']),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : DateTime.now(),
     );
   }
 
@@ -214,6 +300,8 @@ class OrderModel extends Equatable {
       'company_id': companyId,
       'product_id': productId,
       'sales_rep_id': salesRepId,
+      'marketer_id': marketerId,
+      'campaign_id': campaignId,
       'logistics_rep_id': logisticsRepId,
       'delivery_agent_id': deliveryAgentId,
       'warehouse_id': warehouseId,
@@ -254,6 +342,8 @@ class OrderModel extends Equatable {
         companyId,
         productId,
         salesRepId,
+        marketerId,
+        campaignId,
         logisticsRepId,
         deliveryAgentId,
         warehouseId,

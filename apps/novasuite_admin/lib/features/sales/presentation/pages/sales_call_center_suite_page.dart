@@ -15,6 +15,8 @@ import '../widgets/call_rep_dashboard_overview.dart';
 import '../../../logistics/presentation/widgets/reassign_logistics_rep_dialog.dart';
 import '../../../omnichannel_chat/presentation/widgets/omnichannel_unified_chat_sheet.dart';
 import '../../../omnichannel_chat/presentation/widgets/conversations_directory_tab.dart';
+import '../widgets/create_edit_order_dialog.dart';
+import 'single_order_detail_screen.dart';
 
 enum CallStage {
   connectingProvider, // Stage 1: Connecting to Provider
@@ -970,6 +972,27 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                           Text('Call Backs', style: GoogleFonts.inter(fontSize: 10, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey)),
                         ],
                       ),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        CreateEditOrderDialog.show(
+                          context,
+                          currentUser: widget.currentUser,
+                          onSaved: (newOrder) {
+                            widget.onUpdateOrder(newOrder);
+                            setState(() {});
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('New Order', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
                     ),
                   ],
                 ),
@@ -2646,24 +2669,11 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   }
 
   void _openOrderDetailsModal(OrderModel order) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.65),
-      builder: (context) => MasterOrderDetailsDialog(
-        order: order,
-        currentUser: widget.currentUser,
-        currency: widget.activeTheme.currencySymbol,
-        onStartCall: () {
-          Navigator.pop(context);
-          _openOrderActivitiesModal(order, isDarkMode);
-        },
-        onOpenTimeline: () {
-          Navigator.pop(context);
-          _openOrderActivitiesModal(order, isDarkMode);
-        },
-        quickStatusMenu: _buildQuickStatusMenu(order),
-      ),
+    SingleOrderDetailScreen.show(
+      context,
+      order: order,
+      currentUser: widget.currentUser,
+      onUpdateOrder: widget.onUpdateOrder,
     );
   }
 
