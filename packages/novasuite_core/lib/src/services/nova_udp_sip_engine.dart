@@ -74,6 +74,15 @@ class NovaUdpSipEngine {
     if (!_callStateController.isClosed) {
       _callStateController.add(_callState);
     }
+    if (newState == UdpCallState.disconnected) {
+      _callState = UdpCallState.idle;
+      _activeCallId = null;
+      _activeFromTag = null;
+      _activeToTag = null;
+      _activeInviteMsg = null;
+      _incomingCallerNumber = null;
+      _activeOrder = null;
+    }
   }
 
   void _notifyDuration(int seconds) {
@@ -285,7 +294,7 @@ class NovaUdpSipEngine {
     final incomingCallId = callIdMatch?.group(1)!.trim();
 
     // Guard 1: If we are ALREADY in an active call, connecting, ringing, or ending a call, reject with 486 Busy Here!
-    if (_callState != UdpCallState.idle && _activeCallId != incomingCallId) {
+    if (_callState != UdpCallState.idle && _callState != UdpCallState.disconnected && _activeCallId != incomingCallId) {
       print('⛔ [UDP SIP] Line is BUSY (Current state: $_callState, Active Call-ID: $_activeCallId). Rejecting incoming INVITE ($incomingCallId) with 486 Busy Here.');
       _sendSip486BusyResponse(inviteMsg);
       return;
@@ -846,10 +855,12 @@ class NovaUdpSipEngine {
     _durationTimer?.cancel();
 
     final currentCallState = _callState;
+    final targetPhone = _activeOrder?.customerPhone ?? _incomingCallerNumber;
+    final activeCallId = _activeCallId;
+
     _notifyCallState(UdpCallState.ended);
 
-    final targetPhone = _activeOrder?.customerPhone ?? _incomingCallerNumber;
-    if (targetPhone != null && _activeCallId != null) {
+    if (targetPhone != null && activeCallId != null) {
       final formattedPhone = ItSkySipConfig.formatOutboundDialString(targetPhone);
       final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
       
@@ -867,19 +878,15 @@ class NovaUdpSipEngine {
         SupabaseMediaStorageService().uploadCallRecording(
           file: localFile,
           callId: recording.callId,
-          customerPhone: _activeOrder?.customerPhone ?? _incomingCallerNumber ?? '000',
+          customerPhone: targetPhone ?? '000',
         );
       }
     });
 
-    _activeCallId = null;
-    _activeFromTag = null;
-    _activeOrder = null;
     _stopRingbackTone();
     NovaWinmmAudioDriver().closeAudioDevice();
 
-    _notifyCallState(UdpCallState.ended);
-    Timer(const Duration(milliseconds: 1000), () {
+    Timer(const Duration(milliseconds: 300), () {
       _notifyCallState(UdpCallState.disconnected);
     });
   }
