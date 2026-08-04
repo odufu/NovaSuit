@@ -250,7 +250,14 @@ class NovaUdpSipEngine {
     final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
     final incomingCallId = callIdMatch?.group(1)!.trim();
 
-    // Guard against duplicate re-transmitted INVITE packets for the active incoming call
+    // Guard 1: If we are ALREADY in an active call, connecting, ringing, or ending a call, reject with 486 Busy Here!
+    if (_callState != UdpCallState.idle && _activeCallId != incomingCallId) {
+      print('⛔ [UDP SIP] Line is BUSY (Current state: $_callState, Active Call-ID: $_activeCallId). Rejecting incoming INVITE ($incomingCallId) with 486 Busy Here.');
+      _sendSip486BusyResponse(inviteMsg);
+      return;
+    }
+
+    // Guard 2: Guard against duplicate re-transmitted INVITE packets for the active incoming call
     if (_activeCallId != null && _activeCallId == incomingCallId && (_callState == UdpCallState.incomingCall || _callState == UdpCallState.active)) {
       print('🔁 [UDP SIP] Re-transmitting 180 Ringing response for active Call-ID ($incomingCallId)...');
       _send180RingingResponse(inviteMsg);
@@ -357,6 +364,32 @@ class NovaUdpSipEngine {
 
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+  }
+
+  void _sendSip486BusyResponse(String inviteMsg) {
+    final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
+    final callId = callIdMatch?.group(1)!.trim() ?? _activeCallId ?? 'unknown';
+
+    final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
+    final fromHeader = fromMatch != null ? 'From: ${fromMatch.group(1)}' : 'From: <sip:unknown@${ItSkySipConfig.domain}>';
+
+    final toMatch = RegExp(r'To: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
+    final toHeader = toMatch != null ? 'To: ${toMatch.group(1)};tag=nova-busy-${DateTime.now().millisecondsSinceEpoch}' : 'To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=nova-busy-${DateTime.now().millisecondsSinceEpoch}';
+
+    final StringBuffer sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 486 Busy Here');
+    sipMsg.writeln('Via: SIP/2.0/UDP ${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort};rport;branch=z9hG4bK-nova-busy-${DateTime.now().millisecondsSinceEpoch}');
+    sipMsg.writeln(fromHeader);
+    sipMsg.writeln(toHeader);
+    sipMsg.writeln('Call-ID: $callId');
+    sipMsg.writeln('CSeq: 1 INVITE');
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln('');
+
+    final bytes = utf8.encode(sipMsg.toString());
+    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+    print('📡 [UDP SIP] Sent 486 Busy Here response to OpenSIPS for Call-ID: $callId');
   }
 
   Future<void> _send200OKAnswerResponse() async {

@@ -359,7 +359,10 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       if (!mounted) return;
 
       if (state == SipCallSessionState.incomingCall) {
-        if (_isIncomingCallModalOpen) return;
+        if (_isIncomingCallModalOpen || _isCallActionModalOpen) {
+          debugPrint('⛔ [UI] Active call console or incoming modal is already open. Ignoring incoming call overlay.');
+          return;
+        }
 
         _isIncomingCallModalOpen = true;
         final caller = _telephonyService.incomingCallerNumber ?? 'Customer Call';
@@ -2631,7 +2634,12 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
     );
   }
 
+  bool _isCallActionModalOpen = false;
+
   void _openCallActionModal(OrderModel order) {
+    if (_isCallActionModalOpen) return;
+    _isCallActionModalOpen = true;
+
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.65),
@@ -2646,7 +2654,9 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
         onOpenCancellationReason: _openCancellationReasonModal,
         onShowRequestUpsell: _showRequestUpsellModal,
       ),
-    );
+    ).then((_) {
+      _isCallActionModalOpen = false;
+    });
   }
 
   void _showRequestUpsellModal(OrderModel order) async {
