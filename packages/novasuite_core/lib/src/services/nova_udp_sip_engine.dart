@@ -180,7 +180,7 @@ class NovaUdpSipEngine {
         } else if (_callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
           print('📞 [UDP SIP] Call Answered! Audio stream active.');
           _stopRingbackTone();
-          _sendAckPacket();
+          _sendAckPacket(message);
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
@@ -202,7 +202,7 @@ class NovaUdpSipEngine {
       } else if (message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
           print('⏹️ [UDP SIP] Call Terminated by Remote / PBX (Reason: $firstLine). Sending ACK...');
-          _sendAckPacket();
+          _sendAckPacket(message);
           _notifyCallState(UdpCallState.ended);
           _durationTimer?.cancel();
           Timer(const Duration(milliseconds: 1200), () {
@@ -213,24 +213,34 @@ class NovaUdpSipEngine {
     }
   }
 
-  /// Sends SIP ACK packet to OpenSIPS after 200 OK answer
-  void _sendAckPacket() {
+  /// Sends SIP ACK packet to OpenSIPS after 200 OK answer (RFC 3261 Compliant)
+  void _sendAckPacket([String? responseMessage]) async {
     if (_activeOrder == null) return;
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
+    final localIp = await _getLocalIpAddress();
+    final rtpPort = _socket?.port ?? 5060;
     final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
+
+    String toHeader = '<sip:$formattedPhone@${ItSkySipConfig.domain}>';
+    if (responseMessage != null) {
+      final toMatch = RegExp(r'To: ([^\r\n]+)', caseSensitive: false).firstMatch(responseMessage);
+      if (toMatch != null) {
+        toHeader = toMatch.group(1)!;
+      }
+    }
 
     final StringBuffer sipMsg = StringBuffer();
     sipMsg.writeln('ACK sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
-    sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
+    sipMsg.writeln('Via: SIP/2.0/UDP $localIp:$rtpPort;rport;branch=$viaBranch');
     sipMsg.writeln('Max-Forwards: 70');
-    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=nova${DateTime.now().millisecondsSinceEpoch}');
-    sipMsg.writeln('To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
-    sipMsg.writeln('Call-ID: novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '0.0.0.0'}');
+    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=${_activeFromTag ?? "nova"}');
+    sipMsg.writeln('To: $toHeader');
+    sipMsg.writeln('Call-ID: ${_activeCallId ?? "novasuite-call"}');
     sipMsg.writeln('CSeq: $_cseq ACK');
     sipMsg.writeln('Content-Length: 0');
     sipMsg.writeln('');
 
-    print('📡 [UDP SIP] Outbound ACK sent for $formattedPhone');
+    print('📡 [UDP SIP] Outbound Matched ACK sent for $formattedPhone (To: $toHeader)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
