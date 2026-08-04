@@ -192,8 +192,15 @@ class NovaUdpSipEngine {
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
-      } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
-        print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
+      } else if (message.contains('183 Session Progress')) {
+        print('🎵 [UDP SIP] 183 Session Progress - Enabling In-Band Early Media (Operator Voice Announcements)...');
+        _notifyProviderReason(firstLine, message);
+        _parseSdpAnswer(message);
+        _stopRingbackTone();
+        _startEarlyMediaSession();
+        _notifyCallState(UdpCallState.ringing);
+      } else if (message.contains('180 Ringing')) {
+        print('🔔 [UDP SIP] Remote Phone Ringing (180)...');
         _notifyProviderReason(firstLine, message);
         _parseSdpAnswer(message);
         _startRingbackTone();
@@ -681,6 +688,11 @@ class NovaUdpSipEngine {
       _remoteRtpHost = cIpMatch.group(1);
     }
     print('🎵 [RTP Media Setup] Remote Media Gateway Target: ${_remoteRtpHost ?? ItSkySipConfig.providerSipHost}:${_remoteRtpPort ?? 8000}');
+  }
+
+  void _startEarlyMediaSession() {
+    NovaWinmmAudioDriver().openAudioDevice();
+    _sendRtpSilenceFrame();
   }
 
   void _startRtpAudioSession() {
