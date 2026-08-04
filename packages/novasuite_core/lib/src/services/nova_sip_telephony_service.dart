@@ -136,10 +136,6 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
   /// Registers NovaSuite Softphone with IT Sky ASTPP SIP Server over multi-transport endpoints
   Future<bool> registerSipTrunk({int urlIndex = 0}) async {
-    if (!kIsWeb && Platform.isWindows) {
-      return await NovaUdpSipEngine().registerUdpTrunk();
-    }
-
     if (_registrationStatus == SipRegistrationStatus.registered && _sipHelper.registered) {
       return true;
     }
@@ -166,14 +162,24 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     try {
       _sipHelper.start(settings);
 
-      Timer(const Duration(seconds: 4), () {
+      Timer(const Duration(seconds: 8), () {
         if (_registrationCompleter != null && !_registrationCompleter!.isCompleted) {
           if (_activeUrlIndex < ItSkySipConfig.fallbackWebSocketUrls.length - 1) {
             registerSipTrunk(urlIndex: _activeUrlIndex + 1);
           } else {
-            _lastError = 'Untrusted SSL or Closed WSS Port on $currentUrl (Code 1006). Open https://07003100077.astpp.itskysolutions.com:8089 in Chrome once to accept SSL cert.';
-            _notifyRegistrationStatus(SipRegistrationStatus.registrationFailed);
-            _registrationCompleter?.complete(false);
+            // If WebSockets timed out on Windows, fallback to UDP engine
+            if (!kIsWeb && Platform.isWindows) {
+              NovaUdpSipEngine().registerUdpTrunk().then((success) {
+                if (_registrationCompleter != null && !_registrationCompleter!.isCompleted) {
+                  _notifyRegistrationStatus(success ? SipRegistrationStatus.registered : SipRegistrationStatus.registrationFailed);
+                  _registrationCompleter?.complete(success);
+                }
+              });
+            } else {
+              _lastError = 'WSS Connection Failed on $currentUrl (Code 1006).';
+              _notifyRegistrationStatus(SipRegistrationStatus.registrationFailed);
+              _registrationCompleter?.complete(false);
+            }
           }
         }
       });
@@ -196,11 +202,6 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
     _notifyCallState(SipCallSessionState.connectingProvider);
 
-    if (!kIsWeb && Platform.isWindows) {
-      await NovaUdpSipEngine().initiateCall(order);
-      return;
-    }
-
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
     final destinationUri = 'sip:$formattedPhone@${ItSkySipConfig.domain}';
 
@@ -212,7 +213,11 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     }
 
     if (!isRegistered) {
-      _lastError = _lastError ?? 'SIP Trunk Connection Failed (Code 1006). Chrome rejected WSS certificate on port 8089.';
+      if (!kIsWeb && Platform.isWindows) {
+        await NovaUdpSipEngine().initiateCall(order);
+        return;
+      }
+      _lastError = _lastError ?? 'SIP Trunk Connection Failed.';
       _notifyCallState(SipCallSessionState.disconnected);
       return;
     }
