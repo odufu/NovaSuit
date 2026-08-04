@@ -28,3 +28,4 @@ export 'src/services/nova_webrtc_sip_engine.dart';
 export 'src/models/conversation.dart';
 export 'src/models/chat_message.dart';
 export 'src/repositories/omnichannel_repository.dart';
+export 'src/services/nova_windows_focus_service.dart';

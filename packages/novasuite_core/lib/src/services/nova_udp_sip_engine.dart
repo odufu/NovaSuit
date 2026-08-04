@@ -8,6 +8,7 @@ import '../models/order.dart';
 import 'nova_winmm_audio_driver.dart';
 import '../telephony/data/recorders/wave_call_recorder.dart';
 import '../telephony/data/storage/supabase_media_storage_service.dart';
+import 'nova_windows_focus_service.dart';
 
 enum UdpSipStatus {
   unregistered,
@@ -291,6 +292,9 @@ class NovaUdpSipEngine {
     _send180RingingResponse(inviteMsg);
     _startRingbackTone();
     _notifyCallState(UdpCallState.incomingCall);
+
+    // 4. Force Windows app to un-minimize, restore to foreground focus, and flash taskbar icon!
+    NovaWindowsFocusService().bringAppToForegroundAndFlash();
   }
 
   void _sendDatagram(String sipMsg) {

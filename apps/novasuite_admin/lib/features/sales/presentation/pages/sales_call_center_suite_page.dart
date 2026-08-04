@@ -418,6 +418,13 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
             },
             onDeclined: () {
               _isIncomingCallModalOpen = false;
+              OmnichannelRepository().saveCallLog(
+                salesRepId: widget.currentUser.id,
+                destinationNumber: caller,
+                durationSeconds: 0,
+                disposition: 'missed',
+                notes: 'Inbound call declined or missed by ${widget.currentUser.fullName}',
+              );
             },
           ),
         ).then((_) {
