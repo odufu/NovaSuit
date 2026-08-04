@@ -141,13 +141,26 @@ class NovaUdpSipEngine {
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
 
-  /// Handles incoming UDP packets from OpenSIPS PBX
+  /// Handles incoming UDP packets from OpenSIPS PBX (SIP text packets & binary RTP audio stream)
   void _handleIncomingDatagram(RawSocketEvent event) {
     if (event == RawSocketEvent.read) {
       final datagram = _socket?.receive();
-      if (datagram == null) return;
+      if (datagram == null || datagram.data.isEmpty) return;
 
-      final message = utf8.decode(datagram.data);
+      // 1. Detect binary RTP audio stream packet (RTP v2 header byte 0x80 / 0x88 / 0x84)
+      if ((datagram.data[0] & 0xC0) == 0x80 && datagram.data.length > 12) {
+        _processIncomingRtpAudioPayload(datagram.data);
+        return;
+      }
+
+      // 2. Parse text SIP Signaling packets
+      String message;
+      try {
+        message = utf8.decode(datagram.data);
+      } catch (_) {
+        return; // Ignore non-UTF8 binary data
+      }
+
       final firstLine = message.split('\r\n').first;
       print('📥 [UDP SIP] Received Datagram: $firstLine');
 
@@ -456,6 +469,15 @@ class NovaUdpSipEngine {
   void _playBeepTone() {
     if (!kIsWeb && Platform.isWindows) {
       Process.run('powershell', ['-c', '[System.Console]::Beep(440, 500); [System.Console]::Beep(480, 500)']);
+    }
+  }
+
+  int _rtpPacketCount = 0;
+
+  void _processIncomingRtpAudioPayload(Uint8List rtpData) {
+    _rtpPacketCount++;
+    if (_rtpPacketCount % 50 == 1) {
+      print('🎧 [UDP RTP Audio] Live G.711 Audio Stream Packet received (Packet #$_rtpPacketCount, size: ${rtpData.length} bytes)');
     }
   }
 }
