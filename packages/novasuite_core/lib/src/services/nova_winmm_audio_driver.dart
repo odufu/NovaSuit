@@ -98,6 +98,9 @@ typedef DartWaveOutWrite = int Function(
   int cbwh,
 );
 
+typedef NativeWaveOutReset = Int32 Function(IntPtr hwo);
+typedef DartWaveOutReset = int Function(int hwo);
+
 typedef NativeWaveOutClose = Int32 Function(IntPtr hwo);
 typedef DartWaveOutClose = int Function(int hwo);
 
@@ -150,6 +153,7 @@ class NovaWinmmAudioDriver {
   DartWaveOutOpen? _waveOutOpen;
   DartWaveOutPrepareHeader? _waveOutPrepareHeader;
   DartWaveOutWrite? _waveOutWrite;
+  DartWaveOutReset? _waveOutReset;
   DartWaveOutClose? _waveOutClose;
 
   DartWaveInOpen? _waveInOpen;
@@ -219,6 +223,7 @@ class NovaWinmmAudioDriver {
       _waveOutOpen ??= _winmm!.lookupFunction<NativeWaveOutOpen, DartWaveOutOpen>('waveOutOpen');
       _waveOutPrepareHeader ??= _winmm!.lookupFunction<NativeWaveOutPrepareHeader, DartWaveOutPrepareHeader>('waveOutPrepareHeader');
       _waveOutWrite ??= _winmm!.lookupFunction<NativeWaveOutWrite, DartWaveOutWrite>('waveOutWrite');
+      _waveOutReset ??= _winmm!.lookupFunction<NativeWaveOutReset, DartWaveOutReset>('waveOutReset');
       _waveOutClose ??= _winmm!.lookupFunction<NativeWaveOutClose, DartWaveOutClose>('waveOutClose');
 
       _waveInOpen ??= _winmm!.lookupFunction<NativeWaveInOpen, DartWaveInOpen>('waveInOpen');
@@ -468,27 +473,21 @@ class NovaWinmmAudioDriver {
 
     if (_isOpen && _hWaveOut != 0 && _waveOutClose != null) {
       try {
+        if (_waveOutReset != null) {
+          _waveOutReset!(_hWaveOut);
+        }
         for (int i = 0; i < _playWaveHdrs.length; i++) {
           if (_playBufferPrepared[i]) {
             try {
               _winmm!.lookupFunction<NativeWaveOutPrepareHeader, DartWaveOutPrepareHeader>('waveOutUnprepareHeader')(_hWaveOut, _playWaveHdrs[i], sizeOf<WAVEHDR>());
             } catch (_) {}
+            _playBufferPrepared[i] = false;
           }
         }
         _waveOutClose!(_hWaveOut);
         print('⏹️ [Windows Native Audio] WaveOut Audio Device Closed.');
       } catch (_) {}
     }
-
-    for (final buf in _playPcmBuffers) {
-      calloc.free(buf);
-    }
-    for (final hdr in _playWaveHdrs) {
-      calloc.free(hdr);
-    }
-    _playPcmBuffers.clear();
-    _playWaveHdrs.clear();
-    _playBufferPrepared.clear();
 
     if (_hWaveOutPtr != null) {
       calloc.free(_hWaveOutPtr!);
