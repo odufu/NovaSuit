@@ -183,8 +183,9 @@ class NovaUdpSipEngine {
           });
         }
       } else if (message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
-        print('⏹️ [UDP SIP] Call Terminated by Remote / PBX (Reason: $firstLine).');
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
+          print('⏹️ [UDP SIP] Call Terminated by Remote / PBX (Reason: $firstLine). Sending ACK...');
+          _sendAckPacket();
           _notifyCallState(UdpCallState.ended);
           _durationTimer?.cancel();
           Timer(const Duration(milliseconds: 1200), () {
