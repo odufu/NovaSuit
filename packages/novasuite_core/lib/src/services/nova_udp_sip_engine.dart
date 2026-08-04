@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
 import '../it_sky_sip_config.dart';
 import '../models/order.dart';
@@ -165,15 +166,18 @@ class NovaUdpSipEngine {
           }
         } else if (_callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
           print('📞 [UDP SIP] Call Answered! Audio stream active.');
+          _stopRingbackTone();
           _sendAckPacket();
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
       } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
         print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
+        _startRingbackTone();
         _notifyCallState(UdpCallState.ringing);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
         print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
+        _stopRingbackTone();
         _sendBye200OKResponse(message);
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
           _notifyCallState(UdpCallState.ended);
@@ -416,10 +420,37 @@ class NovaUdpSipEngine {
     _activeCallId = null;
     _activeFromTag = null;
     _activeOrder = null;
+    _stopRingbackTone();
 
     _notifyCallState(UdpCallState.ended);
     Timer(const Duration(milliseconds: 1000), () {
       _notifyCallState(UdpCallState.disconnected);
     });
+  }
+
+  Timer? _ringbackTimer;
+
+  void _startRingbackTone() {
+    _stopRingbackTone();
+    // Play initial ringback tone immediately
+    _playBeepTone();
+    _ringbackTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
+        _playBeepTone();
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void _stopRingbackTone() {
+    _ringbackTimer?.cancel();
+    _ringbackTimer = null;
+  }
+
+  void _playBeepTone() {
+    if (!kIsWeb && Platform.isWindows) {
+      Process.run('powershell', ['-c', '[System.Console]::Beep(440, 500); [System.Console]::Beep(480, 500)']);
+    }
   }
 }
