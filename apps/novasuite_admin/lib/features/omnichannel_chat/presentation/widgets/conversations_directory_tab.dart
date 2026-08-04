@@ -28,6 +28,7 @@ class ConversationsDirectoryTab extends StatefulWidget {
 
 class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
   String _selectedChannelFilter = 'All'; // 'All', 'voice', 'whatsapp', 'sms'
+  String _selectedStatusFilter = 'All'; // 'All', 'answered', 'busy', 'missed', 'order_bound', 'open_ended'
   String _searchQuery = '';
 
   late List<ConversationModel> _conversations;
@@ -39,31 +40,30 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
   }
 
   void _initConversationsList() {
-    // Generate realistic mock conversations (some attached to orders, others open-ended)
     final List<ConversationModel> list = [];
 
-    // Order-Bound Conversations
-    for (int i = 0; i < widget.orders.length && i < 4; i++) {
-      final o = widget.orders[i];
+    // 1. Order-Bound Answered Voice Call
+    if (widget.orders.isNotEmpty) {
+      final o1 = widget.orders.first;
       list.add(
         ConversationModel(
-          id: 'conv-ord-${o.id}',
-          companyId: o.companyId,
-          customerId: o.id,
-          orderId: o.id,
+          id: 'conv-ord-1',
+          companyId: o1.companyId,
+          customerId: o1.id,
+          orderId: o1.id,
           assignedRepId: widget.currentUser.id,
-          customerName: o.customerName,
-          customerPhone: o.customerPhone,
-          primaryChannel: i % 2 == 0 ? CommChannelType.voiceCall : CommChannelType.whatsapp,
-          status: 'active',
-          lastMessageSummary: i % 2 == 0 ? '📞 Inbound PSTN Voice Call (02:45) • Recorded' : '💬 Client asked: "Can I pay cash on delivery in Ikeja?"',
-          lastMessageAt: DateTime.now().subtract(Duration(minutes: i * 25 + 5)),
-          createdAt: DateTime.now().subtract(Duration(hours: i + 1)),
+          customerName: o1.customerName,
+          customerPhone: o1.customerPhone,
+          primaryChannel: CommChannelType.voiceCall,
+          status: 'answered',
+          lastMessageSummary: '📞 PSTN Voice Call (03:42) • Answered & Order Confirmed',
+          lastMessageAt: DateTime.now().subtract(const Duration(minutes: 8)),
+          createdAt: DateTime.now().subtract(const Duration(hours: 2)),
         ),
       );
     }
 
-    // Open-Ended Conversations (No Order Attached)
+    // 2. Open-Ended Prospect Inquiry Call (Answered)
     list.add(
       ConversationModel(
         id: 'conv-open-1',
@@ -72,13 +72,46 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
         customerPhone: '+234 803 999 8811',
         assignedRepId: widget.currentUser.id,
         primaryChannel: CommChannelType.voiceCall,
-        status: 'active',
-        lastMessageSummary: '📞 Inbound Voice Call • Inquiry on Herbal Detox wholesale prices',
-        lastMessageAt: DateTime.now().subtract(const Duration(minutes: 12)),
+        status: 'answered',
+        lastMessageSummary: '📞 Inbound Voice Call (05:18) • Wholesale Pricing Inquiry',
+        lastMessageAt: DateTime.now().subtract(const Duration(minutes: 25)),
         createdAt: DateTime.now().subtract(const Duration(hours: 3)),
       ),
     );
 
+    // 3. Busy / Unanswered Voice Call Log
+    list.add(
+      ConversationModel(
+        id: 'conv-busy-1',
+        companyId: widget.currentUser.companyId,
+        customerName: 'Chief Emeka Nwosu',
+        customerPhone: '+234 802 111 2233',
+        assignedRepId: widget.currentUser.id,
+        primaryChannel: CommChannelType.voiceCall,
+        status: 'busy',
+        lastMessageSummary: '🟡 Outbound PSTN Call • Destination Line Busy / No Answer',
+        lastMessageAt: DateTime.now().subtract(const Duration(hours: 1, minutes: 10)),
+        createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+      ),
+    );
+
+    // 4. Missed Inbound Voice Call Log
+    list.add(
+      ConversationModel(
+        id: 'conv-missed-1',
+        companyId: widget.currentUser.companyId,
+        customerName: 'Amina Bello (Kano)',
+        customerPhone: '+234 813 555 7799',
+        assignedRepId: widget.currentUser.id,
+        primaryChannel: CommChannelType.voiceCall,
+        status: 'missed',
+        lastMessageSummary: '🔴 Missed Inbound Call (Rang 45s • Unanswered)',
+        lastMessageAt: DateTime.now().subtract(const Duration(hours: 2, minutes: 15)),
+        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+      ),
+    );
+
+    // 5. Active WhatsApp Conversation Thread
     list.add(
       ConversationModel(
         id: 'conv-open-2',
@@ -87,10 +120,26 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
         customerPhone: '+234 812 444 5566',
         assignedRepId: widget.currentUser.id,
         primaryChannel: CommChannelType.whatsapp,
-        status: 'active',
-        lastMessageSummary: '💬 WhatsApp Message: "Hello NovaSuite, do you deliver to Port Harcourt airport?"',
-        lastMessageAt: DateTime.now().subtract(const Duration(minutes: 45)),
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+        status: 'answered',
+        lastMessageSummary: '💬 WhatsApp Chat: "Hello, please send payment receipt via WhatsApp"',
+        lastMessageAt: DateTime.now().subtract(const Duration(hours: 3, minutes: 30)),
+        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+      ),
+    );
+
+    // 6. Manual Outbound SMS Dispatch Log
+    list.add(
+      ConversationModel(
+        id: 'conv-sms-1',
+        companyId: widget.currentUser.companyId,
+        customerName: 'Pastor David Adebayo',
+        customerPhone: '+234 701 888 9900',
+        assignedRepId: widget.currentUser.id,
+        primaryChannel: CommChannelType.sms,
+        status: 'answered',
+        lastMessageSummary: '📱 Outbound SMS Alert: "Your NovaCare Package is ready for dispatch."',
+        lastMessageAt: DateTime.now().subtract(const Duration(hours: 4, minutes: 45)),
+        createdAt: DateTime.now().subtract(const Duration(hours: 8)),
       ),
     );
 
@@ -103,6 +152,28 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
       builder: (ctx) => InitiateConversationDialog(
         orders: widget.orders,
         onInitiate: (phone, channel, order) {
+          final newConv = ConversationModel(
+            id: 'conv-manual-${DateTime.now().millisecondsSinceEpoch}',
+            companyId: widget.currentUser.companyId,
+            orderId: order?.id,
+            assignedRepId: widget.currentUser.id,
+            customerName: order?.customerName ?? 'Customer ($phone)',
+            customerPhone: phone,
+            primaryChannel: channel,
+            status: 'answered',
+            lastMessageSummary: channel == CommChannelType.voiceCall
+                ? '📞 Outbound PSTN Call to $phone • Logged'
+                : (channel == CommChannelType.whatsapp
+                    ? '💬 WhatsApp Session to $phone • Active'
+                    : '📱 SMS Dispatch to $phone • Sent'),
+            lastMessageAt: DateTime.now(),
+            createdAt: DateTime.now(),
+          );
+
+          setState(() {
+            _conversations.insert(0, newConv);
+          });
+
           if (channel == CommChannelType.voiceCall) {
             final targetOrder = order ?? OrderModel(
               id: 'inc-${DateTime.now().millisecondsSinceEpoch}',
@@ -174,13 +245,20 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
           (_selectedChannelFilter == 'whatsapp' && c.primaryChannel == CommChannelType.whatsapp) ||
           (_selectedChannelFilter == 'sms' && c.primaryChannel == CommChannelType.sms);
 
+      final matchesStatus = _selectedStatusFilter == 'All' ||
+          (_selectedStatusFilter == 'answered' && c.status == 'answered') ||
+          (_selectedStatusFilter == 'busy' && c.status == 'busy') ||
+          (_selectedStatusFilter == 'missed' && c.status == 'missed') ||
+          (_selectedStatusFilter == 'order_bound' && c.isOrderBound) ||
+          (_selectedStatusFilter == 'open_ended' && !c.isOrderBound);
+
       final query = _searchQuery.toLowerCase();
       final matchesQuery = query.isEmpty ||
           (c.customerName?.toLowerCase().contains(query) ?? false) ||
           (c.customerPhone?.toLowerCase().contains(query) ?? false) ||
           (c.lastMessageSummary?.toLowerCase().contains(query) ?? false);
 
-      return matchesChannel && matchesQuery;
+      return matchesChannel && matchesStatus && matchesQuery;
     }).toList();
 
     return LayoutBuilder(
@@ -198,7 +276,7 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Conversations (${_conversations.length})',
+                      'Conversations (${filtered.length})',
                       style: GoogleFonts.outfit(
                         fontSize: isMobile ? 18 : 22,
                         fontWeight: FontWeight.bold,
@@ -234,123 +312,118 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
                 isDarkMode: isDarkMode,
                 isCompact: true,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
 
-              // Filter & Search Controls Bar (Responsive)
-              if (isMobile) ...[
-                Column(
-                  children: [
-                    Container(
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                      ),
-                      child: TextField(
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        style: TextStyle(fontSize: 12, color: isDarkMode ? Colors.white : Colors.black),
-                        decoration: InputDecoration(
-                          hintText: 'Search by name, phone, or message content...',
-                          hintStyle: TextStyle(fontSize: 11, color: isDarkMode ? const Color(0xFF64748B) : Colors.grey),
-                          prefixIcon: const Icon(Icons.search, size: 16, color: Color(0xFF10B981)),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        children: [
-                          _buildChannelFilterChip('All', 'All Channels', isDarkMode),
-                          const SizedBox(width: 6),
-                          _buildChannelFilterChip('voice', '📞 Voice Calls', isDarkMode),
-                          const SizedBox(width: 6),
-                          _buildChannelFilterChip('whatsapp', '💬 WhatsApp', isDarkMode),
-                          const SizedBox(width: 6),
-                          _buildChannelFilterChip('sms', '📱 SMS', isDarkMode),
-                        ],
-                      ),
-                    ),
-                  ],
+              // Search Bar
+              Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
                 ),
-              ] else ...[
-                Row(
+                child: TextField(
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                  style: TextStyle(fontSize: 12, color: isDarkMode ? Colors.white : Colors.black),
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, phone, or call notes...',
+                    hintStyle: TextStyle(fontSize: 11, color: isDarkMode ? const Color(0xFF64748B) : Colors.grey),
+                    prefixIcon: const Icon(Icons.search, size: 16, color: Color(0xFF10B981)),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Multi-Filter Chips Bar (Channel & Call Outcome Filters)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
                   children: [
-                    Expanded(
-                      child: Container(
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                        ),
-                        child: TextField(
-                          onChanged: (val) => setState(() => _searchQuery = val),
-                          style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.white : Colors.black),
-                          decoration: InputDecoration(
-                            hintText: 'Search conversations by name, phone, or message content...',
-                            hintStyle: TextStyle(fontSize: 12, color: isDarkMode ? const Color(0xFF64748B) : Colors.grey),
-                            prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF10B981)),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                    // Channel Chips
                     _buildChannelFilterChip('All', 'All Channels', isDarkMode),
                     const SizedBox(width: 6),
-                    _buildChannelFilterChip('voice', '📞 Voice Calls', isDarkMode),
+                    _buildChannelFilterChip('voice', '📞 Voice', isDarkMode),
                     const SizedBox(width: 6),
                     _buildChannelFilterChip('whatsapp', '💬 WhatsApp', isDarkMode),
                     const SizedBox(width: 6),
                     _buildChannelFilterChip('sms', '📱 SMS', isDarkMode),
+                    const SizedBox(width: 12),
+
+                    // Vertical Divider
+                    Container(height: 20, width: 1, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                    const SizedBox(width: 12),
+
+                    // Status / Outcome Chips
+                    _buildStatusFilterChip('All', 'All Call Outcomes', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildStatusFilterChip('answered', '🟢 Answered', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildStatusFilterChip('busy', '🟡 Busy / No Answer', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildStatusFilterChip('missed', '🔴 Missed', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildStatusFilterChip('order_bound', '📦 Order-Bound', isDarkMode),
+                    const SizedBox(width: 6),
+                    _buildStatusFilterChip('open_ended', '💬 Open Inquiry', isDarkMode),
                   ],
                 ),
-              ],
-          const SizedBox(height: 16),
+              ),
+              const SizedBox(height: 12),
 
-          // Conversations List View
-          Expanded(
-            child: filtered.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.forum_outlined, size: 48, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
-                        const SizedBox(height: 12),
-                        Text('No conversations found matching filters!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDarkMode ? Colors.white70 : Colors.grey)),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final c = filtered[index];
-                      return _buildConversationCard(c, isDarkMode, isMobile);
-                    },
-                  ),
+              // Conversations & Call Logs List View
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.forum_outlined, size: 48, color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                            const SizedBox(height: 12),
+                            Text('No call logs or conversations match filters!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDarkMode ? Colors.white70 : Colors.grey)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final c = filtered[index];
+                          return _buildConversationCard(c, isDarkMode, isMobile);
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
-  },
-);
-}
+  }
 
   Widget _buildChannelFilterChip(String key, String label, bool isDarkMode) {
     final isSelected = _selectedChannelFilter == key;
     return FilterChip(
       selected: isSelected,
-      label: Text(label, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      label: Text(label, style: TextStyle(fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
       onSelected: (val) => setState(() => _selectedChannelFilter = key),
       selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2),
       backgroundColor: isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade100,
       side: BorderSide(color: isSelected ? const Color(0xFF10B981) : (isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300)),
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  Widget _buildStatusFilterChip(String key, String label, bool isDarkMode) {
+    final isSelected = _selectedStatusFilter == key;
+    return FilterChip(
+      selected: isSelected,
+      label: Text(label, style: TextStyle(fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      onSelected: (val) => setState(() => _selectedStatusFilter = key),
+      selectedColor: Colors.blue.withValues(alpha: 0.2),
+      backgroundColor: isDarkMode ? const Color(0xFF0C1F17) : Colors.grey.shade100,
+      side: BorderSide(color: isSelected ? Colors.blue : (isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300)),
+      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -439,21 +512,28 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: c.isOrderBound ? const Color(0xFF10B981).withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: c.isOrderBound ? const Color(0xFF10B981) : Colors.amber, width: 1),
-                    ),
-                    child: Text(
-                      c.isOrderBound ? '#${matchingOrder.orderNumber}' : 'Open Inquiry',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: c.isOrderBound ? const Color(0xFF10B981) : Colors.amber.shade800,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCallOutcomeBadge(c.status, isDarkMode),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: c.isOrderBound ? const Color(0xFF10B981).withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: c.isOrderBound ? const Color(0xFF10B981) : Colors.amber, width: 1),
+                        ),
+                        child: Text(
+                          c.isOrderBound ? '#${matchingOrder.orderNumber}' : 'Open Inquiry',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: c.isOrderBound ? const Color(0xFF10B981) : Colors.amber.shade800,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -647,6 +727,35 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCallOutcomeBadge(String status, bool isDarkMode) {
+    Color color = const Color(0xFF10B981);
+    String label = '🟢 Connected';
+    if (status == 'busy') {
+      color = Colors.amber.shade700;
+      label = '🟡 Busy';
+    } else if (status == 'missed') {
+      color = const Color(0xFFEF4444);
+      label = '🔴 Missed';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color, width: 0.8),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.jetBrainsMono(
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          color: color,
         ),
       ),
     );
