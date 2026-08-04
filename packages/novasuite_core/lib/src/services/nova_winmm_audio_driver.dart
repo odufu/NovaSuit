@@ -256,10 +256,10 @@ class NovaWinmmAudioDriver {
 
         if (_playWaveHdrs.isEmpty) {
           for (int i = 0; i < _numPlayBuffers; i++) {
-            final pcmBuf = calloc<Int8>(3200);
+            final pcmBuf = calloc<Int8>(32000);
             final waveHdr = calloc<WAVEHDR>();
             waveHdr.ref.lpData = pcmBuf;
-            waveHdr.ref.dwBufferLength = 3200;
+            waveHdr.ref.dwBufferLength = 32000;
             waveHdr.ref.dwFlags = 0;
 
             _playPcmBuffers.add(pcmBuf);
