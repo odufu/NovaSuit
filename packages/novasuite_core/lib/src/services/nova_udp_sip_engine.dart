@@ -251,8 +251,10 @@ class NovaUdpSipEngine {
 
   String? _incomingCallerNumber;
   String? _activeToTag;
+  String? _activeInviteMsg;
 
   void _handleIncomingInviteRequest(String inviteMsg) {
+    _activeInviteMsg = inviteMsg;
     // 1. Extract Call-ID
     final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
     final incomingCallId = callIdMatch?.group(1)!.trim();
@@ -367,23 +369,39 @@ class NovaUdpSipEngine {
   }
 
   void _send180RingingResponse(String inviteMsg) async {
-    final toHeader = 'To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$_activeToTag';
-    final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
-    final fromHeader = fromMatch != null ? 'From: ${fromMatch.group(1)}' : 'From: <sip:unknown@${ItSkySipConfig.domain}>';
+    final viaMatches = RegExp(r'^Via:\s*[^\r\n]+', caseSensitive: false, multiLine: true).allMatches(inviteMsg);
+    final viaHeaders = viaMatches.map((m) => m.group(0)!).toList();
+
+    final fromMatch = RegExp(r'^From:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(inviteMsg);
+    final fromHeader = fromMatch?.group(0) ?? 'From: <sip:unknown@${ItSkySipConfig.domain}>';
+
+    final toMatch = RegExp(r'^To:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(inviteMsg);
+    String toHeader = toMatch?.group(0) ?? 'To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>';
+    if (!toHeader.contains('tag=')) {
+      toHeader = '$toHeader;tag=$_activeToTag';
+    }
+
+    final callIdMatch = RegExp(r'^Call-ID:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(inviteMsg);
+    final callIdHeader = callIdMatch?.group(0) ?? 'Call-ID: $_activeCallId';
+
+    final cseqMatch = RegExp(r'^CSeq:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(inviteMsg);
+    final cseqHeader = cseqMatch?.group(0) ?? 'CSeq: 1 INVITE';
 
     final sipMsg = StringBuffer();
     sipMsg.writeln('SIP/2.0 180 Ringing');
-    sipMsg.writeln('Via: SIP/2.0/UDP ${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort};rport;branch=z9hG4bK${DateTime.now().millisecondsSinceEpoch}');
+    for (final via in viaHeaders) {
+      sipMsg.writeln(via);
+    }
     sipMsg.writeln(fromHeader);
     sipMsg.writeln(toHeader);
-    sipMsg.writeln('Call-ID: $_activeCallId');
-    sipMsg.writeln('CSeq: 1 INVITE');
-    sipMsg.writeln('User-Agent: NovaSuite Engine v1.0 (Windows)');
+    sipMsg.writeln(callIdHeader);
+    sipMsg.writeln(cseqHeader);
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
     sipMsg.writeln('Content-Length: 0');
     sipMsg.writeln();
 
     _sendDatagram(sipMsg.toString());
-    print('📡 [UDP SIP] Sent 180 Ringing response for incoming call.');
+    print('📡 [UDP SIP] Sent RFC 3261 Compliant 180 Ringing response with exact Via header.');
   }
 
   Timer? _keepAliveTimer;
@@ -461,8 +479,31 @@ class NovaUdpSipEngine {
   }
 
   Future<void> _send200OKAnswerResponse() async {
+    if (_activeInviteMsg == null) {
+      print('⚠️ [UDP SIP] Cannot send 200 OK: missing active INVITE message.');
+      return;
+    }
+
     final localIp = await _getLocalIpAddress();
     final port = _socket?.port ?? 5060;
+
+    final viaMatches = RegExp(r'^Via:\s*[^\r\n]+', caseSensitive: false, multiLine: true).allMatches(_activeInviteMsg!);
+    final viaHeaders = viaMatches.map((m) => m.group(0)!).toList();
+
+    final fromMatch = RegExp(r'^From:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(_activeInviteMsg!);
+    final fromHeader = fromMatch?.group(0) ?? 'From: <sip:${_incomingCallerNumber}@${ItSkySipConfig.domain}>;tag=$_activeFromTag';
+
+    final toMatch = RegExp(r'^To:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(_activeInviteMsg!);
+    String toHeader = toMatch?.group(0) ?? 'To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>';
+    if (!toHeader.contains('tag=')) {
+      toHeader = '$toHeader;tag=$_activeToTag';
+    }
+
+    final callIdMatch = RegExp(r'^Call-ID:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(_activeInviteMsg!);
+    final callIdHeader = callIdMatch?.group(0) ?? 'Call-ID: $_activeCallId';
+
+    final cseqMatch = RegExp(r'^CSeq:\s*[^\r\n]+', caseSensitive: false, multiLine: true).firstMatch(_activeInviteMsg!);
+    final cseqHeader = cseqMatch?.group(0) ?? 'CSeq: 1 INVITE';
 
     final sdpBody = StringBuffer();
     sdpBody.writeln('v=0');
@@ -480,19 +521,22 @@ class NovaUdpSipEngine {
 
     final sipMsg = StringBuffer();
     sipMsg.writeln('SIP/2.0 200 OK');
-    sipMsg.writeln('Via: SIP/2.0/UDP ${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort};rport;branch=z9hG4bK${DateTime.now().millisecondsSinceEpoch}');
-    sipMsg.writeln('From: <sip:${_incomingCallerNumber}@${ItSkySipConfig.domain}>;tag=$_activeFromTag');
-    sipMsg.writeln('To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$_activeToTag');
-    sipMsg.writeln('Call-ID: $_activeCallId');
-    sipMsg.writeln('CSeq: 1 INVITE');
+    for (final via in viaHeaders) {
+      sipMsg.writeln(via);
+    }
+    sipMsg.writeln(fromHeader);
+    sipMsg.writeln(toHeader);
+    sipMsg.writeln(callIdHeader);
+    sipMsg.writeln(cseqHeader);
     sipMsg.writeln('Contact: <sip:${ItSkySipConfig.username}@$localIp:$port>');
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
     sipMsg.writeln('Content-Type: application/sdp');
     sipMsg.writeln('Content-Length: ${sdpBytes.length}');
     sipMsg.writeln();
     sipMsg.write(sdpBody.toString());
 
     _sendDatagram(sipMsg.toString());
-    print('📡 [UDP SIP] Sent 200 OK Answer Response with SDP Offer.');
+    print('📡 [UDP SIP] Sent RFC 3261 Compliant 200 OK Answer Response with exact Via header.');
   }
 
   void _notifyProviderReason(String firstLine, String message) {
@@ -760,8 +804,9 @@ class NovaUdpSipEngine {
 
     _notifyCallState(UdpCallState.ended);
 
-    if (_activeOrder != null && _activeCallId != null) {
-      final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
+    final targetPhone = _activeOrder?.customerPhone ?? _incomingCallerNumber;
+    if (targetPhone != null && _activeCallId != null) {
+      final formattedPhone = ItSkySipConfig.formatOutboundDialString(targetPhone);
       final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
       
       // Send both CANCEL and BYE to guarantee OpenSIPS terminates transaction/dialog in any state!
