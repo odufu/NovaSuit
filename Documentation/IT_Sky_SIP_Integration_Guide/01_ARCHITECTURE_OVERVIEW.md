@@ -11,21 +11,21 @@ Unlike traditional Flutter VoIP solutions that rely on external softphones (such
 
 ```mermaid
 graph TD
-    subgraph Flutter Application Layer (apps/novasuite_admin)
+    subgraph AppLayer ["Flutter Application Layer (apps/novasuite_admin)"]
         UI["CallActionModal (CRM UI)"]
         State["Provider Feedback & Disposition Stream"]
     end
 
-    subgraph Core Telephony Domain (packages/novasuite_core)
+    subgraph CoreDomain ["Core Telephony Domain (packages/novasuite_core)"]
         Facade["NovaSipTelephonyService (Platform Abstraction)"]
         
-        subgraph Native Windows UDP Engine
+        subgraph UDPEngine ["Native Windows UDP Engine"]
             Engine["NovaUdpSipEngine (SIP RFC 3261 State Machine)"]
             Parser["SIP Text Parser & MD5 Digest Calculator"]
             RTPEngine["RTP Packet Formatter & NAT Hole-Puncher"]
         end
 
-        subgraph Pure Dart FFI Audio Driver
+        subgraph AudioDriverLayer ["Pure Dart FFI Audio Driver"]
             AudioDriver["NovaWinmmAudioDriver (Win32 FFI)"]
             WaveOut["waveOut (Speaker Playback)"]
             WaveIn["waveIn (Headset Microphone Recording)"]
@@ -33,7 +33,7 @@ graph TD
         end
     end
 
-    subgraph External Network Infrastructure
+    subgraph NetInfra ["External Network Infrastructure"]
         OpenSIPS["IT Sky OpenSIPS PBX (95.217.244.97:5060)"]
         MediaGateway["IT Sky RTP Media Gateway (46.62.246.2:RTP)"]
         PSTN["Nigerian Telco PSTN (MTN / Airtel / Glo)"]

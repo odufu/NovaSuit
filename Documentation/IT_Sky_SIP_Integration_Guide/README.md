@@ -12,10 +12,10 @@ This subfolder serves as a complete engineering reference manual for replicating
 graph TD
     KB["IT Sky Telephony Knowledge Base"]
     
-    KB --> Doc1["01_ARCHITECTURE_OVERVIEW.md<br/>• Dual-Engine Architecture<br/>• Component Responsibilities<br/>• Sequence Flows"]
-    KB --> Doc2["02_TECHNICAL_CHALLENGES_AND_SOLUTIONS.md<br/>• 7 Deep Engineering Challenges<br/>• SIP Auth & ACK Matching<br/>• Symmetric RTP & FFI Audio"]
-    KB --> Doc3["03_STEP_BY_STEP_IMPLEMENTATION_BLUEPRINT.md<br/>• Developer Blueprint<br/>• Code Snippets & Structs<br/>• State Machine Lifecycle"]
-    KB --> Doc4["04_BEST_PRACTICES_AND_CRM_INTEGRATION.md<br/>• Telecom Status Code Mapping<br/>• Auto CRM Disposition<br/>• Production Best Practices"]
+    KB --> Doc1["01_ARCHITECTURE_OVERVIEW.md - Dual-Engine Architecture & Sequence Flows"]
+    KB --> Doc2["02_TECHNICAL_CHALLENGES_AND_SOLUTIONS.md - 7 Engineering Challenges & Solutions"]
+    KB --> Doc3["03_STEP_BY_STEP_IMPLEMENTATION_BLUEPRINT.md - Developer Blueprint & Code Snippets"]
+    KB --> Doc4["04_BEST_PRACTICES_AND_CRM_INTEGRATION.md - Telecom Code Mapping & Auto Disposition"]
 ```
 
 ---
