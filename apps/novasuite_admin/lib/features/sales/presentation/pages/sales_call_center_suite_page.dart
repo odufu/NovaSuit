@@ -363,8 +363,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       if (!mounted) return;
 
       if (state == SipCallSessionState.incomingCall) {
-        if (_isIncomingCallModalOpen || _isCallActionModalOpen) {
-          debugPrint('⛔ [UI] Active call console or incoming modal is already open. Ignoring incoming call overlay.');
+        if (_isIncomingCallModalOpen) {
+          debugPrint('⛔ [UI] Incoming call modal is already open. Ignoring duplicate incoming call overlay.');
           return;
         }
 
@@ -414,6 +414,9 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
             onAnswered: () {
               _isIncomingCallModalOpen = false;
               Navigator.of(ctx).pop();
+              if (_isCallActionModalOpen) {
+                Navigator.of(context).pop();
+              }
               _openCallActionModal(targetOrder, isIncomingCall: true);
             },
             onDeclined: () {
