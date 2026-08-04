@@ -136,6 +136,10 @@ class NovaSipTelephonyService implements SipUaHelperListener {
 
   /// Registers NovaSuite Softphone with IT Sky ASTPP SIP Server over multi-transport endpoints
   Future<bool> registerSipTrunk({int urlIndex = 0}) async {
+    if (!kIsWeb && Platform.isWindows) {
+      return await NovaUdpSipEngine().registerUdpTrunk();
+    }
+
     if (_registrationStatus == SipRegistrationStatus.registered && _sipHelper.registered) {
       return true;
     }
@@ -201,6 +205,11 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     _lastError = null;
 
     _notifyCallState(SipCallSessionState.connectingProvider);
+
+    if (!kIsWeb && Platform.isWindows) {
+      await NovaUdpSipEngine().initiateCall(order);
+      return;
+    }
 
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
     final destinationUri = 'sip:$formattedPhone@${ItSkySipConfig.domain}';
