@@ -246,13 +246,19 @@ class NovaUdpSipEngine {
   String? _activeToTag;
 
   void _handleIncomingInviteRequest(String inviteMsg) {
-    print('📞 [UDP SIP] INCOMING CALL DETECTED FROM OPENSIPS PBX!');
-
     // 1. Extract Call-ID
     final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
-    if (callIdMatch != null) {
-      _activeCallId = callIdMatch.group(1)!.trim();
+    final incomingCallId = callIdMatch?.group(1)!.trim();
+
+    // Guard against duplicate re-transmitted INVITE packets for the active incoming call
+    if (_activeCallId != null && _activeCallId == incomingCallId && _callState == UdpCallState.incomingCall) {
+      print('🔁 [UDP SIP] Re-transmitting 180 Ringing response for active Call-ID ($incomingCallId)...');
+      _send180RingingResponse(inviteMsg);
+      return;
     }
+
+    _activeCallId = incomingCallId;
+    print('📞 [UDP SIP] INCOMING CALL DETECTED FROM OPENSIPS PBX! (Call-ID: $_activeCallId)');
 
     // 2. Extract From header & caller phone number
     final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);

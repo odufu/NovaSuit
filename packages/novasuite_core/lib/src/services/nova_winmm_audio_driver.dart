@@ -205,7 +205,7 @@ class NovaWinmmAudioDriver {
 
   /// Initializes Windows winmm.dll FFI bindings and opens 8000Hz 16-bit Mono WaveOut device
   bool openAudioDevice() {
-    if (_isOpen) return true;
+    if (_isOpen && _hWaveOut != 0) return true;
     if (kIsWeb || !Platform.isWindows) return false;
 
     try {
