@@ -531,7 +531,7 @@ class NovaUdpSipEngine {
   void _sendRtpSilenceFrame() {
     if (_remoteRtpPort == null || _socket == null) return;
 
-    // Build 12-byte standard RTP v2 Header + 160-byte G.711 u-law silence payload (0xFF)
+    // Build 12-byte standard RTP v2 Header + 160-byte G.711 u-law payload
     final rtpPacket = Uint8List(172);
     rtpPacket[0] = 0x80; // RTP v2
     rtpPacket[1] = 0x00; // Payload type 0 (PCMU)
@@ -539,9 +539,9 @@ class NovaUdpSipEngine {
     rtpPacket[2] = (seq >> 8) & 0xFF;
     rtpPacket[3] = seq & 0xFF;
     
-    // G.711 u-law silence byte is 0xFF
+    // G.711 u-law neutral 0-amplitude voice byte is 0x7F (RFC 3551 compliant)
     for (int i = 12; i < 172; i++) {
-      rtpPacket[i] = 0xFF;
+      rtpPacket[i] = 0x7F;
     }
 
     final targetHost = _remoteRtpHost ?? ItSkySipConfig.providerSipHost;
