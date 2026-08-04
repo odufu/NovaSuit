@@ -187,14 +187,9 @@ class NovaUdpSipEngine {
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
-      } else if (message.contains('183 Session Progress')) {
-        print('🔔 [UDP SIP] 183 Session Progress received -> Enabling Network Early Media Audio Stream...');
+      } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
+        print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
         _parseSdpAnswer(message);
-        _stopRingbackTone();
-        _startRtpAudioSession();
-        _notifyCallState(UdpCallState.ringing);
-      } else if (message.contains('180 Ringing')) {
-        print('🔔 [UDP SIP] Remote Phone Ringing (180 Ringing)...');
         _startRingbackTone();
         _notifyCallState(UdpCallState.ringing);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
@@ -505,7 +500,6 @@ class NovaUdpSipEngine {
 
   int? _remoteRtpPort;
   String? _remoteRtpHost;
-  Timer? _rtpKeepaliveTimer;
 
   void _parseSdpAnswer(String sdpMessage) {
     final mAudioMatch = RegExp(r'm=audio (\d+)', caseSensitive: false).firstMatch(sdpMessage);
@@ -522,21 +516,13 @@ class NovaUdpSipEngine {
   void _startRtpAudioSession() {
     NovaWinmmAudioDriver().openAudioDevice();
     
-    // Start capturing live headset microphone voice audio
+    // Send initial single RTP silence frame to open NAT pinhole
+    _sendRtpSilenceFrame();
+
+    // Start single continuous stream of live headset microphone audio
     NovaWinmmAudioDriver().startMicrophoneCapture((micFrame) {
       if (_callState == UdpCallState.active) {
         _sendRtpAudioFrame(micFrame);
-      }
-    });
-
-    // Send initial RTP frame to open NAT pinhole
-    _sendRtpSilenceFrame();
-    _rtpKeepaliveTimer?.cancel();
-    _rtpKeepaliveTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
-      if (_callState == UdpCallState.active) {
-        _sendRtpSilenceFrame();
-      } else {
-        timer.cancel();
       }
     });
   }
