@@ -174,9 +174,15 @@ class NovaWinmmAudioDriver {
   Pointer<Int8>? _micBuffer2Ptr;
   Timer? _micPollingTimer;
 
+  // Pre-allocated Circular Ring Buffer pool for crash-free RTP audio streaming
+  static const int _numPlayBuffers = 16;
+  final List<Pointer<WAVEHDR>> _playWaveHdrs = [];
+  final List<Pointer<Int8>> _playPcmBuffers = [];
+  final List<bool> _playBufferPrepared = [];
+  int _playBufferIndex = 0;
+
   // G.711 u-law encoder (16-bit PCM to 8-bit G.711 u-law with anti-clipping gain control)
   static int pcm16ToULaw(int pcm16) {
-    // Apply 0.6x soft gain to prevent digital peak clipping distortion on headset mics
     pcm16 = (pcm16 * 0.6).round().clamp(-32635, 32635);
     int sign = (pcm16 >> 8) & 0x80;
     if (sign != 0) pcm16 = -pcm16;
@@ -242,6 +248,21 @@ class NovaWinmmAudioDriver {
       if (result == 0) {
         _hWaveOut = _hWaveOutPtr!.value;
         _isOpen = true;
+
+        if (_playWaveHdrs.isEmpty) {
+          for (int i = 0; i < _numPlayBuffers; i++) {
+            final pcmBuf = calloc<Int8>(3200);
+            final waveHdr = calloc<WAVEHDR>();
+            waveHdr.ref.lpData = pcmBuf;
+            waveHdr.ref.dwBufferLength = 3200;
+            waveHdr.ref.dwFlags = 0;
+
+            _playPcmBuffers.add(pcmBuf);
+            _playWaveHdrs.add(waveHdr);
+            _playBufferPrepared.add(false);
+          }
+        }
+
         print('🎧 [Windows Native Audio] WaveOut WASAPI Audio Device Opened Successfully (Handle: $_hWaveOut)');
         return true;
       } else {
@@ -254,20 +275,29 @@ class NovaWinmmAudioDriver {
     }
   }
 
-  /// Plays incoming G.711 u-law RTP audio payload bytes directly to Windows Sound Card
+  /// Plays incoming G.711 u-law RTP audio payload bytes directly to Windows Sound Card using Ring Buffer
   void playG711RtpPayload(Uint8List rtpPacket) {
     if (!_isOpen || _hWaveOut == 0) {
       if (!openAudioDevice()) return;
     }
 
-    // RTP Header is typically 12 bytes; audio payload follows
     if (rtpPacket.length <= 12) return;
     final uLawPayload = rtpPacket.sublist(12);
 
     final numSamples = uLawPayload.length;
     final pcmBytesCount = numSamples * 2;
 
-    final pcmDataPtr = calloc<Int8>(pcmBytesCount);
+    _playBufferIndex = (_playBufferIndex + 1) % _numPlayBuffers;
+    final waveHdr = _playWaveHdrs[_playBufferIndex];
+    final pcmDataPtr = _playPcmBuffers[_playBufferIndex];
+
+    if (_playBufferPrepared[_playBufferIndex]) {
+      try {
+        _winmm!.lookupFunction<NativeWaveOutPrepareHeader, DartWaveOutPrepareHeader>('waveOutUnprepareHeader')(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
+      } catch (_) {}
+      _playBufferPrepared[_playBufferIndex] = false;
+    }
+
     final ByteData view = ByteData.view(pcmDataPtr.cast<Uint8>().asTypedList(pcmBytesCount).buffer);
 
     for (int i = 0; i < numSamples; i++) {
@@ -275,23 +305,14 @@ class NovaWinmmAudioDriver {
       view.setInt16(i * 2, pcmSample, Endian.little);
     }
 
-    final waveHdr = calloc<WAVEHDR>();
-    waveHdr.ref.lpData = pcmDataPtr;
     waveHdr.ref.dwBufferLength = pcmBytesCount;
     waveHdr.ref.dwFlags = 0;
 
     final prepResult = _waveOutPrepareHeader!(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
     if (prepResult == 0) {
+      _playBufferPrepared[_playBufferIndex] = true;
       _waveOutWrite!(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
     }
-
-    // Schedule cleanup of memory pointers after buffer playback (~500ms)
-    Future.delayed(const Duration(milliseconds: 500), () {
-      try {
-        calloc.free(pcmDataPtr);
-        calloc.free(waveHdr);
-      } catch (_) {}
-    });
   }
 
   /// Synthesizes pure 440Hz + 480Hz PSTN Ringback Tone PCM samples and plays directly to sound card
@@ -301,37 +322,38 @@ class NovaWinmmAudioDriver {
     }
 
     const int sampleRate = 8000;
-    const int durationMs = 1500; // 1.5 second ringback burst
+    const int durationMs = 1500;
     final int numSamples = (sampleRate * durationMs) ~/ 1000;
     final int pcmBytesCount = numSamples * 2;
 
-    final pcmDataPtr = calloc<Int8>(pcmBytesCount);
+    _playBufferIndex = (_playBufferIndex + 1) % _numPlayBuffers;
+    final waveHdr = _playWaveHdrs[_playBufferIndex];
+    final pcmDataPtr = _playPcmBuffers[_playBufferIndex];
+
+    if (_playBufferPrepared[_playBufferIndex]) {
+      try {
+        _winmm!.lookupFunction<NativeWaveOutPrepareHeader, DartWaveOutPrepareHeader>('waveOutUnprepareHeader')(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
+      } catch (_) {}
+      _playBufferPrepared[_playBufferIndex] = false;
+    }
+
     final ByteData view = ByteData.view(pcmDataPtr.cast<Uint8>().asTypedList(pcmBytesCount).buffer);
 
     for (int i = 0; i < numSamples; i++) {
       final double t = i / sampleRate;
-      // 440Hz + 480Hz dual sine wave PSTN ringback tone
       final double sampleVal = (math.sin(2 * math.pi * 440 * t) + math.sin(2 * math.pi * 480 * t)) * 0.2;
       final int pcm16 = (sampleVal * 32767).clamp(-32768, 32767).toInt();
       view.setInt16(i * 2, pcm16, Endian.little);
     }
 
-    final waveHdr = calloc<WAVEHDR>();
-    waveHdr.ref.lpData = pcmDataPtr;
     waveHdr.ref.dwBufferLength = pcmBytesCount;
     waveHdr.ref.dwFlags = 0;
 
     final prepResult = _waveOutPrepareHeader!(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
     if (prepResult == 0) {
+      _playBufferPrepared[_playBufferIndex] = true;
       _waveOutWrite!(_hWaveOut, waveHdr, sizeOf<WAVEHDR>());
     }
-
-    Future.delayed(const Duration(milliseconds: 1600), () {
-      try {
-        calloc.free(pcmDataPtr);
-        calloc.free(waveHdr);
-      } catch (_) {}
-    });
   }
 
   /// Starts capturing live microphone PCM audio and converting to 8000Hz G.711 u-law RTP payloads
@@ -384,9 +406,9 @@ class NovaWinmmAudioDriver {
       print('🎙️ [Windows Native Audio] Headset Microphone Active (8000Hz 16-bit Mono)');
 
       _micPollingTimer?.cancel();
-      _micPollingTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
+      _micPollingTimer = Timer.periodic(const Duration(milliseconds: 20), (_) {
         if (!_isMicRecording || _hWaveIn == 0) {
-          timer.cancel();
+          _micPollingTimer?.cancel();
           return;
         }
 
@@ -446,10 +468,28 @@ class NovaWinmmAudioDriver {
 
     if (_isOpen && _hWaveOut != 0 && _waveOutClose != null) {
       try {
+        for (int i = 0; i < _playWaveHdrs.length; i++) {
+          if (_playBufferPrepared[i]) {
+            try {
+              _winmm!.lookupFunction<NativeWaveOutPrepareHeader, DartWaveOutPrepareHeader>('waveOutUnprepareHeader')(_hWaveOut, _playWaveHdrs[i], sizeOf<WAVEHDR>());
+            } catch (_) {}
+          }
+        }
         _waveOutClose!(_hWaveOut);
         print('⏹️ [Windows Native Audio] WaveOut Audio Device Closed.');
       } catch (_) {}
     }
+
+    for (final buf in _playPcmBuffers) {
+      calloc.free(buf);
+    }
+    for (final hdr in _playWaveHdrs) {
+      calloc.free(hdr);
+    }
+    _playPcmBuffers.clear();
+    _playWaveHdrs.clear();
+    _playBufferPrepared.clear();
+
     if (_hWaveOutPtr != null) {
       calloc.free(_hWaveOutPtr!);
       _hWaveOutPtr = null;
