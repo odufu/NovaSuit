@@ -194,6 +194,7 @@ class NovaUdpSipEngine {
         }
       } else if (message.contains('183 Session Progress')) {
         print('🎵 [UDP SIP] 183 Session Progress - Enabling In-Band Early Media (Operator Voice Announcements)...');
+        _hasEarlyMedia = true;
         _notifyProviderReason(firstLine, message);
         _parseSdpAnswer(message);
         _startRingbackTone();
@@ -210,12 +211,14 @@ class NovaUdpSipEngine {
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
         print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
         _notifyProviderReason(firstLine, message);
-        _stopRingbackTone();
         _sendBye200OKResponse(message);
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
           _notifyCallState(UdpCallState.ended);
           _durationTimer?.cancel();
-          Timer(const Duration(milliseconds: 1200), () {
+          final delayMs = _hasEarlyMedia ? 5500 : 1500;
+          print('⏳ [UDP SIP] Delaying outcome screen transition by ${delayMs}ms to allow operator voice prompt to finish playing...');
+          Timer(Duration(milliseconds: delayMs), () {
+            _stopRingbackTone();
             _notifyCallState(UdpCallState.disconnected);
           });
         }
@@ -226,7 +229,10 @@ class NovaUdpSipEngine {
           _sendAckPacket(message);
           _notifyCallState(UdpCallState.ended);
           _durationTimer?.cancel();
-          Timer(const Duration(milliseconds: 1200), () {
+          final delayMs = _hasEarlyMedia ? 5500 : 1500;
+          print('⏳ [UDP SIP] Delaying outcome screen transition by ${delayMs}ms to allow operator voice prompt to finish playing...');
+          Timer(Duration(milliseconds: delayMs), () {
+            _stopRingbackTone();
             _notifyCallState(UdpCallState.disconnected);
           });
         }
@@ -494,11 +500,13 @@ class NovaUdpSipEngine {
 
   String? _activeCallId;
   String? _activeFromTag;
+  bool _hasEarlyMedia = false;
 
   /// Initiates an outbound UDP SIP INVITE call to customer phone number
   Future<void> initiateCall(OrderModel order) async {
     _activeOrder = order;
     _callDuration = 0;
+    _hasEarlyMedia = false;
     _activeCallId = 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '127.0.0.1'}';
     _activeFromTag = 'nova${DateTime.now().millisecondsSinceEpoch}';
     _notifyCallState(UdpCallState.connecting);
