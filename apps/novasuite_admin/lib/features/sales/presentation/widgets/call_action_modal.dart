@@ -597,11 +597,55 @@ class _CallActionModalState extends State<CallActionModal> {
                             ),
                           ),
                         ] else ...[
-                          // DISCONNECTED OUTCOME SELECTOR
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('SELECT CALL OUTCOME CATEGORY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, letterSpacing: 0.8)),
-                          ),
+                          if (widget.order.orderNumber == 'OPEN-INQUIRY' ||
+                              widget.order.orderNumber.startsWith('INC-') ||
+                              widget.order.id.startsWith('inc-') ||
+                              widget.order.id.startsWith('chat-')) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDarkMode ? const Color(0xFF064E3B).withValues(alpha: 0.3) : const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: const Color(0xFF10B981)),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.check_circle_outline, color: Color(0xFF10B981), size: 36),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Open-Ended Voice Session Completed',
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15, color: isDarkMode ? Colors.white : const Color(0xFF0F172A)),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Voice recording & session activity saved to Omnichannel Conversation History.',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.inter(fontSize: 11, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 42,
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF10B981),
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                      child: const Text('Close Session', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            // DISCONNECTED OUTCOME SELECTOR FOR ORDER-BOUND CALLS
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text('SELECT CALL OUTCOME CATEGORY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, letterSpacing: 0.8)),
+                            ),
                           const SizedBox(height: 8),
 
                           SingleChildScrollView(
@@ -775,6 +819,7 @@ class _CallActionModalState extends State<CallActionModal> {
                               );
                             },
                           ),
+                        ],
                         ],
                       ],
                     ),

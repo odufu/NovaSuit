@@ -6,6 +6,8 @@ class ConversationModel {
   final String? customerId;
   final String? orderId;
   final String? assignedRepId;
+  final String? customerName;
+  final String? customerPhone;
   final CommChannelType primaryChannel;
   final String status;
   final String? lastMessageSummary;
@@ -18,12 +20,16 @@ class ConversationModel {
     this.customerId,
     this.orderId,
     this.assignedRepId,
+    this.customerName,
+    this.customerPhone,
     this.primaryChannel = CommChannelType.whatsapp,
     this.status = 'active',
     this.lastMessageSummary,
     required this.lastMessageAt,
     required this.createdAt,
   });
+
+  bool get isOrderBound => orderId != null && orderId!.isNotEmpty;
 
   factory ConversationModel.fromMap(Map<String, dynamic> map) {
     return ConversationModel(

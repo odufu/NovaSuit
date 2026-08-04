@@ -14,6 +14,7 @@ import '../widgets/supervisee_quota_meter_card.dart';
 import '../widgets/call_rep_dashboard_overview.dart';
 import '../../../logistics/presentation/widgets/reassign_logistics_rep_dialog.dart';
 import '../../../omnichannel_chat/presentation/widgets/omnichannel_unified_chat_sheet.dart';
+import '../../../omnichannel_chat/presentation/widgets/conversations_directory_tab.dart';
 
 enum CallStage {
   connectingProvider, // Stage 1: Connecting to Provider
@@ -505,6 +506,13 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
                   ),
                 ),
               ),
+            ),
+            ConversationsDirectoryTab(
+              orders: widget.orders,
+              currentUser: widget.currentUser,
+              activeTheme: widget.activeTheme,
+              isDarkMode: Theme.of(context).brightness == Brightness.dark,
+              onStartVoiceCall: (targetOrder) => _openCallActionModal(targetOrder),
             ),
             _buildConfirmedOrdersTab(isMobile),
             _buildUpsellApprovalsTab(isMobile),
