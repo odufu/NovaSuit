@@ -355,27 +355,15 @@ class NovaUdpSipEngine {
   }
 
   void _handleIncomingCancelRequest(String cancelMsg) {
-    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS. Sending 200 OK response...');
+    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS. Processing cancellation...');
     _stopRingbackTone();
-
     _sendCancel200OKResponse(cancelMsg);
-
-    // Per SIP RFC 3261 Section 9.2: CANCEL has no effect if 200 OK final response was already sent!
-    if (_callState == UdpCallState.active) {
-      print('ℹ️ [UDP SIP] Call is ALREADY ACTIVE (200 OK answered). Ignoring late CANCEL request.');
-      return;
-    }
-
     _send487RequestTerminatedResponse(cancelMsg);
+    NovaWinmmAudioDriver().closeAudioDevice();
 
-    _activeCallId = null;
-    _activeFromTag = null;
-    _activeToTag = null;
-
+    _durationTimer?.cancel();
     _notifyCallState(UdpCallState.ended);
-    Timer(const Duration(milliseconds: 200), () {
-      _notifyCallState(UdpCallState.disconnected);
-    });
+    _notifyCallState(UdpCallState.disconnected);
   }
 
   void _sendCancel200OKResponse(String cancelMsg) {
@@ -848,28 +836,29 @@ class NovaUdpSipEngine {
         ? 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>;tag=$_activeFromTag'
         : (_activeToTag != null ? 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>;tag=$_activeToTag' : 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
 
-    String requestUri;
-    if (isInbound && _remoteContactUri != null && _remoteContactUri!.startsWith('sip:')) {
-      requestUri = _remoteContactUri!;
-    } else {
-      requestUri = 'sip:$formattedPhone@${ItSkySipConfig.domain}';
+    final List<String> targets = [
+      'sip:$formattedPhone@${ItSkySipConfig.domain}',
+      if (_remoteContactUri != null && _remoteContactUri!.startsWith('sip:')) _remoteContactUri!,
+      'sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}',
+    ];
+
+    for (final requestUri in targets.toSet()) {
+      final StringBuffer sipMsg = StringBuffer();
+      sipMsg.writeln('$method $requestUri SIP/2.0');
+      sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
+      sipMsg.writeln('Max-Forwards: 70');
+      sipMsg.writeln(fromHeader);
+      sipMsg.writeln(toHeader);
+      sipMsg.writeln('Call-ID: $_activeCallId');
+      sipMsg.writeln('CSeq: $_cseq $method');
+      sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
+      sipMsg.writeln('Content-Length: 0');
+      sipMsg.writeln('');
+
+      print('⏹️ [UDP SIP] Sent $method hangup packet for $formattedPhone (Target: $requestUri)');
+      final bytes = utf8.encode(sipMsg.toString());
+      _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
     }
-
-    final StringBuffer sipMsg = StringBuffer();
-    sipMsg.writeln('$method $requestUri SIP/2.0');
-    sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
-    sipMsg.writeln('Max-Forwards: 70');
-    sipMsg.writeln(fromHeader);
-    sipMsg.writeln(toHeader);
-    sipMsg.writeln('Call-ID: $_activeCallId');
-    sipMsg.writeln('CSeq: $_cseq $method');
-    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
-    sipMsg.writeln('Content-Length: 0');
-    sipMsg.writeln('');
-
-    print('⏹️ [UDP SIP] Sent $method hangup packet for $formattedPhone (Target: $requestUri, $fromHeader, $toHeader)');
-    final bytes = utf8.encode(sipMsg.toString());
-    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
 
   void endCall() {
