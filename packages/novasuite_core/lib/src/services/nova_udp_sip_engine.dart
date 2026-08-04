@@ -305,10 +305,15 @@ class NovaUdpSipEngine {
     }
   }
 
+  String? _activeCallId;
+  String? _activeFromTag;
+
   /// Initiates an outbound UDP SIP INVITE call to customer phone number
   Future<void> initiateCall(OrderModel order) async {
     _activeOrder = order;
     _callDuration = 0;
+    _activeCallId = 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '127.0.0.1'}';
+    _activeFromTag = 'nova${DateTime.now().millisecondsSinceEpoch}';
     _notifyCallState(UdpCallState.connecting);
 
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
@@ -330,14 +335,15 @@ class NovaUdpSipEngine {
     if (_activeOrder == null) return;
     _cseq++;
     final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
-    final callId = 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '0.0.0.0'}';
+    final callId = _activeCallId ?? 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@127.0.0.1';
+    final fromTag = _activeFromTag ?? 'nova${DateTime.now().millisecondsSinceEpoch}';
     final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
 
     final StringBuffer sipMsg = StringBuffer();
     sipMsg.writeln('INVITE sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
     sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
     sipMsg.writeln('Max-Forwards: 70');
-    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=nova${DateTime.now().millisecondsSinceEpoch}');
+    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$fromTag');
     sipMsg.writeln('To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
     sipMsg.writeln('Call-ID: $callId');
     sipMsg.writeln('CSeq: $_cseq INVITE');
@@ -354,7 +360,7 @@ class NovaUdpSipEngine {
     sipMsg.writeln('');
     sipMsg.write(sdp);
 
-    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone (CSeq: $_cseq)');
+    print('📡 [UDP SIP] Outbound INVITE packet sent for $formattedPhone (Call-ID: $callId, CSeq: $_cseq)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
@@ -367,8 +373,34 @@ class NovaUdpSipEngine {
   }
 
   void endCall() {
-    print('⏹️ [UDP SIP] Hanging up call...');
+    print('⏹️ [UDP SIP] Hanging up call session cleanly...');
     _durationTimer?.cancel();
+
+    if (_activeOrder != null && _activeCallId != null) {
+      final formattedPhone = ItSkySipConfig.formatOutboundDialString(_activeOrder!.customerPhone);
+      final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
+      final method = (_callState == UdpCallState.active) ? 'BYE' : 'CANCEL';
+      _cseq++;
+
+      final StringBuffer sipMsg = StringBuffer();
+      sipMsg.writeln('$method sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
+      sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
+      sipMsg.writeln('Max-Forwards: 70');
+      sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=${_activeFromTag ?? "nova"}');
+      sipMsg.writeln('To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
+      sipMsg.writeln('Call-ID: $_activeCallId');
+      sipMsg.writeln('CSeq: $_cseq $method');
+      sipMsg.writeln('Content-Length: 0');
+      sipMsg.writeln('');
+
+      final bytes = utf8.encode(sipMsg.toString());
+      _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+    }
+
+    _activeCallId = null;
+    _activeFromTag = null;
+    _activeOrder = null;
+
     _notifyCallState(UdpCallState.ended);
     Timer(const Duration(milliseconds: 1000), () {
       _notifyCallState(UdpCallState.disconnected);
