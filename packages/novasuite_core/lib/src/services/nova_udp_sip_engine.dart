@@ -355,9 +355,17 @@ class NovaUdpSipEngine {
   }
 
   void _handleIncomingCancelRequest(String cancelMsg) {
-    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS. Processing cancellation...');
+    print('⏹️ [UDP SIP] Received CANCEL from OpenSIPS...');
     _stopRingbackTone();
     _sendCancel200OKResponse(cancelMsg);
+
+    // RFC 3261 Section 9.2: If the call has ALREADY been answered with 200 OK (_callState == active),
+    // a CANCEL packet in transit has NO EFFECT on the established dialog.
+    if (_callState == UdpCallState.active) {
+      print('ℹ️ [UDP SIP] Call is ALREADY ACTIVE (200 OK answered). Acknowledged CANCEL with 200 OK and maintaining active 2-way call.');
+      return;
+    }
+
     _send487RequestTerminatedResponse(cancelMsg);
     NovaWinmmAudioDriver().closeAudioDevice();
 
