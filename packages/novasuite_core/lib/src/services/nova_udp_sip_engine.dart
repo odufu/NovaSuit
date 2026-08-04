@@ -18,6 +18,7 @@ enum UdpCallState {
   idle,
   connecting,
   ringing,
+  incomingCall,
   active,
   ended,
   disconnected,
@@ -195,6 +196,8 @@ class NovaUdpSipEngine {
         _parseSdpAnswer(message);
         _startRingbackTone();
         _notifyCallState(UdpCallState.ringing);
+      } else if (message.startsWith('INVITE') || message.contains('\r\nINVITE ')) {
+        _handleIncomingInviteRequest(message);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
         print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
         _notifyProviderReason(firstLine, message);
@@ -220,6 +223,115 @@ class NovaUdpSipEngine {
         }
       }
     }
+  }
+
+  String? _incomingCallerNumber;
+  String? _activeToTag;
+
+  String? get incomingCallerNumber => _incomingCallerNumber;
+
+  void _handleIncomingInviteRequest(String inviteMsg) {
+    print('📞 [UDP SIP] INCOMING CALL DETECTED FROM OPENSIPS PBX!');
+
+    // 1. Extract Call-ID
+    final callIdMatch = RegExp(r'Call-ID: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
+    if (callIdMatch != null) {
+      _activeCallId = callIdMatch.group(1)!.trim();
+    }
+
+    // 2. Extract From header & caller phone number
+    final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
+    if (fromMatch != null) {
+      final fromStr = fromMatch.group(1)!;
+      final tagMatch = RegExp(r'tag=([^\s;;\r\n]+)').firstMatch(fromStr);
+      if (tagMatch != null) {
+        _activeFromTag = tagMatch.group(1);
+      }
+      final phoneMatch = RegExp(r'sip:(\d+)@').firstMatch(fromStr);
+      if (phoneMatch != null) {
+        _incomingCallerNumber = phoneMatch.group(1);
+      } else {
+        _incomingCallerNumber = 'Customer Call';
+      }
+    }
+
+    _activeToTag = 'nova-inc-${DateTime.now().millisecondsSinceEpoch}';
+    _parseSdpAnswer(inviteMsg);
+    _notifyProviderReason('INCOMING CALL', '📞 Incoming Call from ${_incomingCallerNumber ?? "Customer"}');
+
+    // 3. Send 180 Ringing response to OpenSIPS so the caller hears phone ringing!
+    _send180RingingResponse(inviteMsg);
+    _startRingbackTone();
+    _notifyCallState(UdpCallState.incomingCall);
+  }
+
+  void _sendDatagram(String sipMsg) {
+    final bytes = utf8.encode(sipMsg);
+    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+  }
+
+  void _send180RingingResponse(String inviteMsg) async {
+    final toHeader = 'To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$_activeToTag';
+    final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
+    final fromHeader = fromMatch != null ? 'From: ${fromMatch.group(1)}' : 'From: <sip:unknown@${ItSkySipConfig.domain}>';
+
+    final sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 180 Ringing');
+    sipMsg.writeln('Via: SIP/2.0/UDP ${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort};rport;branch=z9hG4bK${DateTime.now().millisecondsSinceEpoch}');
+    sipMsg.writeln(fromHeader);
+    sipMsg.writeln(toHeader);
+    sipMsg.writeln('Call-ID: $_activeCallId');
+    sipMsg.writeln('CSeq: 1 INVITE');
+    sipMsg.writeln('User-Agent: NovaSuite Engine v1.0 (Windows)');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln();
+
+    _sendDatagram(sipMsg.toString());
+    print('📡 [UDP SIP] Sent 180 Ringing response for incoming call.');
+  }
+
+  Future<void> answerIncomingCall() async {
+    print('📞 [UDP SIP] Answering Inbound Call from $_incomingCallerNumber...');
+    _stopRingbackTone();
+    await _send200OKAnswerResponse();
+    _startRtpAudioSession();
+    _notifyCallState(UdpCallState.active);
+    _startTimer();
+  }
+
+  Future<void> _send200OKAnswerResponse() async {
+    final localIp = await _getLocalIpAddress();
+    final port = _socket?.port ?? 5060;
+
+    final sdpBody = StringBuffer();
+    sdpBody.writeln('v=0');
+    sdpBody.writeln('o=- ${DateTime.now().millisecondsSinceEpoch} 1 IN IP4 $localIp');
+    sdpBody.writeln('s=NovaSuite Core Audio');
+    sdpBody.writeln('c=IN IP4 $localIp');
+    sdpBody.writeln('t=0 0');
+    sdpBody.writeln('m=audio $port RTP/AVP 0 101');
+    sdpBody.writeln('a=rtpmap:0 PCMU/8000');
+    sdpBody.writeln('a=rtpmap:101 telephone-event/8000');
+    sdpBody.writeln('a=fmtp:101 0-15');
+    sdpBody.writeln('a=sendrecv');
+
+    final sdpBytes = utf8.encode(sdpBody.toString());
+
+    final sipMsg = StringBuffer();
+    sipMsg.writeln('SIP/2.0 200 OK');
+    sipMsg.writeln('Via: SIP/2.0/UDP ${ItSkySipConfig.providerSipHost}:${ItSkySipConfig.providerSipPort};rport;branch=z9hG4bK${DateTime.now().millisecondsSinceEpoch}');
+    sipMsg.writeln('From: <sip:${_incomingCallerNumber}@${ItSkySipConfig.domain}>;tag=$_activeFromTag');
+    sipMsg.writeln('To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$_activeToTag');
+    sipMsg.writeln('Call-ID: $_activeCallId');
+    sipMsg.writeln('CSeq: 1 INVITE');
+    sipMsg.writeln('Contact: <sip:${ItSkySipConfig.username}@$localIp:$port>');
+    sipMsg.writeln('Content-Type: application/sdp');
+    sipMsg.writeln('Content-Length: ${sdpBytes.length}');
+    sipMsg.writeln();
+    sipMsg.write(sdpBody.toString());
+
+    _sendDatagram(sipMsg.toString());
+    print('📡 [UDP SIP] Sent 200 OK Answer Response with SDP Offer.');
   }
 
   void _notifyProviderReason(String firstLine, String message) {

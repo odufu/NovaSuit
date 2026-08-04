@@ -17,6 +17,7 @@ enum SipCallSessionState {
   idle,
   connectingProvider, // Stage 1: SIP Signaling over WSS
   initiatingCall,     // Stage 2: Ringing Feed
+  incomingCall,       // Inbound Incoming Call Detected
   callInProgress,     // Stage 3: Active 2-Way Audio Stream
   callEnded,          // Stage 4: Billing Computation
   disconnected,       // Stage 5: Select Outcome Category
@@ -64,6 +65,9 @@ class NovaSipTelephonyService implements SipUaHelperListener {
             break;
           case UdpCallState.ringing:
             _notifyCallState(SipCallSessionState.initiatingCall);
+            break;
+          case UdpCallState.incomingCall:
+            _notifyCallState(SipCallSessionState.incomingCall);
             break;
           case UdpCallState.active:
             _notifyCallState(SipCallSessionState.callInProgress);
@@ -120,7 +124,15 @@ class NovaSipTelephonyService implements SipUaHelperListener {
   bool get isMuted => _isMuted;
   bool get isOnHold => _isOnHold;
   String? get lastError => _lastError;
-  String get activeUrl => ItSkySipConfig.fallbackWebSocketUrls[_activeUrlIndex];
+  String? get incomingCallerNumber => NovaUdpSipEngine().incomingCallerNumber;
+
+  Future<void> answerIncomingCall() async {
+    if (!kIsWeb && Platform.isWindows) {
+      await NovaUdpSipEngine().answerIncomingCall();
+    } else {
+      _activeSipCall?.answer({});
+    }
+  }
 
   void _notifyRegistrationStatus(SipRegistrationStatus status) {
     _registrationStatus = status;
