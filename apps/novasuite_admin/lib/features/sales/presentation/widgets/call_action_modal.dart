@@ -781,10 +781,11 @@ class _CallActionModalState extends State<CallActionModal> {
                   ),
                 ),
               ),
-            );
-          },
-        );
-      },
-    );
+            ),
+          );
+        },
+      );
+    },
+  );
   }
 }
