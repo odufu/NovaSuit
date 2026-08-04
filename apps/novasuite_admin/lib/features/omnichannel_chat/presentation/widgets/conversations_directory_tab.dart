@@ -370,7 +370,7 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final c = filtered[index];
-                      return _buildConversationCard(c, isDarkMode);
+                      return _buildConversationCard(c, isDarkMode, isMobile);
                     },
                   ),
           ),
@@ -393,7 +393,7 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
     );
   }
 
-  Widget _buildConversationCard(ConversationModel c, bool isDarkMode) {
+  Widget _buildConversationCard(ConversationModel c, bool isDarkMode, bool isMobile) {
     final timeStr = DateFormat('h:mm a • EEE, MMM d').format(c.lastMessageAt);
     final isVoice = c.primaryChannel == CommChannelType.voiceCall;
     final isWhatsApp = c.primaryChannel == CommChannelType.whatsapp;
@@ -423,6 +423,139 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
         updatedAt: DateTime.now(),
       ),
     );
+
+    if (isMobile) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 0,
+        color: isDarkMode ? const Color(0xFF0C1F17) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Avatar + Customer Name + Badge
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: isVoice
+                        ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                        : (isWhatsApp ? const Color(0xFF25D366).withValues(alpha: 0.15) : const Color(0xFF3B82F6).withValues(alpha: 0.15)),
+                    child: Icon(
+                      isVoice ? Icons.phone_in_talk_rounded : (isWhatsApp ? Icons.chat_bubble_rounded : Icons.sms_rounded),
+                      color: isVoice ? const Color(0xFF10B981) : (isWhatsApp ? const Color(0xFF25D366) : const Color(0xFF3B82F6)),
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          c.customerName ?? 'Customer (${c.customerPhone})',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          timeStr,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10,
+                            color: isDarkMode ? const Color(0xFF64748B) : Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: c.isOrderBound ? const Color(0xFF10B981).withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: c.isOrderBound ? const Color(0xFF10B981) : Colors.amber, width: 1),
+                    ),
+                    child: Text(
+                      c.isOrderBound ? '#${matchingOrder.orderNumber}' : 'Open Inquiry',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: c.isOrderBound ? const Color(0xFF10B981) : Colors.amber.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Message Summary
+              Text(
+                c.lastMessageSummary ?? 'No recent messages',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Action Buttons Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => widget.onStartVoiceCall(matchingOrder),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF10B981),
+                      side: const BorderSide(color: Color(0xFF10B981)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.phone_in_talk_rounded, size: 14),
+                    label: const Text('Call', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      OmnichannelUnifiedChatSheet.show(
+                        context,
+                        order: matchingOrder,
+                        currentUser: widget.currentUser,
+                        activeTheme: widget.activeTheme,
+                        isDarkMode: isDarkMode,
+                        onStartCall: () => widget.onStartVoiceCall(matchingOrder),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
+                      foregroundColor: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.chat_outlined, size: 14),
+                    label: const Text('Open Chat', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -457,12 +590,16 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        c.customerName ?? 'Customer (${c.customerPhone})',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                      Flexible(
+                        child: Text(
+                          c.customerName ?? 'Customer (${c.customerPhone})',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
