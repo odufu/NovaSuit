@@ -53,6 +53,33 @@ class NovaSipTelephonyService implements SipUaHelperListener {
             break;
         }
       });
+
+      NovaUdpSipEngine().callStateStream.listen((udpCallState) {
+        switch (udpCallState) {
+          case UdpCallState.idle:
+            _notifyCallState(SipCallSessionState.idle);
+            break;
+          case UdpCallState.connecting:
+            _notifyCallState(SipCallSessionState.connectingProvider);
+            break;
+          case UdpCallState.ringing:
+            _notifyCallState(SipCallSessionState.initiatingCall);
+            break;
+          case UdpCallState.active:
+            _notifyCallState(SipCallSessionState.callInProgress);
+            break;
+          case UdpCallState.ended:
+            _notifyCallState(SipCallSessionState.callEnded);
+            break;
+          case UdpCallState.disconnected:
+            _notifyCallState(SipCallSessionState.disconnected);
+            break;
+        }
+      });
+
+      NovaUdpSipEngine().durationStream.listen((duration) {
+        _notifyDuration(duration);
+      });
     }
   }
 
