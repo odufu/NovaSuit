@@ -818,18 +818,29 @@ class NovaUdpSipEngine {
 
   void _sendHangupPacket(String method, String formattedPhone, String viaBranch) {
     _cseq++;
+    final bool isInbound = _incomingCallerNumber != null && _activeOrder == null;
+
+    final fromHeader = isInbound
+        ? 'From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=$_activeToTag'
+        : 'From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=${_activeFromTag ?? "nova"}';
+
+    final toHeader = isInbound
+        ? 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>;tag=$_activeFromTag'
+        : (_activeToTag != null ? 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>;tag=$_activeToTag' : 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
+
     final StringBuffer sipMsg = StringBuffer();
     sipMsg.writeln('$method sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
     sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
     sipMsg.writeln('Max-Forwards: 70');
-    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=${_activeFromTag ?? "nova"}');
-    sipMsg.writeln('To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
+    sipMsg.writeln(fromHeader);
+    sipMsg.writeln(toHeader);
     sipMsg.writeln('Call-ID: $_activeCallId');
     sipMsg.writeln('CSeq: $_cseq $method');
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
     sipMsg.writeln('Content-Length: 0');
     sipMsg.writeln('');
 
-    print('⏹️ [UDP SIP] Sent $method hangup packet for $formattedPhone (Call-ID: $_activeCallId)');
+    print('⏹️ [UDP SIP] Sent $method hangup packet for $formattedPhone (From: $fromHeader, To: $toHeader)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
@@ -838,6 +849,7 @@ class NovaUdpSipEngine {
     print('⏹️ [UDP SIP] Hanging up call session cleanly...');
     _durationTimer?.cancel();
 
+    final currentCallState = _callState;
     _notifyCallState(UdpCallState.ended);
 
     final targetPhone = _activeOrder?.customerPhone ?? _incomingCallerNumber;
@@ -845,9 +857,11 @@ class NovaUdpSipEngine {
       final formattedPhone = ItSkySipConfig.formatOutboundDialString(targetPhone);
       final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
       
-      // Send both CANCEL and BYE to guarantee OpenSIPS terminates transaction/dialog in any state!
-      _sendHangupPacket('CANCEL', formattedPhone, viaBranch);
-      _sendHangupPacket('BYE', formattedPhone, viaBranch);
+      if (currentCallState == UdpCallState.active) {
+        _sendHangupPacket('BYE', formattedPhone, viaBranch);
+      } else {
+        _sendHangupPacket('CANCEL', formattedPhone, viaBranch);
+      }
     }
 
     // Finalize 2-way call audio recording & upload asynchronously to cloud storage
