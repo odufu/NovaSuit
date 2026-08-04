@@ -247,18 +247,14 @@ class NovaUdpSipEngine {
       } else if (message.startsWith('CANCEL') || message.contains('\r\nCANCEL ')) {
         _handleIncomingCancelRequest(message);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {
-        print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Hung Up). Sending 200 OK ACK...');
+        print('⏹️ [UDP SIP] Received BYE from OpenSIPS (Remote Customer Hung Up). Sending 200 OK ACK...');
         _notifyProviderReason(firstLine, message);
         _sendBye200OKResponse(message);
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {
-          _notifyCallState(UdpCallState.ended);
           _durationTimer?.cancel();
-          final delayMs = _hasEarlyMedia ? 5500 : 1500;
-          print('⏳ [UDP SIP] Delaying outcome screen transition by ${delayMs}ms to allow operator voice prompt to finish playing...');
-          Timer(Duration(milliseconds: delayMs), () {
-            _stopRingbackTone();
-            _notifyCallState(UdpCallState.disconnected);
-          });
+          _stopRingbackTone();
+          _notifyCallState(UdpCallState.ended);
+          _notifyCallState(UdpCallState.disconnected);
         }
       } else if (message.contains('486 Busy') || message.contains('603 Decline') || message.contains('480 Temporarily Unavailable') || message.contains('487 Request Terminated')) {
         if (_callState != UdpCallState.ended && _callState != UdpCallState.disconnected) {

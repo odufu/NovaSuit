@@ -142,8 +142,6 @@ class _CallActionModalState extends State<CallActionModal> {
           _stage.value = CallStage.callInProgress;
           break;
         case SipCallSessionState.callEnded:
-          _stage.value = CallStage.callEnded;
-          break;
         case SipCallSessionState.disconnected:
           _stage.value = CallStage.disconnected;
           break;
