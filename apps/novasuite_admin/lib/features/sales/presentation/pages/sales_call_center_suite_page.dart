@@ -169,6 +169,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
     _customCallScriptsNotifier = ValueNotifier<List<Map<String, dynamic>>>([]);
     _orderActivityStoreNotifier = ValueNotifier<Map<String, List<OrderActivityModel>>>({});
 
+    _listenForIncomingCalls();
+
     _ahodTeams = [
       {
         'id': 'ahod-1',
@@ -356,6 +358,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   bool _isIncomingCallModalOpen = false;
 
   void _listenForIncomingCalls() {
+    _telephonyService.registerSipTrunk();
     _incomingCallSub = _telephonyService.callStateStream.listen((state) {
       if (!mounted) return;
 
@@ -533,6 +536,8 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
       },
     );
   }
+
+
 
 
 
