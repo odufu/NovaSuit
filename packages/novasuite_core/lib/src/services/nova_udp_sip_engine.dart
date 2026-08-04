@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
 import '../it_sky_sip_config.dart';
 import '../models/order.dart';
+import 'nova_winmm_audio_driver.dart';
 
 enum UdpSipStatus {
   unregistered,
@@ -449,6 +450,7 @@ class NovaUdpSipEngine {
     _activeFromTag = null;
     _activeOrder = null;
     _stopRingbackTone();
+    NovaWinmmAudioDriver().closeAudioDevice();
 
     _notifyCallState(UdpCallState.ended);
     Timer(const Duration(milliseconds: 1000), () {
@@ -487,7 +489,9 @@ class NovaUdpSipEngine {
   void _processIncomingRtpAudioPayload(Uint8List rtpData) {
     _rtpPacketCount++;
     if (_rtpPacketCount % 50 == 1) {
-      print('🎧 [UDP RTP Audio] Live G.711 Audio Stream Packet received (Packet #$_rtpPacketCount, size: ${rtpData.length} bytes)');
+      print('🎧 [Windows Native Audio Stream] Playing G.711 RTP Audio Packet #$_rtpPacketCount (${rtpData.length} bytes) to sound card...');
     }
+    // Stream live G.711 u-law RTP audio bytes directly into Windows WASAPI sound card
+    NovaWinmmAudioDriver().playG711RtpPayload(rtpData);
   }
 }

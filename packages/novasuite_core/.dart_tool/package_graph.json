@@ -9,6 +9,7 @@
       "dependencies": [
         "crypto",
         "equatable",
+        "ffi",
         "flutter",
         "flutter_webrtc",
         "sip_ua",
@@ -56,6 +57,11 @@
         "test_api",
         "vector_math"
       ]
+    },
+    {
+      "name": "ffi",
+      "version": "2.2.0",
+      "dependencies": []
     },
     {
       "name": "crypto",
@@ -764,11 +770,6 @@
         "flutter",
         "gtk"
       ]
-    },
-    {
-      "name": "ffi",
-      "version": "2.2.0",
-      "dependencies": []
     },
     {
       "name": "platform",

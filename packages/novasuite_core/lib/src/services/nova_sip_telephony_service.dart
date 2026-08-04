@@ -207,24 +207,7 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     _notifyCallState(SipCallSessionState.connectingProvider);
 
     if (!kIsWeb && Platform.isWindows) {
-      final formattedPhone = ItSkySipConfig.formatOutboundDialString(order.customerPhone);
-      
-      // 1. Run NovaUdpSipEngine for real-time UI state tracking
-      NovaUdpSipEngine().initiateCall(order);
-
-      // 2. Launch MicroSIP executable for full 2-way WASAPI audio streaming
-      try {
-        final userProfile = Platform.environment['USERPROFILE'] ?? 'C:\\Users\\Joel Odufu';
-        final microSipPath = '$userProfile\\AppData\\Local\\MicroSIP\\MicroSIP.exe';
-        if (File(microSipPath).existsSync()) {
-          print('🎙️ [Windows Audio] Launching MicroSIP at $microSipPath for $formattedPhone...');
-          Process.run(microSipPath, [formattedPhone]);
-        } else {
-          Process.run('cmd', ['/c', 'start', 'microsip:$formattedPhone']);
-        }
-      } catch (e) {
-        print('⚠️ MicroSIP launch notice: $e');
-      }
+      await NovaUdpSipEngine().initiateCall(order);
       return;
     }
 
