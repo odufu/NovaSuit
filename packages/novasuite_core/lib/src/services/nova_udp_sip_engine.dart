@@ -81,6 +81,7 @@ class NovaUdpSipEngine {
       _activeToTag = null;
       _activeInviteMsg = null;
       _incomingCallerNumber = null;
+      _remoteContactUri = null;
       _activeOrder = null;
     }
   }
@@ -199,7 +200,9 @@ class NovaUdpSipEngine {
 
       // 1. Detect binary RTP audio stream packet (RTP v2 header byte 0x80 / 0x88 / 0x84)
       if ((datagram.data[0] & 0xC0) == 0x80 && datagram.data.length > 12) {
-        _processIncomingRtpAudioPayload(datagram.data);
+        if (_callState == UdpCallState.active || _callState == UdpCallState.ringing || _callState == UdpCallState.connecting) {
+          _processIncomingRtpAudioPayload(datagram.data);
+        }
         return;
       }
 
@@ -286,6 +289,7 @@ class NovaUdpSipEngine {
   String? _incomingCallerNumber;
   String? _activeToTag;
   String? _activeInviteMsg;
+  String? _remoteContactUri;
 
   void _handleIncomingInviteRequest(String inviteMsg) {
     _activeInviteMsg = inviteMsg;
@@ -309,6 +313,17 @@ class NovaUdpSipEngine {
 
     _activeCallId = incomingCallId;
     print('📞 [UDP SIP] INCOMING CALL DETECTED FROM OPENSIPS PBX! (Call-ID: $_activeCallId)');
+
+    // Extract Contact URI for RFC 3261 compliant BYE target
+    final contactMatch = RegExp(r'Contact:\s*<([^>]+)>', caseSensitive: false).firstMatch(inviteMsg);
+    if (contactMatch != null) {
+      _remoteContactUri = contactMatch.group(1)!.trim();
+    } else {
+      final contactMatch2 = RegExp(r'Contact:\s*([^\r\n;]+)', caseSensitive: false).firstMatch(inviteMsg);
+      if (contactMatch2 != null) {
+        _remoteContactUri = contactMatch2.group(1)!.trim();
+      }
+    }
 
     // 2. Extract From header & caller phone number
     final fromMatch = RegExp(r'From: ([^\r\n]+)', caseSensitive: false).firstMatch(inviteMsg);
@@ -833,8 +848,15 @@ class NovaUdpSipEngine {
         ? 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>;tag=$_activeFromTag'
         : (_activeToTag != null ? 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>;tag=$_activeToTag' : 'To: <sip:$formattedPhone@${ItSkySipConfig.domain}>');
 
+    String requestUri;
+    if (isInbound && _remoteContactUri != null && _remoteContactUri!.startsWith('sip:')) {
+      requestUri = _remoteContactUri!;
+    } else {
+      requestUri = 'sip:$formattedPhone@${ItSkySipConfig.domain}';
+    }
+
     final StringBuffer sipMsg = StringBuffer();
-    sipMsg.writeln('$method sip:$formattedPhone@${ItSkySipConfig.domain} SIP/2.0');
+    sipMsg.writeln('$method $requestUri SIP/2.0');
     sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
     sipMsg.writeln('Max-Forwards: 70');
     sipMsg.writeln(fromHeader);
@@ -845,7 +867,7 @@ class NovaUdpSipEngine {
     sipMsg.writeln('Content-Length: 0');
     sipMsg.writeln('');
 
-    print('⏹️ [UDP SIP] Sent $method hangup packet for $formattedPhone (From: $fromHeader, To: $toHeader)');
+    print('⏹️ [UDP SIP] Sent $method hangup packet for $formattedPhone (Target: $requestUri, $fromHeader, $toHeader)');
     final bytes = utf8.encode(sipMsg.toString());
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
