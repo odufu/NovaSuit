@@ -187,8 +187,14 @@ class NovaUdpSipEngine {
           _notifyCallState(UdpCallState.active);
           _startTimer();
         }
-      } else if (message.contains('180 Ringing') || message.contains('183 Session Progress')) {
-        print('🔔 [UDP SIP] Remote Phone Ringing (180/183)...');
+      } else if (message.contains('183 Session Progress')) {
+        print('🔔 [UDP SIP] 183 Session Progress received -> Enabling Network Early Media Audio Stream...');
+        _parseSdpAnswer(message);
+        _stopRingbackTone();
+        _startRtpAudioSession();
+        _notifyCallState(UdpCallState.ringing);
+      } else if (message.contains('180 Ringing')) {
+        print('🔔 [UDP SIP] Remote Phone Ringing (180 Ringing)...');
         _startRingbackTone();
         _notifyCallState(UdpCallState.ringing);
       } else if (message.startsWith('BYE') || message.contains('\r\nBYE ')) {

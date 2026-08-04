@@ -174,8 +174,10 @@ class NovaWinmmAudioDriver {
   Pointer<Int8>? _micBuffer2Ptr;
   Timer? _micPollingTimer;
 
-  // G.711 u-law encoder (16-bit PCM to 8-bit G.711 u-law)
+  // G.711 u-law encoder (16-bit PCM to 8-bit G.711 u-law with anti-clipping gain control)
   static int pcm16ToULaw(int pcm16) {
+    // Apply 0.6x soft gain to prevent digital peak clipping distortion on headset mics
+    pcm16 = (pcm16 * 0.6).round().clamp(-32635, 32635);
     int sign = (pcm16 >> 8) & 0x80;
     if (sign != 0) pcm16 = -pcm16;
     if (pcm16 > 32635) pcm16 = 32635;
