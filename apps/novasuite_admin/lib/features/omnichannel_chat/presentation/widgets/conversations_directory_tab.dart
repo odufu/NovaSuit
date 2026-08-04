@@ -192,88 +192,49 @@ class _ConversationsDirectoryTabState extends State<ConversationsDirectoryTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Header Row (Responsive)
-              if (isMobile) ...[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'OMNICHANNEL CONVERSATIONS DIRECTORY (${_conversations.length})',
+              // Streamlined Header Row (Compact & Space-saving)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Conversations (${_conversations.length})',
                       style: GoogleFonts.outfit(
-                        fontSize: 18,
+                        fontSize: isMobile ? 18 : 22,
                         fontWeight: FontWeight.bold,
                         color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
                       ),
                     ),
-                    Text(
-                      'Unified inbox for Voice Calls, WhatsApp, and SMS sessions.',
-                      style: GoogleFonts.inter(fontSize: 11, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _openStartConversationModal,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: const Icon(Icons.add_comment_rounded, size: 16),
-                        label: Text(
-                          'Start New Conversation',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _openStartConversationModal,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 10 : 16,
+                        vertical: isMobile ? 8 : 12,
                       ),
+                      visualDensity: isMobile ? VisualDensity.compact : VisualDensity.standard,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                  ],
-                ),
-              ] else ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'OMNICHANNEL CONVERSATIONS DIRECTORY (${_conversations.length})',
-                          style: GoogleFonts.outfit(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                        ),
-                        Text(
-                          'Unified inbox for Voice Calls, WhatsApp, and SMS sessions.',
-                          style: GoogleFonts.inter(fontSize: 12, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
-                        ),
-                      ],
+                    icon: Icon(Icons.add_comment_rounded, size: isMobile ? 14 : 18),
+                    label: Text(
+                      isMobile ? '+ New' : 'Start New Conversation',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: isMobile ? 11 : 13),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: _openStartConversationModal,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: const Icon(Icons.add_comment_rounded, size: 18),
-                      label: Text(
-                        'Start New Conversation',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 14),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
 
+              // Compact Operations Channel Status Bar
               OperationsChannelControlCard(
                 currentUser: widget.currentUser,
                 isDarkMode: isDarkMode,
+                isCompact: true,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
               // Filter & Search Controls Bar (Responsive)
               if (isMobile) ...[
