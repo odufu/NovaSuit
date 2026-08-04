@@ -155,6 +155,16 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     }
   }
 
+  /// Unregisters NovaSuite Softphone from OpenSIPS PBX on app exit
+  void unregisterSipTrunk() {
+    if (!kIsWeb && Platform.isWindows) {
+      NovaUdpSipEngine().unregisterUdpTrunk();
+      return;
+    }
+    _sipHelper.unregister();
+    _notifyRegistrationStatus(SipRegistrationStatus.unregistered);
+  }
+
   /// Registers NovaSuite Softphone with IT Sky ASTPP SIP Server over multi-transport endpoints
   Future<bool> registerSipTrunk({int urlIndex = 0}) async {
     if (!kIsWeb && Platform.isWindows) {

@@ -153,6 +153,35 @@ class NovaUdpSipEngine {
     _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
   }
 
+  /// Sends raw SIP REGISTER packet with Expires: 0 to OpenSIPS Host to immediately unregister line on app exit
+  void unregisterUdpTrunk() {
+    if (_socket == null) return;
+    _cseq++;
+    final callId = 'novasuite-call-${DateTime.now().millisecondsSinceEpoch}@${_socket?.address.address ?? '0.0.0.0'}';
+    final viaBranch = 'z9hG4bK-nova-${DateTime.now().millisecondsSinceEpoch}';
+
+    final StringBuffer sipMsg = StringBuffer();
+    sipMsg.writeln('REGISTER sip:${ItSkySipConfig.domain} SIP/2.0');
+    sipMsg.writeln('Via: SIP/2.0/UDP ${_socket?.address.address ?? '0.0.0.0'}:${_socket?.port ?? 5060};rport;branch=$viaBranch');
+    sipMsg.writeln('Max-Forwards: 70');
+    sipMsg.writeln('From: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>;tag=nova${DateTime.now().millisecondsSinceEpoch}');
+    sipMsg.writeln('To: <sip:${ItSkySipConfig.username}@${ItSkySipConfig.domain}>');
+    sipMsg.writeln('Call-ID: $callId');
+    sipMsg.writeln('CSeq: $_cseq REGISTER');
+    sipMsg.writeln('Contact: *');
+    sipMsg.writeln('User-Agent: MicroSIP/3.21.3');
+    sipMsg.writeln('Expires: 0');
+    sipMsg.writeln('Content-Length: 0');
+    sipMsg.writeln('');
+
+    print('📡 [UDP SIP] Outbound Un-REGISTER packet sent (Expires: 0)');
+    final bytes = utf8.encode(sipMsg.toString());
+    _socket?.send(bytes, InternetAddress(ItSkySipConfig.providerSipHost), ItSkySipConfig.providerSipPort);
+    _socket?.close();
+    _socket = null;
+    _status = UdpSipStatus.unregistered;
+  }
+
   /// Handles incoming UDP packets from OpenSIPS PBX (SIP text packets & binary RTP audio stream)
   void _handleIncomingDatagram(RawSocketEvent event) {
     if (event == RawSocketEvent.read) {

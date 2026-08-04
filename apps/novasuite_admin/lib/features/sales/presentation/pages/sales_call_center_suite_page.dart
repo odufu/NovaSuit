@@ -442,6 +442,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
 
   @override
   void dispose() {
+    _telephonyService.unregisterSipTrunk();
     _incomingCallSub?.cancel();
     _activeSubTabNotifier.dispose();
     _searchQueryNotifier.dispose();
