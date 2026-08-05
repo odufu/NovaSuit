@@ -184,6 +184,36 @@ class _CallActionModalState extends State<CallActionModal> {
     _stage.value = CallStage.disconnected;
   }
 
+  void _retryCall() {
+    _telephonyService.endCall();
+    _secondsElapsed.value = 0;
+    _providerReasonNotifier.value = null;
+    _stage.value = CallStage.connectingProvider;
+    _telephonyService.initiateCall(widget.order);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF0284C7),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Row(
+          children: [
+            const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '🔄 Redialing ${widget.order.customerName} (${widget.order.customerPhone})...',
+                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _telephonySubscription?.cancel();
@@ -356,6 +386,19 @@ class _CallActionModalState extends State<CallActionModal> {
                                         'Telecom Feedback: $reasonVal',
                                         style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : const Color(0xFF0F172A)),
                                       ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ElevatedButton.icon(
+                                      onPressed: _retryCall,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF0284C7),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        visualDensity: VisualDensity.compact,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      ),
+                                      icon: const Icon(Icons.refresh_rounded, size: 14),
+                                      label: const Text('Retry Call', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                     ),
                                   ],
                                 ),
@@ -646,9 +689,23 @@ class _CallActionModalState extends State<CallActionModal> {
                             ),
                           ] else ...[
                             // DISCONNECTED OUTCOME SELECTOR FOR ORDER-BOUND CALLS
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('SELECT CALL OUTCOME CATEGORY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, letterSpacing: 0.8)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('SELECT CALL OUTCOME CATEGORY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, letterSpacing: 0.8)),
+                                ElevatedButton.icon(
+                                  onPressed: _retryCall,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0284C7),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  icon: const Icon(Icons.refresh_rounded, size: 14),
+                                  label: const Text('Retry Call / Redial', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
                             ),
                           const SizedBox(height: 8),
 
