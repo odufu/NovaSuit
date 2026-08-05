@@ -292,7 +292,7 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
-                            mainAxisExtent: 460,
+                            mainAxisExtent: 485,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                           ),

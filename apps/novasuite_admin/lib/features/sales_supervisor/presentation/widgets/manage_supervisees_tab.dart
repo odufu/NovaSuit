@@ -123,7 +123,7 @@ class _ManageSuperviseesTabState extends State<ManageSuperviseesTab> {
                           physics: const BouncingScrollPhysics(),
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
-                            mainAxisExtent: 460,
+                            mainAxisExtent: 485,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                           ),
