@@ -114,65 +114,59 @@ class AllOrdersDirectoryCard extends StatelessWidget {
     final statusDateStr = DateFormat('dd MMM yyyy, hh:mm a').format(order.updatedAt);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF132A22) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isDarkMode ? const Color(0xFF0F261E) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade200,
-          width: 1.2,
+          color: isDarkMode ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.25 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Row 1: Order # Pill + Status Date + Current Stage Badge
+            // Row 1: Order # Badge + Date + Stage Pill
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '#${order.orderNumber}',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF2E7D32),
-                            fontSize: 10.5,
-                          ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? const Color(0xFF064E3B) : const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isDarkMode ? const Color(0xFF10B981).withValues(alpha: 0.3) : const Color(0xFFA7F3D0)),
+                      ),
+                      child: Text(
+                        '#${order.orderNumber}',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF047857),
+                          fontSize: 11,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          statusDateStr,
-                          style: GoogleFonts.inter(fontSize: 9, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, fontWeight: FontWeight.w500),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      statusDateStr,
+                      style: GoogleFonts.inter(fontSize: 9.5, color: isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
                     color: badge['bg'] as Color,
                     borderRadius: BorderRadius.circular(20),
@@ -182,12 +176,12 @@ class AllOrdersDirectoryCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(badge['icon'] as IconData, size: 11, color: badge['color'] as Color),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       Text(
                         badge['label'] as String,
                         style: TextStyle(
                           color: badge['color'] as Color,
-                          fontSize: 10,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -196,128 +190,155 @@ class AllOrdersDirectoryCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
 
-            // Row 2: Customer Avatar + Name & Phone + Address & COD Amount
+            // Row 2: Customer Avatar + Name & Phone + Total COD Amount
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 17,
-                  backgroundColor: isDarkMode ? const Color(0xFF0D382B) : const Color(0xFFE0F2F1),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDarkMode
+                          ? [const Color(0xFF059669), const Color(0xFF10B981)]
+                          : [const Color(0xFF0A2E23), const Color(0xFF059669)],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
                   child: Text(
                     initials,
                     style: GoogleFonts.inter(
-                      color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF00695C),
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         order.customerName,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 14,
                           color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
                         ),
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.phone_rounded, size: 11, color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669)),
+                          const SizedBox(width: 4),
+                          Text(
+                            order.customerPhone,
+                            style: GoogleFonts.jetBrainsMono(
+                              color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                       Text(
-                        order.customerPhone,
-                        style: GoogleFonts.jetBrainsMono(
-                          color: isDarkMode ? const Color(0xFF10B981) : theme.primaryColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${order.deliveryState} - ${order.deliveryAddress}',
-                        style: GoogleFonts.inter(color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, fontSize: 9.5),
+                        '${order.deliveryState} • ${order.deliveryAddress}',
+                        style: GoogleFonts.inter(color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600, fontSize: 10),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'TOTAL COD',
-                      style: GoogleFonts.inter(
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? const Color(0xFF064E3B).withValues(alpha: 0.3) : const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'TOTAL COD',
+                        style: GoogleFonts.inter(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF047857),
+                        ),
                       ),
-                    ),
-                    Text(
-                      '$currency${order.totalAmount.toStringAsFixed(0)}',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: isDarkMode ? const Color(0xFF10B981) : const Color(0xFF059669),
+                      Text(
+                        '$currency${order.totalAmount.toStringAsFixed(0)}',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
 
-            // Row 3: Product Name & Quantity Price Breakdown
+            // Row 3: Product Item & Qty Breakdown
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(8),
+                color: isDarkMode ? const Color(0xFF132A22) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isDarkMode ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.inventory_2_outlined, size: 12, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade600),
-                      const SizedBox(width: 4),
+                      Icon(Icons.inventory_2_rounded, size: 14, color: isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669)),
+                      const SizedBox(width: 6),
                       Text(
                         productName,
                         style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                          color: isDarkMode ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11.5,
+                          color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                     ],
                   ),
                   Text(
                     'Qty: ${order.quantity} × $currency${order.basePrice.toStringAsFixed(0)}',
-                    style: GoogleFonts.inter(fontSize: 10, color: isDarkMode ? const Color(0xFF94A3B8) : Colors.grey.shade700, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.inter(fontSize: 10.5, color: isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF475569), fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
 
-            // Row 4: Logistics Agent handling the order
+            // Row 4: Logistics Agent Badge
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xFF0C2A38) : const Color(0xFFE0F2FE),
-                borderRadius: BorderRadius.circular(8),
+                color: isDarkMode ? const Color(0xFF0C2A38) : const Color(0xFFF0F9FF),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isDarkMode ? const Color(0xFF0284C7).withValues(alpha: 0.3) : const Color(0xFFBAE6FD)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.local_shipping_outlined, size: 12, color: Color(0xFF0284C7)),
-                  const SizedBox(width: 5),
+                  const Icon(Icons.local_shipping_rounded, size: 13, color: Color(0xFF0284C7)),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Logistics Rep: $logisticsAgent',
                       style: GoogleFonts.inter(
-                        fontSize: 10,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.bold,
                         color: isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                       ),
@@ -327,45 +348,68 @@ class AllOrdersDirectoryCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            // Single Unified Omnichannel Follow-Up CTA
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: onOpenActivities,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 2,
-                ),
-                icon: const Icon(Icons.forum_outlined, size: 16),
-                label: Text(
-                  'Follow-Up & Connect 💬📞',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Secondary Quick Actions (Quick Status Dropdown & Details)
+            // Row 5: Action Row 1 (Call Client + Chat / History Log)
             Row(
               children: [
-                Expanded(child: quickStatusMenu),
-                const SizedBox(width: 6),
-                OutlinedButton.icon(
-                  onPressed: onOpenDetails,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                    side: BorderSide(color: isDarkMode ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onStartCall,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 1,
+                    ),
+                    icon: const Icon(Icons.phone_in_talk_rounded, size: 14),
+                    label: Text(
+                      'Call Client',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11.5),
+                    ),
                   ),
-                  icon: const Icon(Icons.visibility_outlined, size: 14),
-                  label: const Text('Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onOpenActivities,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                      side: BorderSide(color: isDarkMode ? const Color(0xFF0284C7) : const Color(0xFF7DD3FC)),
+                      backgroundColor: isDarkMode ? const Color(0xFF0C2A38) : const Color(0xFFF0F9FF),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.forum_outlined, size: 14),
+                    label: Text(
+                      'Chat / Log',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Row 6: Action Row 2 (View Details + Quick Menu)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onOpenDetails,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: isDarkMode ? Colors.white70 : const Color(0xFF334155),
+                      side: BorderSide(color: isDarkMode ? const Color(0xFF1E3E33) : Colors.grey.shade300),
+                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.visibility_outlined, size: 13),
+                    label: Text('View Details', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                quickStatusMenu,
               ],
             ),
           ],

@@ -631,7 +631,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
             addRepaintBoundaries: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              mainAxisExtent: 350,
+              mainAxisExtent: 370,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
             ),
