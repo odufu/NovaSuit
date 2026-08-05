@@ -27,11 +27,24 @@ import 'features/sales_supervisor/presentation/providers/supervisor_dashboard_pr
 import 'features/sales/presentation/providers/sales_call_center_provider.dart';
 import 'features/sales_supervisee/presentation/providers/call_rep_dashboard_provider.dart';
 import 'features/hr/presentation/providers/hr_provider.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'features/logistics/presentation/providers/inventory_provider.dart';
 import 'features/marketing/presentation/providers/campaign_form_builder_provider.dart';
 
+class NovaHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb) {
+    HttpOverrides.global = NovaHttpOverrides();
+  }
   GoogleFonts.config.allowRuntimeFetching = true;
   await SupabaseConfig.init();
   await initDi();

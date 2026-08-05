@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:sip_ua/sip_ua.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../it_sky_sip_config.dart';
 import '../models/order.dart';
 import 'nova_udp_sip_engine.dart';
@@ -235,6 +236,12 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     _isOnHold = false;
     _lastError = null;
 
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await Helper.requestCapturePermission();
+      } catch (_) {}
+    }
+
     _notifyCallState(SipCallSessionState.connectingProvider);
 
     if (!kIsWeb && Platform.isWindows) {
@@ -408,6 +415,11 @@ class NovaSipTelephonyService implements SipUaHelperListener {
         _notifyCallState(SipCallSessionState.initiatingCall); // Ringing stage
         break;
       case CallStateEnum.CONFIRMED:
+        if (!kIsWeb && Platform.isAndroid) {
+          try {
+            Helper.setSpeakerphoneOn(false);
+          } catch (_) {}
+        }
         _notifyCallState(SipCallSessionState.callInProgress); // Active Audio
         _startDurationTimer();
         break;
