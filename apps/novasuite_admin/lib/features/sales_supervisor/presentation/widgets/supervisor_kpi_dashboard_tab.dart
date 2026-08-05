@@ -284,15 +284,12 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                 else if (showCards)
                   Padding(
                     padding: const EdgeInsets.all(14),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final crossAxisCount = (constraints.maxWidth / 320).floor().clamp(1, 4);
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            childAspectRatio: 0.58,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 340,
+                            mainAxisExtent: 470,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                           ),
@@ -317,10 +314,8 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                               ),
                             );
                           },
-                        );
-                      },
-                    ),
-                  )
+                        ),
+                      )
                 else
                   LayoutBuilder(
                     builder: (context, constraints) {

@@ -114,16 +114,15 @@ class _ManageSuperviseesTabState extends State<ManageSuperviseesTab> {
                     )
                   : LayoutBuilder(
                       builder: (context, constraints) {
-                        final crossAxisCount = (constraints.maxWidth / 320).floor().clamp(1, 4);
                         final topPerformerId = widget.squad.isNotEmpty
                             ? (widget.squad.reduce((a, b) => a.confirmedOrdersToday >= b.confirmedOrdersToday ? a : b)).user.id
                             : '';
 
                         return GridView.builder(
                           physics: const BouncingScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            childAspectRatio: 0.58,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 340,
+                            mainAxisExtent: 470,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                           ),
