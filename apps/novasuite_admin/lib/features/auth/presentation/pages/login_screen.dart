@@ -31,10 +31,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _errorMessage.value = null;
 
     try {
-      final user = await _authRepository.signInWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final user = await _authRepository
+          .signInWithEmail(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          )
+          .timeout(const Duration(milliseconds: 2500));
 
       if (!mounted) return;
       _isLoading.value = false;

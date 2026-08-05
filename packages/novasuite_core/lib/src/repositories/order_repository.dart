@@ -25,7 +25,7 @@ class OrderRepository {
         query = query.eq('status', status.dbValue);
       }
 
-      final response = await query.order('created_at', ascending: false);
+      final response = await query.order('created_at', ascending: false).timeout(const Duration(seconds: 2));
       final orders = (response as List).map((json) => OrderModel.fromMap(json)).toList();
       if (orders.isNotEmpty) {
         return orders;

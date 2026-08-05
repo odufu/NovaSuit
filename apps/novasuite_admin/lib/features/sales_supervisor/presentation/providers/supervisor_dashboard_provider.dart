@@ -44,12 +44,19 @@ class SupervisorDashboardProvider extends ChangeNotifier {
   }
 
   Future<void> fetchSquadData({String companyId = 'comp-101', String supervisorId = 'sup-01'}) async {
-    _isLoading = true;
-    notifyListeners();
+    if (_squad.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
-      _squad = await _repository.fetchSquadSupervisees(companyId: companyId, supervisorId: supervisorId);
-      _dailyReport = await _repository.fetchDailyOperationalReport(companyId: companyId, date: DateTime(2026, 7, 27));
+      final fetchedSquad = await _repository.fetchSquadSupervisees(companyId: companyId, supervisorId: supervisorId);
+      final fetchedReport = await _repository.fetchDailyOperationalReport(companyId: companyId, date: DateTime(2026, 7, 27));
+
+      if (fetchedSquad.isNotEmpty) {
+        _squad = fetchedSquad;
+      }
+      _dailyReport = fetchedReport;
     } catch (e) {
       // Repositories automatically return fallback seed data
     } finally {
