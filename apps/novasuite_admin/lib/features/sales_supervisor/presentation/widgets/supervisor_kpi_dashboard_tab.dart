@@ -5,6 +5,7 @@ import 'package:novasuite_core/novasuite_core.dart';
 import 'package:intl/intl.dart';
 import '../providers/supervisor_dashboard_provider.dart';
 import 'agent_profile_modal.dart';
+import 'supervisee_leaderboard_card.dart';
 
 class SupervisorKpiDashboardTab extends StatefulWidget {
   final List<SuperviseePerformanceModel> squad;
@@ -283,11 +284,41 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
                 else if (showCards)
                   Padding(
                     padding: const EdgeInsets.all(14),
-                    child: Column(
-                      children: filteredSquad.map((agent) {
-                        final isTop = agent.user.id == topPerformerId;
-                        return _buildMobileSuperviseeCard(agent, isTop, isDark, theme, borderColor, textPrimary, textMuted);
-                      }).toList(),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final crossAxisCount = (constraints.maxWidth / 320).floor().clamp(1, 4);
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            mainAxisExtent: 460,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
+                          ),
+                          itemCount: filteredSquad.length,
+                          itemBuilder: (context, index) {
+                            final agent = filteredSquad[index];
+                            final isTop = agent.user.id == topPerformerId;
+                            return SuperviseeLeaderboardCard(
+                              agent: agent,
+                              isTopPerformer: isTop,
+                              isDarkMode: isDark,
+                              theme: theme,
+                              onManageProfile: () => showDialog(
+                                context: context,
+                                builder: (ctx) => AgentProfileModal(
+                                  supervisee: agent,
+                                  squadOrders: widget.squadOrders,
+                                  activeTheme: theme,
+                                  isDarkMode: isDark,
+                                  onSave: widget.onUpdateSupervisee,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   )
                 else
@@ -590,171 +621,6 @@ class _SupervisorKpiDashboardTabState extends State<SupervisorKpiDashboardTab> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMobileSuperviseeCard(
-    SuperviseePerformanceModel agent,
-    bool isTopPerformer,
-    bool isDark,
-    TenantTheme theme,
-    Color borderColor,
-    Color textPrimary,
-    Color textMuted,
-  ) {
-    final products = agent.assignedProducts.join(', ');
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isTopPerformer
-            ? (isDark ? const Color(0xFF1E3A2B) : const Color(0xFFECFDF5))
-            : (isDark ? const Color(0xFF0C1F17) : const Color(0xFFF8FAFC)),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isTopPerformer ? Colors.amber : borderColor,
-          width: isTopPerformer ? 1.5 : 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: isTopPerformer ? Colors.amber.withValues(alpha: 0.3) : theme.primaryColor.withValues(alpha: 0.2),
-                          child: Text(
-                            agent.user.fullName[0].toUpperCase(),
-                            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: isTopPerformer ? Colors.amber : theme.primaryColor),
-                          ),
-                        ),
-                        if (isTopPerformer)
-                          const Positioned(right: -2, top: -2, child: Text('👑', style: TextStyle(fontSize: 10))),
-                      ],
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  agent.user.fullName,
-                                  style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.bold, color: textPrimary),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (isTopPerformer)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
-                                  ),
-                                  child: Text('TOP', style: GoogleFonts.jetBrainsMono(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.amber)),
-                                ),
-                            ],
-                          ),
-                          Text(
-                            'Ext 102 • ${products.isEmpty ? "GRAZER, SHAMPOO" : products}',
-                            style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w500, color: textMuted),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isDark ? const Color(0xFF10B981) : const Color(0xFF86EFAC)),
-                ),
-                child: Text(
-                  '${agent.assignedCount} Assigned',
-                  style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold, color: isDark ? const Color(0xFF34D399) : const Color(0xFF15803D), fontSize: 10.5),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _buildBadge('✅ ${agent.confirmedOrdersToday} Confirmed', const Color(0xFF10B981), isDark),
-              _buildBadge('🚚 ${agent.deliveredCount} Delivered (${agent.untaggedOnCrm} untagged)', const Color(0xFF059669), isDark),
-              _buildBadge('📅 ${agent.deliveredTodayAssigned} / ${agent.deliveredPreviousDays} Prev', Colors.blue, isDark),
-              _buildBadge('⏰ ${agent.rescheduledCount} Rescheduled', Colors.purple, isDark),
-              _buildBadge('📞 ${agent.inProgressCount} In progress', Colors.amber, isDark),
-              _buildBadge('📴 ${agent.switchedOffCount} Switched off', Colors.deepOrange, isDark),
-              _buildBadge('🚫 ${agent.notPickingCount} Unanswered', Colors.redAccent, isDark),
-              _buildBadge('❌ ${agent.cancelledCount} Cancelled', Colors.grey, isDark),
-              _buildBadge('⏸️ ${agent.notReadyCount} Pending', Colors.teal, isDark),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          Align(
-            alignment: Alignment.centerRight,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: theme.primaryColor),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                visualDensity: VisualDensity.compact,
-              ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AgentProfileModal(
-                    supervisee: agent,
-                    squadOrders: widget.squadOrders,
-                    activeTheme: theme,
-                    isDarkMode: isDark,
-                    onSave: widget.onUpdateSupervisee,
-                  ),
-                );
-              },
-              icon: const Icon(Icons.manage_accounts, size: 14),
-              label: Text('Manage Agent Profile', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBadge(String text, Color color, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.18 : 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold, color: color),
       ),
     );
   }

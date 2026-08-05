@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import 'agent_profile_modal.dart';
+import 'supervisee_leaderboard_card.dart';
 
 class ManageSuperviseesTab extends StatefulWidget {
   final List<SuperviseePerformanceModel> squad;
@@ -44,7 +45,6 @@ class _ManageSuperviseesTabState extends State<ManageSuperviseesTab> {
   Widget build(BuildContext context) {
     final theme = widget.activeTheme;
     final isDark = widget.isDarkMode;
-    final cardBg = isDark ? const Color(0xFF132A22) : Colors.white;
     final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
     final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
@@ -112,150 +112,47 @@ class _ManageSuperviseesTabState extends State<ManageSuperviseesTab> {
                       child: Text('No supervisees found matching "$queryVal"',
                           style: GoogleFonts.inter(color: textMuted)),
                     )
-                  : ListView.builder(
-                      itemCount: filteredSquad.length,
-                      itemBuilder: (context, index) {
-                        final agent = filteredSquad[index];
-                        final products = agent.assignedProducts.join(', ');
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final crossAxisCount = (constraints.maxWidth / 320).floor().clamp(1, 4);
+                        final topPerformerId = widget.squad.isNotEmpty
+                            ? (widget.squad.reduce((a, b) => a.confirmedOrdersToday >= b.confirmedOrdersToday ? a : b)).user.id
+                            : '';
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: borderColor),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                        return GridView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            mainAxisExtent: 460,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: theme.primaryColor.withValues(alpha: 0.2),
-                                        child: Text(
-                                          agent.user.fullName[0].toUpperCase(),
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.primaryColor,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                agent.user.fullName,
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: textPrimary,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'Ext 10${index + 1} • ${agent.user.email}',
-                                                style: GoogleFonts.jetBrainsMono(
-                                                  fontSize: 11,
-                                                  color: textMuted,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            '📦 Licensed Products: $products',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: isDark ? const Color(0xFF34D399) : const Color(0xFF0A2E23),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: isDark ? const Color(0xFF10B981) : const Color(0xFF86EFAC)),
-                                        ),
-                                        child: Text(
-                                          '35 Total Assigned',
-                                          style: GoogleFonts.jetBrainsMono(
-                                            fontWeight: FontWeight.bold,
-                                            color: isDark ? const Color(0xFF34D399) : const Color(0xFF15803D),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      OutlinedButton.icon(
-                                        style: OutlinedButton.styleFrom(
-                                          side: BorderSide(color: theme.primaryColor),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                        ),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (ctx) => AgentProfileModal(
-                                              supervisee: agent,
-                                              squadOrders: widget.squadOrders,
-                                              squadReps: widget.squad,
-                                              activeTheme: theme,
-                                              isDarkMode: isDark,
-                                              onSave: widget.onUpdateSupervisee,
-                                              onReassignOrders: widget.onExecuteReassignment,
-                                            ),
-                                          );
-                                        },
-                                        icon: const Icon(Icons.manage_accounts, size: 16),
-                                        label: Text('Manage Agent Profile', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                          itemCount: filteredSquad.length,
+                          itemBuilder: (context, index) {
+                            final agent = filteredSquad[index];
+                            final isTop = agent.user.id == topPerformerId;
 
-                              const SizedBox(height: 14),
-
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  _buildMetricBadge('✅ 21 Confirmed', const Color(0xFF10B981), isDark),
-                                  _buildMetricBadge('🚚 17 Delivered (6 untagged on CRM)', const Color(0xFF059669), isDark),
-                                  _buildMetricBadge('⏰ 7 Rescheduled', const Color(0xFF8B5CF6), isDark),
-                                  _buildMetricBadge('📞 6 In progress', Colors.amber, isDark),
-                                  _buildMetricBadge('📴 2 Switched off', Colors.deepOrange, isDark),
-                                  _buildMetricBadge('🚫 4 Not picking', Colors.redAccent, isDark),
-                                  _buildMetricBadge('❌ 0 Cancelled', Colors.grey, isDark),
-                                  _buildMetricBadge('⏸️ 1 Not ready', Colors.teal, isDark),
-                                  _buildMetricBadge('📦 15 delivered today, 2 prev', Colors.blue, isDark),
-                                ],
-                              ),
-                            ],
-                          ),
+                            return SuperviseeLeaderboardCard(
+                              agent: agent,
+                              isTopPerformer: isTop,
+                              isDarkMode: isDark,
+                              theme: theme,
+                              onManageProfile: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AgentProfileModal(
+                                    supervisee: agent,
+                                    squadOrders: widget.squadOrders,
+                                    squadReps: widget.squad,
+                                    activeTheme: theme,
+                                    isDarkMode: isDark,
+                                    onSave: widget.onUpdateSupervisee,
+                                    onReassignOrders: widget.onExecuteReassignment,
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         );
                       },
                     ),
@@ -263,25 +160,6 @@ class _ManageSuperviseesTabState extends State<ManageSuperviseesTab> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildMetricBadge(String text, Color color, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.18 : 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 11.5,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
     );
   }
 }
