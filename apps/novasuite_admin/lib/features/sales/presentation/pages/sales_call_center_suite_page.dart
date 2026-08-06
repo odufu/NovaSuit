@@ -360,13 +360,7 @@ class _SalesCallCenterSuitePageState extends State<SalesCallCenterSuitePage> {
   bool _isIncomingCallModalOpen = false;
 
   void _listenForIncomingCalls() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          _telephonyService.registerSipTrunk();
-        }
-      });
-    });
+    _telephonyService.registerSipTrunk();
     _incomingCallSub = _telephonyService.callStateStream.listen((state) {
       if (!mounted) return;
 
