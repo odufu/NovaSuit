@@ -123,25 +123,7 @@ class SupervisorRepository {
       final response = await _client
           .from('user_roles')
           .select('*, users:user_id(*)')
-          .eq('company_id', companyId)
-          .timeout(const Duration(seconds: 2));
-
-      final allOrdersResponse = await _client
-          .from('orders')
-          .select()
-          .eq('company_id', companyId)
-          .timeout(const Duration(seconds: 2));
-
-      final allOrders = (allOrdersResponse as List)
-          .map((map) => OrderModel.fromMap(map))
-          .toList();
-
-      final Map<String, List<OrderModel>> ordersByRep = {};
-      for (final o in allOrders) {
-        if (o.salesRepId != null) {
-          ordersByRep.putIfAbsent(o.salesRepId!, () => []).add(o);
-        }
-      }
+          .eq('company_id', companyId);
 
       final List<SuperviseePerformanceModel> squad = [];
 
@@ -150,7 +132,15 @@ class SupervisorRepository {
         final user = UserModel.fromMap(userData);
 
         if (user.role == UserRole.salesCallRep) {
-          final orders = ordersByRep[user.id] ?? [];
+          final ordersResponse = await _client
+              .from('orders')
+              .select()
+              .eq('company_id', companyId)
+              .eq('sales_rep_id', user.id);
+
+          final orders = (ordersResponse as List)
+              .map((map) => OrderModel.fromMap(map))
+              .toList();
 
           final activeLeads = orders.where((o) =>
               o.status != OrderStatus.accepted &&
@@ -292,8 +282,7 @@ class SupervisorRepository {
       final response = await _client
           .from('orders')
           .select()
-          .eq('company_id', companyId)
-          .timeout(const Duration(seconds: 2));
+          .eq('company_id', companyId);
 
       final orders = (response as List).map((map) => OrderModel.fromMap(map)).toList();
 
