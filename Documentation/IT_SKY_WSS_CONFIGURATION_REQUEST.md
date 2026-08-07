@@ -33,13 +33,15 @@ sequenceDiagram
     participant Nginx as "IT Sky Nginx Reverse Proxy (Port 7443)"
     participant FreeSWITCH as "ASTPP FreeSWITCH (Port 8088 / 5066)"
 
-    box rgb(255, 235, 235) "Current State (Failing)"
+    rect rgb(255, 230, 230)
+        Note over Browser,FreeSWITCH: Current State (Failing - Missing Nginx Upgrade Headers)
         Browser->>Nginx: WSS Handshake Request (Upgrade: websocket)
         Note over Nginx: Missing proxy_set_header Upgrade directives
         Nginx-->>Browser: HTTP 400 Bad Request (Handshake Refused)
     end
 
-    box rgb(235, 248, 240) "Target State (After 1-Minute Nginx Update)"
+    rect rgb(230, 245, 235)
+        Note over Browser,FreeSWITCH: Target State (Working - After 1-Minute Nginx Header Fix)
         Browser->>Nginx: WSS Handshake Request (Upgrade: websocket)
         Nginx->>FreeSWITCH: Forwards Upgrade: websocket and Connection: Upgrade
         FreeSWITCH-->>Nginx: HTTP 101 Switching Protocols
