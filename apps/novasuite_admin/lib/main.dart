@@ -42,6 +42,9 @@ class NovaHttpOverrides extends HttpOverrides {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // 50MB Max Memory Cache
+  PaintingBinding.instance.imageCache.maximumSize = 100;
+
   if (!kIsWeb) {
     HttpOverrides.global = NovaHttpOverrides();
   }
