@@ -1,12 +1,12 @@
 {
-    "name": "novasuite_admin",
-    "short_name": "novasuite_admin",
+    "name": "NovaSuite Enterprise Portal",
+    "short_name": "NovaSuite",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#09140E",
+    "theme_color": "#10B981",
+    "description": "NovaSuite Enterprise Multi-Tenant Telephony & CRM Suite.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
