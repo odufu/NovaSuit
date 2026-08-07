@@ -23,19 +23,19 @@ When web browsers establish the Secure WebSocket handshake to `wss://astpp.itsky
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Browser as 🎧 NovaSuite Web App (Chrome/Edge)
-    participant Nginx as ⚡ IT Sky Nginx (Port 7443)
-    participant FS as 🇳🇬 FreeSWITCH / ASTPP (Port 8088/5066)
+    actor Browser as "NovaSuite Web App (Chrome / Edge)"
+    participant Nginx as "IT Sky Nginx (Port 7443)"
+    participant FS as "FreeSWITCH ASTPP (Port 8088 / 5066)"
 
-    Browser->>Nginx: 1. WSS Handshake (wss://astpp.itskysolutions.com:7443)
-    Note over Nginx: Missing 'proxy_set_header Upgrade $http_upgrade'
-    Nginx-->>Browser: 2. HTTP 400 Bad Request (Handshake Refused)
+    Browser->>Nginx: WSS Handshake (wss://astpp.itskysolutions.com:7443)
+    Note over Nginx: Missing proxy_set_header Upgrade directive
+    Nginx-->>Browser: HTTP 400 Bad Request (Handshake Refused)
     
     rect rgb(235, 248, 240)
-    Note over Browser,FS: Expected Working Sequence after 1-Line Fix:
-    Nginx->>FS: 3. Forward Upgrade Request to FreeSWITCH
-    FS-->>Nginx: 4. 101 Switching Protocols
-    Nginx-->>Browser: 5. 101 Switching Protocols (WebRTC Ready!)
+        Note over Browser,FS: Expected Working Sequence after 1-Line Fix:
+        Nginx->>FS: Forward Upgrade Request to FreeSWITCH
+        FS-->>Nginx: 101 Switching Protocols
+        Nginx-->>Browser: 101 Switching Protocols (WebRTC Ready)
     end
 ```
 
