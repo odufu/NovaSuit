@@ -75,35 +75,39 @@ class NovaSuiteAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final navProvider = context.watch<AppNavigationProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
-    final currentUser = authProvider.currentUser;
-    final activeTheme = navProvider.activeTheme;
+    return Selector2<AuthProvider, ThemeProvider, _AppShellData>(
+      selector: (_, auth, theme) => _AppShellData(
+        currentUser: auth.currentUser,
+        themeMode: theme.themeMode,
+      ),
+      builder: (context, data, _) {
+        final activeTheme = context.read<AppNavigationProvider>().activeTheme;
 
-    return MaterialApp(
-      title: activeTheme.appTitle,
-      debugShowCheckedModeBanner: false,
-      themeMode: themeProvider.themeMode,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      home: currentUser == null
-          ? LoginScreen(
-              activeTheme: activeTheme,
-              onLoginSuccess: (user) {
-                context.read<AuthProvider>().setCurrentUser(user);
-              },
-            )
-          : AdminMainShell(
-              activeTheme: activeTheme,
-              currentUser: currentUser,
-              onThemeChanged: (newTheme) {
-                context.read<AppNavigationProvider>().setActiveTheme(newTheme);
-              },
-              onSignOut: () {
-                context.read<AuthProvider>().logout();
-              },
-            ),
+        return MaterialApp(
+          title: activeTheme.appTitle,
+          debugShowCheckedModeBanner: false,
+          themeMode: data.themeMode,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          home: data.currentUser == null
+              ? LoginScreen(
+                  activeTheme: activeTheme,
+                  onLoginSuccess: (user) {
+                    context.read<AuthProvider>().setCurrentUser(user);
+                  },
+                )
+              : AdminMainShell(
+                  activeTheme: activeTheme,
+                  currentUser: data.currentUser!,
+                  onThemeChanged: (newTheme) {
+                    context.read<AppNavigationProvider>().setActiveTheme(newTheme);
+                  },
+                  onSignOut: () {
+                    context.read<AuthProvider>().logout();
+                  },
+                ),
+        );
+      },
     );
   }
 }
@@ -1846,8 +1850,25 @@ class _AdminMainShellState extends State<AdminMainShell> {
       ),
     );
   }
+}
 
+class _AppShellData {
+  final UserModel? currentUser;
+  final ThemeMode themeMode;
 
+  _AppShellData({
+    this.currentUser,
+    required this.themeMode,
+  });
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _AppShellData &&
+          runtimeType == other.runtimeType &&
+          currentUser == other.currentUser &&
+          themeMode == other.themeMode;
 
+  @override
+  int get hashCode => currentUser.hashCode ^ themeMode.hashCode;
 }

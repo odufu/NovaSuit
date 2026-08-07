@@ -236,7 +236,7 @@ class NovaSipTelephonyService implements SipUaHelperListener {
     _isOnHold = false;
     _lastError = null;
 
-    if (!kIsWeb && Platform.isAndroid) {
+    if (kIsWeb || Platform.isAndroid) {
       try {
         await Helper.requestCapturePermission();
       } catch (_) {}

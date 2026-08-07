@@ -106,17 +106,9 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
 
   @override
   Widget build(BuildContext context) {
-    final dashboardProvider = context.watch<SupervisorDashboardProvider>();
-    final salesProvider = context.watch<SalesCallCenterProvider>();
-
     final theme = TenantTheme.defaultNovaCare();
     const isDarkMode = true;
     const cardBg = Color(0xFF0C1F17);
-
-    final squad = dashboardProvider.squad;
-    final squadOrders = salesProvider.orders;
-    final dailyReport = dashboardProvider.dailyReport ?? SupervisorDailyReportModel.defaultReportForJuly27();
-    final pendingUpsells = squadOrders.where((o) => o.status == OrderStatus.upsellPending).toList();
 
     return Scaffold(
       backgroundColor: cardBg,
@@ -125,74 +117,96 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
           Column(
             children: [
               Expanded(
-                child: dashboardProvider.isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
-                    : TabBarView(
-                        controller: _tabController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          // Tab 0: Squad Overview & Operational KPIs
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: SupervisorKpiDashboardTab(
-                              squad: squad,
-                              squadOrders: squadOrders,
-                              dailyReport: dailyReport,
-                              activeTheme: theme,
-                              isDarkMode: isDarkMode,
-                              onUpdateSupervisee: (updated) {
-                                context.read<SupervisorDashboardProvider>().updateSupervisee(updated);
-                              },
-                              onDateOrTimeframeChanged: (selectedDate, timeframe) async {
-                                await _supervisorRepo.fetchDailyOperationalReport(
-                                  companyId: widget.currentUser.companyId,
-                                  date: selectedDate,
-                                  timeframe: timeframe,
-                                );
-                                if (!context.mounted) return;
-                                context.read<SupervisorDashboardProvider>().setTimeframe(timeframe);
-                              },
-                            ),
-                          ),
+                child: Selector<SupervisorDashboardProvider, bool>(
+                  selector: (_, p) => p.isLoading,
+                  builder: (context, isLoading, _) {
+                    if (isLoading) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)));
+                    }
 
-                          // Tab 1: Realtime Upsell Approvals
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: SupervisorApprovalsTab(
-                              pendingUpsellOrders: pendingUpsells,
-                              activeTheme: theme,
-                              isDarkMode: isDarkMode,
-                              onResolveUpsell: _handleResolveUpsell,
-                            ),
-                          ),
+                    return Selector2<SupervisorDashboardProvider, SalesCallCenterProvider,
+                        _SupervisorConsoleData>(
+                      selector: (_, dashP, salesP) => _SupervisorConsoleData(
+                        squad: dashP.squad,
+                        orders: salesP.orders,
+                        dailyReport: dashP.dailyReport,
+                      ),
+                      builder: (context, data, _) {
+                        final squad = data.squad;
+                        final squadOrders = data.orders;
+                        final dailyReport = data.dailyReport ?? SupervisorDailyReportModel.defaultReportForJuly27();
+                        final pendingUpsells = squadOrders.where((o) => o.status == OrderStatus.upsellPending).toList();
 
-                          // Tab 2: Workload & Lead Reassignment
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: SupervisorReassignmentTab(
-                              squadOrders: squadOrders,
-                              squad: squad,
-                              activeTheme: theme,
-                              isDarkMode: isDarkMode,
-                              onExecuteReassignment: _handleReassign,
-                            ),
-                          ),
-
-                          // Tab 3: My Personal Dialer Queue
-                          if (widget.currentUser.canTakeCalls)
+                        return TabBarView(
+                          controller: _tabController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            // Tab 0: Squad Overview & Operational KPIs
                             Padding(
                               padding: const EdgeInsets.all(24),
-                              child: CallRepDashboardOverview(
-                                currentUser: widget.currentUser,
-                                myOrders: squadOrders,
+                              child: SupervisorKpiDashboardTab(
+                                squad: squad,
+                                squadOrders: squadOrders,
+                                dailyReport: dailyReport,
                                 activeTheme: theme,
                                 isDarkMode: isDarkMode,
-                                onStartCall: _startDirectCall,
-                                onOpenFullQueue: () {},
+                                onUpdateSupervisee: (updated) {
+                                  context.read<SupervisorDashboardProvider>().updateSupervisee(updated);
+                                },
+                                onDateOrTimeframeChanged: (selectedDate, timeframe) async {
+                                  await _supervisorRepo.fetchDailyOperationalReport(
+                                    companyId: widget.currentUser.companyId,
+                                    date: selectedDate,
+                                    timeframe: timeframe,
+                                  );
+                                  if (!context.mounted) return;
+                                  context.read<SupervisorDashboardProvider>().setTimeframe(timeframe);
+                                },
                               ),
                             ),
-                        ],
-                      ),
+
+                            // Tab 1: Realtime Upsell Approvals
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: SupervisorApprovalsTab(
+                                pendingUpsellOrders: pendingUpsells,
+                                activeTheme: theme,
+                                isDarkMode: isDarkMode,
+                                onResolveUpsell: _handleResolveUpsell,
+                              ),
+                            ),
+
+                            // Tab 2: Workload & Lead Reassignment
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: SupervisorReassignmentTab(
+                                squadOrders: squadOrders,
+                                squad: squad,
+                                activeTheme: theme,
+                                isDarkMode: isDarkMode,
+                                onExecuteReassignment: _handleReassign,
+                              ),
+                            ),
+
+                            // Tab 3: My Personal Dialer Queue
+                            if (widget.currentUser.canTakeCalls)
+                              Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: CallRepDashboardOverview(
+                                  currentUser: widget.currentUser,
+                                  myOrders: squadOrders,
+                                  activeTheme: theme,
+                                  isDarkMode: isDarkMode,
+                                  onStartCall: _startDirectCall,
+                                  onOpenFullQueue: () {},
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -235,4 +249,28 @@ class _SupervisorConsolePageState extends State<SupervisorConsolePage> with Sing
       ),
     );
   }
+}
+
+class _SupervisorConsoleData {
+  final List<SuperviseePerformanceModel> squad;
+  final List<OrderModel> orders;
+  final SupervisorDailyReportModel? dailyReport;
+
+  _SupervisorConsoleData({
+    required this.squad,
+    required this.orders,
+    this.dailyReport,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _SupervisorConsoleData &&
+          runtimeType == other.runtimeType &&
+          squad == other.squad &&
+          orders == other.orders &&
+          dailyReport == other.dailyReport;
+
+  @override
+  int get hashCode => squad.hashCode ^ orders.hashCode ^ dailyReport.hashCode;
 }
