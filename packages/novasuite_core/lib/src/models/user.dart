@@ -12,7 +12,9 @@ enum UserRole {
   logisticsCallRep('logistics_call_rep', 'Logistics Call Rep'),
   digitalMarketer('digital_marketer', 'Digital Marketer'),
   deliveryAgent('delivery_agent', 'Delivery Agent / Rider'),
-  financeManager('finance_manager', 'Finance Manager');
+  financeManager('finance_manager', 'Finance Manager'),
+  circuitCenterManager('circuit_center_manager', 'Circuit Center Manager'),
+  logisticsSuperAdmin('logistics_super_admin', 'Logistics Super Admin');
 
   final String dbValue;
   final String label;

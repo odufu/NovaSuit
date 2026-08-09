@@ -38,12 +38,14 @@ import '../../features/hr/presentation/providers/hr_provider.dart';
 // Finance Feature
 import '../../features/finance/presentation/providers/finance_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/tenant_brand_provider.dart';
 
 final sl = GetIt.instance;
 
 Future<void> initDi() async {
   // Core Providers
   sl.registerLazySingleton(() => ThemeProvider());
+  sl.registerLazySingleton(() => TenantBrandProvider());
   sl.registerFactory(() => FinanceProvider());
   sl.registerFactory(() => HRProvider());
   sl.registerFactory(() => InventoryProvider());

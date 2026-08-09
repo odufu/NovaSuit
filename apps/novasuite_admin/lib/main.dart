@@ -5,6 +5,7 @@ import 'package:novasuite_core/novasuite_core.dart';
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/providers/tenant_brand_provider.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/sales/presentation/providers/sales_provider.dart';
 import 'features/logistics/presentation/providers/logistics_provider.dart';
@@ -55,6 +56,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => sl<ThemeProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<TenantBrandProvider>()),
         ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesProvider>()),
         ChangeNotifierProvider(create: (_) => sl<LogisticsProvider>()),
