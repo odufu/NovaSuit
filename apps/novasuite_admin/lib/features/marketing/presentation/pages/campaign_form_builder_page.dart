@@ -19,26 +19,43 @@ class AddressLocationService {
 
   static const Map<String, List<String>> statesByCountry = {
     'Nigeria': [
-      'Lagos',
-      'Abuja (FCT)',
-      'Rivers (Port Harcourt)',
-      'Oyo (Ibadan)',
-      'Kano',
-      'Ogun',
-      'Enugu',
-      'Delta',
-      'Anambra',
-      'Kaduna',
-      'Edo',
-      'Osun',
-      'Ondo',
-      'Imo',
-      'Kwara',
-      'Plateau',
-      'Akwa Ibom',
-      'Benue',
       'Abia',
+      'Abuja (FCT)',
+      'Adamawa',
+      'Akwa Ibom',
+      'Anambra',
+      'Bauchi',
+      'Bayelsa',
+      'Benue',
+      'Borno',
       'Cross River',
+      'Delta',
+      'Ebonyi',
+      'Edo',
+      'Ekiti',
+      'Enugu',
+      'Gombe',
+      'Imo',
+      'Jigawa',
+      'Kaduna',
+      'Kano',
+      'Katsina',
+      'Kebbi',
+      'Kogi',
+      'Kwara',
+      'Lagos',
+      'Nasarawa',
+      'Niger',
+      'Ogun',
+      'Ondo',
+      'Osun',
+      'Oyo (Ibadan)',
+      'Plateau',
+      'Rivers (Port Harcourt)',
+      'Sokoto',
+      'Taraba',
+      'Yobe',
+      'Zamfara',
     ],
     'Ghana': [
       'Greater Accra',
@@ -2411,18 +2428,82 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   </form>
 </div>
 
-<!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & DYNAMIC LOCATION ENGINE SCRIPT -->
-<!-- OPEN-SOURCE NIGERIAN STATES, LGAS & TOWNS CDN SCRIPT -->
-<script src="https://cdn.jsdelivr.net/npm/nigerian-states-lgas-cities-towns@1.0.1/dist/index.min.js"></script>
+<!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & SELF-CONTAINED LOCATION CASCADE SCRIPT -->
 <script>
   const locationCascadeData = {
     "Nigeria": {
-      "Lagos": ["Ikeja", "Victoria Island / Eti-Osa", "Lekki / Ajah", "Surulere", "Alimosho", "Kosofe / Ojota", "Apapa", "Ikorodu", "Epe", "Badagry", "Mushin", "Agege", "Oshodi-Isolo", "Yaba / Lagos Mainland", "Amuwo-Odofin"],
+      "Abia": ["Aba North", "Aba South", "Umuahia North", "Umuahia South", "Ohafia", "Arochukwu", "Osisioma"],
       "Abuja (FCT)": ["Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa", "Kubwa", "Lugbe", "Bwari", "Kuje", "Abaji", "Utako", "Jabi"],
-      "Rivers (Port Harcourt)": ["Port Harcourt City", "Obio-Akpor", "Eleme", "Ikwerre", "Bonny Island", "Oyigbo", "Degema"],
-      "Oyo (Ibadan)": ["Ibadan North", "Ibadan Southwest", "Ibadan Southeast", "Ibadan Northwest", "Oyo East", "Ogbomoso"],
+      "Adamawa": ["Yola North", "Yola South", "Jimeta", "Mubi North", "Mubi South", "Numan"],
+      "Akwa Ibom": ["Uyo", "Eket", "Ikot Ekpene", "Oron", "Ibeno", "Abak", "Etinan"],
+      "Anambra": ["Awka South", "Awka North", "Onitsha North", "Onitsha South", "Nnewi North", "Nnewi South", "Ekwulobia (Aguata)", "Ihiala", "Ogbaru", "Otuocha (Anambra East)"],
+      "Bauchi": ["Bauchi Central", "Azare (Katagum)", "Misau", "Jama'are", "Toro"],
+      "Bayelsa": ["Yenagoa", "Sagbama", "Brass", "Ogbia", "Ekeremor", "Southern Ijaw"],
+      "Benue": ["Makurdi", "Otukpo", "Gboko", "Ogobia", "Ugboju", "Oju", "Katsina-Ala", "Vandeikya", "Okpoga (Okpokwu)", "Adoka", "Utonkon (Ado)", "Obagaji (Agatu)", "Gwer East (Aliade)", "Gwer West (Naka)", "Ukum (Sankera)", "Buruku", "Tarka (Wannune)", "Ushongo"],
+      "Borno": ["Maiduguri Municipal", "Jere", "Biu", "Bama"],
+      "Cross River": ["Calabar Municipal", "Calabar South", "Ikom", "Ogoja", "Ugep (Yakurr)", "Obudu", "Akamkpa"],
+      "Delta": ["Warri South", "Warri North", "Warri Southwest", "Asaba / Oshimili South", "Uvwie / Effurun", "Ughelli North", "Ughelli South", "Sapele", "Agbor (Ika South)", "Oghara (Ethiope West)"],
+      "Ebonyi": ["Abakaliki", "Afikpo North", "Afikpo South", "Onueke (Ezza South)", "Ishiagu (Ivo)"],
+      "Edo": ["Benin City (Oredo)", "Ikpoba-Okha", "Egor", "Uromi (Esan Northeast)", "Ekpoma (Esan West)", "Auchi (Etsako West)", "Okada (Ovia Northeast)", "Abudu (Orhionmwon)"],
+      "Ekiti": ["Ado-Ekiti", "Ikere-Ekiti", "Ijero-Ekiti", "Ikole-Ekiti", "Oye-Ekiti"],
+      "Enugu": ["Enugu North", "Enugu South", "Enugu East", "Nsukka", "Udi", "Oji River", "Awgu", "Nkanu West"],
+      "Gombe": ["Gombe Town", "Dukku", "Kaltungo", "Yamaltu/Deba"],
+      "Imo": ["Owerri Municipal", "Owerri North", "Owerri West", "Orlu", "Okigwe", "Mbaise (Aboh/Ahiazu)", "Oguta", "Mbaitoli"],
+      "Jigawa": ["Dutse", "Hadejia", "Birnin Kudu", "Gumel", "Kazaure"],
+      "Kaduna": ["Kaduna North", "Kaduna South", "Zaria", "Kafanchan (Jema'a)", "Chikun", "Igabi", "Sabon Gari", "Saminaka (Lere)", "Kachia", "Giwa"],
       "Kano": ["Kano Municipal", "Fagge", "Dala", "Gwale", "Tarauni", "Nassarawa"],
-      "Benue": ["Makurdi", "Otukpo", "Gboko", "Ogobia", "Ugboju", "Oju", "Katsina-Ala", "Vandeikya", "Okpoga (Okpokwu)", "Adoka", "Utonkon (Ado)", "Obagaji (Agatu)", "Gwer East (Aliade)", "Gwer West (Naka)", "Ukum (Sankera)", "Buruku", "Tarka (Wannune)", "Ushongo"]
+      "Katsina": ["Katsina Town", "Daura", "Funtua", "Malumfashi", "Kankia"],
+      "Kebbi": ["Birnin Kebbi", "Argungu", "Yauri", "Zuru"],
+      "Kogi": ["Lokoja", "Okene", "Kabba (Kabba/Bunu)", "Idah", "Anyigba (Dekina)", "Ajaokuta", "Koton Karfe (Kogi LGA)"],
+      "Kwara": ["Ilorin West", "Ilorin East", "Ilorin South", "Offa", "Omu-Aran (Irepodun)", "Lafiagi (Edu)", "Kaiama"],
+      "Lagos": ["Ikeja", "Victoria Island / Eti-Osa", "Lekki / Ajah", "Surulere", "Alimosho", "Kosofe / Ojota", "Apapa", "Ikorodu", "Epe", "Badagry", "Mushin", "Agege", "Oshodi-Isolo", "Yaba / Lagos Mainland", "Amuwo-Odofin"],
+      "Nasarawa": ["Lafia", "Karu (Mararaba / Nyanya axis)", "Keffi", "Akwanga", "Nasarawa Town", "Toto"],
+      "Niger": ["Minna (Chanchaga)", "Bida", "Suleja", "Kontagora", "Lapai", "Mokwa"],
+      "Ogun": ["Abeokuta South", "Abeokuta North", "Ifo", "Ota / Ado-Odo", "Ijebu Ode", "Sagamu", "Ilaro (Yewa South)", "Mowe / Ibafo", "Ijebu Igbo (Ijebu North)"],
+      "Ondo": ["Akure South", "Akure North", "Ondo West (Ondo Town)", "Ondo East", "Owo", "Ikare (Akoko Northwest)", "Okitipupa", "Igbokoda (Ilaje)"],
+      "Osun": ["Osogbo", "Ede North", "Ede South", "Ife Central (Ile-Ife)", "Ife East", "Ilesa East", "Ilesa West", "Ikirun (Ifelodun)", "Iwo", "Ejigbo"],
+      "Oyo": ["Ibadan North", "Ibadan Southwest", "Ibadan Southeast", "Ibadan Northwest", "Oyo East", "Ogbomoso"],
+      "Plateau": ["Jos North", "Jos South", "Jos East", "Bukuru", "Pankshin", "Shendam", "Mangu", "Langtang North"],
+      "Rivers (Port Harcourt)": ["Port Harcourt City", "Obio-Akpor", "Eleme", "Ikwerre", "Bonny Island", "Oyigbo", "Degema"],
+      "Sokoto": ["Sokoto North", "Sokoto South", "Wamako", "Tambuwal", "Goronyo"],
+      "Taraba": ["Jalingo", "Wukari", "Bali", "Sardauna (Gembu)", "Takum"],
+      "Yobe": ["Damaturu", "Potiskum", "Gashua (Bade)", "Nguru"],
+      "Zamfara": ["Gusau", "Kaura Namoda", "Talata Mafara", "Tsafe"]
+    },
+    "Ghana": {
+      "Greater Accra": ["Accra Central", "Tema", "East Legon", "Madina", "Spintex"],
+      "Ashanti (Kumasi)": ["Kumasi Central", "Adum", "Bantama", "Asokwa"],
+      "Western (Takoradi)": ["Sekondi", "Takoradi Central", "Tarkwa"],
+      "Northern (Tamale)": ["Tamale Central", "Sagnarigu"]
+    },
+    "Kenya": {
+      "Nairobi": ["Nairobi Central", "Westlands", "Kilimani", "Karen", "Kasarani"],
+      "Mombasa": ["Mombasa Island", "Nyali", "Bamburi", "Likoni"],
+      "Kisumu": ["Kisumu Central", "Milimani"],
+      "Nakuru": ["Nakuru Town", "Naivasha"]
+    },
+    "South Africa": {
+      "Gauteng (Johannesburg)": ["Sandton", "Rosebank", "Soweto", "Midrand", "Pretoria"],
+      "Western Cape (Cape Town)": ["Cape Town CBD", "Stellenbosch", "Bellville", "Camps Bay"],
+      "KwaZulu-Natal (Durban)": ["Durban Central", "Umhlanga", "Pinetown"]
+    },
+    "United Kingdom": {
+      "England (London)": ["Central London", "Westminster", "Camden", "Greenwich", "Croydon"],
+      "Scotland (Edinburgh)": ["City Centre", "Leith", "Morningside"],
+      "Wales (Cardiff)": ["Cardiff Central", "Cardiff Bay"],
+      "Northern Ireland": ["Belfast", "Derry"]
+    },
+    "United States": {
+      "California": ["Los Angeles", "San Francisco", "San Diego", "San Jose"],
+      "Texas": ["Houston", "Dallas", "Austin", "San Antonio"],
+      "New York": ["New York City", "Brooklyn", "Queens", "Buffalo"],
+      "Florida": ["Miami", "Orlando", "Tampa", "Jacksonville"],
+      "Georgia": ["Atlanta", "Savannah", "Augusta"]
+    },
+    "Canada": {
+      "Ontario (Toronto)": ["Toronto Downtown", "Mississauga", "Brampton", "Ottawa"],
+      "British Columbia (Vancouver)": ["Vancouver CBD", "Burnaby", "Richmond"],
+      "Quebec (Montreal)": ["Montreal Downtown", "Laval", "Gatineau"]
     }
   };
 
