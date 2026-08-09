@@ -1049,31 +1049,123 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           cardBg,
           isDark,
           action: ElevatedButton.icon(
-            onPressed: () {
-              provider.addAdditionalQuestion({
-                'id': 'q-${DateTime.now().millisecondsSinceEpoch}',
-                'label': 'New Question',
-                'type': 'Text',
-                'placeholder': 'Enter response...',
-                'required': false,
-              });
-            },
+            onPressed: () => _showCustomQuestionModalDialog(context, provider: provider),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('+ Add question'),
           ),
-          child: Column(
-            children: provider.additionalQuestions.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final q = entry.value;
-              return _AdditionalQuestionCardItem(
-                key: ValueKey(q['id'] ?? 'q-$idx'),
-                index: idx,
-                question: q,
-                isDark: isDark,
-                provider: provider,
-              );
-            }).toList(),
-          ),
+          child: provider.additionalQuestions.isEmpty
+              ? Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  alignment: Alignment.center,
+                  child: Text(
+                      'No custom fields configured. Click "+ Add question" to add vast field types.',
+                      style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+                )
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: [
+                      DataColumn(
+                          label: Text('QUESTION LABEL',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: textMuted))),
+                      DataColumn(
+                          label: Text('FIELD TYPE',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: textMuted))),
+                      DataColumn(
+                          label: Text('REQUIRED?',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: textMuted))),
+                      DataColumn(
+                          label: Text('ACTIONS',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: textMuted))),
+                    ],
+                    rows: provider.additionalQuestions.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final q = entry.value;
+                      final isReq = q['required'] == true;
+
+                      return DataRow(cells: [
+                        DataCell(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(q['label'] ?? 'Custom Question',
+                                  style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: textColor)),
+                              if (q['placeholder'] != null &&
+                                  q['placeholder'].toString().isNotEmpty)
+                                Text('Hint: ${q['placeholder']}',
+                                    style: GoogleFonts.inter(
+                                        fontSize: 10, color: textMuted)),
+                            ],
+                          ),
+                        ),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(q['type'] ?? 'Text',
+                                style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                    color: const Color(0xFF10B981))),
+                          ),
+                        ),
+                        DataCell(
+                          Switch(
+                            value: isReq,
+                            activeColor: const Color(0xFF10B981),
+                            onChanged: (val) {
+                              provider.updateAdditionalQuestion(idx, 'required', val);
+                            },
+                          ),
+                        ),
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined,
+                                    size: 18, color: Colors.blue),
+                                onPressed: () => _showCustomQuestionModalDialog(
+                                    context,
+                                    provider: provider,
+                                    editIndex: idx,
+                                    existingQuestion: q),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline,
+                                    size: 18, color: Colors.red),
+                                onPressed: () =>
+                                    provider.removeAdditionalQuestion(idx),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]);
+                    }).toList(),
+                  ),
+                ),
         ),
       ],
     );
@@ -2765,6 +2857,128 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 },
                 icon: const Icon(Icons.check_rounded, size: 16),
                 label: Text(isEditing ? 'Save Changes' : 'Create Package'),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // MODAL DIALOG: CREATE / EDIT CUSTOM QUESTION FIELD MODAL
+  void _showCustomQuestionModalDialog(
+    BuildContext context, {
+    required CampaignFormBuilderProvider provider,
+    int? editIndex,
+    Map<String, dynamic>? existingQuestion,
+  }) {
+    final isEditing = editIndex != null && existingQuestion != null;
+    final labelCtrl = TextEditingController(text: existingQuestion?['label'] ?? '');
+    final placeholderCtrl = TextEditingController(text: existingQuestion?['placeholder'] ?? '');
+    final optionsCtrl = TextEditingController(text: existingQuestion?['options'] ?? '');
+    String selectedType = existingQuestion?['type'] ?? 'Text';
+    bool isRequired = existingQuestion?['required'] == true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final showOptionsField = ['Dropdown', 'Checkbox Group', 'Radio Group'].contains(selectedType);
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.quiz_rounded, color: Color(0xFF10B981), size: 22),
+                const SizedBox(width: 8),
+                Text(isEditing ? 'Edit Custom Question Field' : 'Add New Custom Question Field',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildModalTextField('QUESTION LABEL *', labelCtrl, 'e.g. Preferred Delivery Time Slot'),
+                    const SizedBox(height: 14),
+
+                    Text('FIELD TYPE *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedType,
+                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                      items: [
+                        'Text',
+                        'Paragraph',
+                        'Phone',
+                        'Dropdown',
+                        'Checkbox Group',
+                        'Radio Group',
+                        'Date',
+                        'Time',
+                        'Number',
+                        'File Upload',
+                      ].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                      onChanged: (val) {
+                        if (val != null) setModalState(() => selectedType = val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildModalTextField('PLACEHOLDER / HINT TEXT', placeholderCtrl, 'e.g. Select your preferred delivery window'),
+                    const SizedBox(height: 14),
+
+                    if (showOptionsField) ...[
+                      _buildModalTextField('CHOICE OPTIONS (COMMA SEPARATED) *', optionsCtrl, 'e.g. Morning (9am-12pm), Afternoon (12pm-4pm), Evening (4pm-7pm)'),
+                      const SizedBox(height: 14),
+                    ],
+
+                    SwitchListTile(
+                      title: Text('Mandatory Required Field', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
+                      subtitle: Text('Prevent checkout submission until customer completes this field.', style: GoogleFonts.inter(fontSize: 11, color: Colors.grey)),
+                      value: isRequired,
+                      activeColor: const Color(0xFF10B981),
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setModalState(() => isRequired = val),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton.icon(
+                onPressed: () {
+                  if (labelCtrl.text.trim().isEmpty) return;
+                  final qData = {
+                    'id': existingQuestion?['id'] ?? 'q-${DateTime.now().millisecondsSinceEpoch}',
+                    'label': labelCtrl.text.trim(),
+                    'type': selectedType,
+                    'placeholder': placeholderCtrl.text.trim(),
+                    'options': optionsCtrl.text.trim(),
+                    'required': isRequired,
+                  };
+
+                  if (isEditing) {
+                    provider.updateAdditionalQuestion(editIndex, 'label', qData['label']);
+                    provider.updateAdditionalQuestion(editIndex, 'type', qData['type']);
+                    provider.updateAdditionalQuestion(editIndex, 'placeholder', qData['placeholder']);
+                    provider.updateAdditionalQuestion(editIndex, 'options', qData['options']);
+                    provider.updateAdditionalQuestion(editIndex, 'required', qData['required']);
+                  } else {
+                    provider.addAdditionalQuestion(qData);
+                  }
+
+                  Navigator.pop(ctx);
+                },
+                icon: const Icon(Icons.check_rounded, size: 16),
+                label: Text(isEditing ? 'Save Changes' : 'Add Question'),
                 style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white),
