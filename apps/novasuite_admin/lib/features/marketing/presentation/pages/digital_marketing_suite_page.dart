@@ -89,11 +89,29 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
                 Text('Build checkout forms for WordPress landing pages, TikTok ads, or microsites.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
               ],
             ),
-            ElevatedButton.icon(
-              onPressed: () => context.read<AppNavigationProvider>().setMarketingSubNavIndex(2),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Create New Form'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _showOnboardProductDialog(context, builderProvider),
+                  icon: const Icon(Icons.inventory_2_rounded, size: 18, color: Color(0xFF10B981)),
+                  label: const Text('Onboard Product'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    side: const BorderSide(color: Color(0xFF10B981)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: () => context.read<AppNavigationProvider>().setMarketingSubNavIndex(2),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Create New Form'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -646,6 +664,132 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
               }
             },
             child: const Text('Save SMS Template'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOnboardProductDialog(BuildContext context, CampaignFormBuilderProvider provider) {
+    final nameCtrl = TextEditingController();
+    final categoryCtrl = TextEditingController(text: provider.selectedProductCategory);
+    final priceCtrl = TextEditingController(text: '23500');
+    final stockCtrl = TextEditingController(text: '500');
+    final skuCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.inventory_2_rounded, color: Color(0xFF10B981), size: 24),
+            const SizedBox(width: 10),
+            Text('Onboard New Product',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: SizedBox(
+            width: 440,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Onboard a product to your catalog so digital marketers can create campaign checkout lead forms attached to it.',
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'PRODUCT NAME *', hintText: 'e.g. Grazer Herbal Tea', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: categoryCtrl,
+                  decoration: const InputDecoration(labelText: 'CATEGORY / BRAND *', hintText: 'e.g. Grazer Herbal Tea / Vitality Booster', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: priceCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'SELLING PRICE (₦) *', hintText: '23500', border: OutlineInputBorder()),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: stockCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'INITIAL STOCK *', hintText: '500', border: OutlineInputBorder()),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: skuCtrl,
+                  decoration: const InputDecoration(labelText: 'SKU CODE (OPTIONAL)', hintText: 'e.g. GHT-001', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: descCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'SHORT DESCRIPTION', hintText: 'Product description...', border: OutlineInputBorder()),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              if (nameCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a product name.')),
+                );
+                return;
+              }
+
+              final price = double.tryParse(priceCtrl.text.trim()) ?? 0.0;
+              final stock = int.tryParse(stockCtrl.text.trim()) ?? 100;
+
+              final success = await provider.onboardProductToSupabase(
+                name: nameCtrl.text.trim(),
+                category: categoryCtrl.text.trim(),
+                basePrice: price,
+                stockQuantity: stock,
+                sku: skuCtrl.text.trim().isNotEmpty ? skuCtrl.text.trim() : null,
+                description: descCtrl.text.trim(),
+              );
+
+              if (ctx.mounted) Navigator.pop(ctx);
+
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: const Color(0xFF10B981),
+                    content: Text(
+                        'Product "${nameCtrl.text.trim()}" onboarded successfully! You can now create forms for it. ✓'),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.check_circle_rounded, size: 16),
+            label: const Text('Onboard Product ✓'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),

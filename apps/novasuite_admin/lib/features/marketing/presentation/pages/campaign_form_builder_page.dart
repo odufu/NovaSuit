@@ -1235,6 +1235,112 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // MANDATORY ATTACHED PRODUCT ONBOARDING SECTION
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.inventory_2_rounded,
+                            color: Color(0xFF10B981), size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'ATTACHED ONBOARDED PRODUCT *',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => _showOnboardProductModalDialog(context, provider: provider),
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: const Text('+ Onboard New Product'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Select the onboarded product from your catalog that this lead form sells.',
+                  style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                ),
+                const SizedBox(height: 10),
+                if (provider.availableProducts.isEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'No products onboarded yet! Click "+ Onboard New Product" to create your product before attaching it to this form.',
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: textColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  DropdownButtonFormField<String>(
+                    initialValue: provider.attachedProductId,
+                    dropdownColor: cardBg,
+                    style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                    decoration: const InputDecoration(
+                      filled: true,
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                    items: provider.availableProducts.map((p) {
+                      final name = p['name'] ?? 'Product';
+                      final price = (p['price'] as num?)?.toDouble() ?? 0.0;
+                      final cat = p['category'] ?? 'General';
+                      final priceFormatted = '₦${price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+                      return DropdownMenuItem<String>(
+                        value: p['id'].toString(),
+                        child: Text(
+                          '$name ($priceFormatted) — Category: $cat',
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        provider.setAttachedProductId(val);
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           if (isMobile) ...[
             _buildInputGroup(
                 'FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
@@ -1363,6 +1469,17 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 children: [
                   OutlinedButton(
                     onPressed: () async {
+                      if (provider.attachedProductId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Colors.redAccent,
+                            content: Text(
+                                '⚠️ Cannot save form! Please attach an onboarded product by clicking "+ Onboard New Product".'),
+                          ),
+                        );
+                        return;
+                      }
+
                       await provider.saveLeadFormToSupabase(
                         companyId: 'c0000000-0000-0000-0000-000000000001',
                         title: _formTitleController.text,
@@ -1388,6 +1505,17 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: () async {
+                      if (provider.attachedProductId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Colors.redAccent,
+                            content: Text(
+                                '⚠️ Cannot create form! Please attach an onboarded product by clicking "+ Onboard New Product".'),
+                          ),
+                        );
+                        return;
+                      }
+
                       await provider.saveLeadFormToSupabase(
                         companyId: 'c0000000-0000-0000-0000-000000000001',
                         title: _formTitleController.text,
@@ -4045,6 +4173,125 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  // MODAL DIALOG: ONBOARD NEW PRODUCT MODAL DIALOG
+  void _showOnboardProductModalDialog(
+    BuildContext context, {
+    required CampaignFormBuilderProvider provider,
+  }) {
+    final nameCtrl = TextEditingController();
+    final categoryCtrl =
+        TextEditingController(text: provider.selectedProductCategory);
+    final priceCtrl = TextEditingController(text: '23500');
+    final stockCtrl = TextEditingController(text: '500');
+    final skuCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.inventory_2_rounded,
+                color: Color(0xFF10B981), size: 24),
+            const SizedBox(width: 10),
+            Text('Onboard New Product',
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: SizedBox(
+            width: 440,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Onboard a product to your catalog so digital marketers can create campaign checkout lead forms attached to it.',
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                _buildModalTextField(
+                    'PRODUCT NAME *', nameCtrl, 'e.g. Grazer Herbal Tea'),
+                const SizedBox(height: 14),
+                _buildModalTextField('CATEGORY / BRAND *', categoryCtrl,
+                    'e.g. Grazer Herbal Tea / Vitality Booster'),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalTextField(
+                          'SELLING PRICE (₦) *', priceCtrl, '23500'),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildModalTextField(
+                          'INITIAL STOCK *', stockCtrl, '500'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildModalTextField(
+                    'SKU CODE (OPTIONAL)', skuCtrl, 'e.g. GHT-001'),
+                const SizedBox(height: 14),
+                _buildModalTextField(
+                    'SHORT DESCRIPTION', descCtrl, 'Product description...'),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              if (nameCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a product name.')),
+                );
+                return;
+              }
+
+              final price = double.tryParse(priceCtrl.text.trim()) ?? 0.0;
+              final stock = int.tryParse(stockCtrl.text.trim()) ?? 100;
+
+              final success = await provider.onboardProductToSupabase(
+                name: nameCtrl.text.trim(),
+                category: categoryCtrl.text.trim(),
+                basePrice: price,
+                stockQuantity: stock,
+                sku:
+                    skuCtrl.text.trim().isNotEmpty ? skuCtrl.text.trim() : null,
+                description: descCtrl.text.trim(),
+              );
+
+              if (ctx.mounted) Navigator.pop(ctx);
+
+              if (success && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: const Color(0xFF10B981),
+                    content: Text(
+                        'Product "${nameCtrl.text.trim()}" onboarded successfully! Attached to form. ✓'),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.check_circle_rounded, size: 16),
+            label: const Text('Onboard Product ✓'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -330,6 +330,90 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     }
   }
 
+  String? _attachedProductId;
+
+  String? get attachedProductId {
+    if (_attachedProductId != null) return _attachedProductId;
+    if (_availableProducts.isNotEmpty) {
+      final matching = _availableProducts.firstWhere(
+        (p) => p['category'].toString().toLowerCase() == _selectedProductCategory.toLowerCase(),
+        orElse: () => _availableProducts.first,
+      );
+      return matching['id']?.toString();
+    }
+    return null;
+  }
+
+  void setAttachedProductId(String? prodId) {
+    _attachedProductId = prodId;
+    if (prodId != null && _availableProducts.isNotEmpty) {
+      final matching = _availableProducts.firstWhere((p) => p['id'] == prodId, orElse: () => {});
+      if (matching.isNotEmpty && matching['category'] != null) {
+        _selectedProductCategory = matching['category'].toString();
+      }
+    }
+    notifyListeners();
+  }
+
+  /// 🛢️ Onboard / Create New Product in Supabase `products` Table
+  Future<bool> onboardProductToSupabase({
+    required String name,
+    required String category,
+    required double basePrice,
+    required int stockQuantity,
+    String? sku,
+    String? description,
+    String companyId = 'c0000000-0000-0000-0000-000000000001',
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final client = Supabase.instance.client;
+      final cleanName = name.trim();
+      final cleanCat = category.trim().isNotEmpty ? category.trim() : 'General';
+      final cleanSku = sku?.trim().isNotEmpty == true
+          ? sku!.trim()
+          : 'SKU-${cleanName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase().substring(0, cleanName.length > 3 ? 3 : cleanName.length)}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+
+      final newRecord = await client.from('products').insert({
+        'company_id': companyId,
+        'name': cleanName,
+        'sku': cleanSku,
+        'category': cleanCat,
+        'base_price': basePrice,
+        'stock_quantity': stockQuantity,
+        'description': description ?? 'Onboarded by Digital Marketer',
+        'is_active': true,
+      }).select().single();
+
+      if (newRecord['id'] != null) {
+        final prodId = newRecord['id'].toString();
+        final newProd = {
+          'id': prodId,
+          'name': newRecord['name'],
+          'sku': newRecord['sku'] ?? cleanSku,
+          'category': newRecord['category'] ?? cleanCat,
+          'price': (newRecord['base_price'] as num).toDouble(),
+          'stock': newRecord['stock_quantity'] ?? stockQuantity,
+        };
+        _availableProducts.insert(0, newProd);
+        _selectedProductCategory = cleanCat;
+        _attachedProductId = prodId;
+      }
+
+      await fetchAvailableProductsFromSupabase();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Error onboarding product to Supabase: $e');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// 🛢️ Fetch Pre-Onboarded Products from Supabase `products` Table
   Future<void> fetchAvailableProductsFromSupabase() async {
     try {
@@ -395,6 +479,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       final formPayload = {
         if (existingId != null) 'id': existingId,
         'company_id': companyId.isNotEmpty ? companyId : 'c0000000-0000-0000-0000-000000000001',
+        'product_id': attachedProductId,
         'title': cleanTitle,
         'digital_marketer_email': marketerEmail,
         'redirect_url': redirectUrl,
