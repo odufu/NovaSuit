@@ -106,13 +106,16 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
   }
 
   // ===========================================================================
-  // SUBTAB 0: LEAD FORMS LIST
+  // SUBTAB 0: LEAD FORMS LIST (Shows all Drafts & Published Forms!)
   // ===========================================================================
   Widget _buildLeadFormsTab(BuildContext context) {
+    final builderProvider = Provider.of<CampaignFormBuilderProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF0C1F17) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
+    final forms = builderProvider.leadForms;
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -138,31 +141,55 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
         const SizedBox(height: 24),
         Container(
           decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('FORM TITLE')),
-              DataColumn(label: Text('DIGITAL MARKETER')),
-              DataColumn(label: Text('PRODUCT')),
-              DataColumn(label: Text('SUBMISSIONS')),
-              DataColumn(label: Text('STATUS')),
-              DataColumn(label: Text('ACTIONS')),
-            ],
-            rows: [
-              DataRow(cells: [
-                DataCell(Text('Grazer Tea Joel', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
-                DataCell(Text('joelodufu@gmail.com', style: GoogleFonts.inter(color: textMuted))),
-                DataCell(Text('Grazer Herbal Tea', style: GoogleFonts.inter(color: textColor))),
-                DataCell(Text('142 submissions', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF10B981)))),
-                DataCell(const Chip(label: Text('ACTIVE', style: TextStyle(color: Colors.white, fontSize: 10)), backgroundColor: Colors.green)),
-                DataCell(
-                  OutlinedButton.icon(
-                    onPressed: () => context.read<AppNavigationProvider>().setMarketingSubNavIndex(2),
-                    icon: const Icon(Icons.edit_rounded, size: 14),
-                    label: const Text('Edit Form'),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+              columns: const [
+                DataColumn(label: Text('FORM TITLE')),
+                DataColumn(label: Text('FORM CODE')),
+                DataColumn(label: Text('DIGITAL MARKETER')),
+                DataColumn(label: Text('PRODUCT CATEGORY')),
+                DataColumn(label: Text('SUBMISSIONS')),
+                DataColumn(label: Text('STATUS')),
+                DataColumn(label: Text('LAST UPDATED')),
+                DataColumn(label: Text('ACTIONS')),
+              ],
+              rows: forms.map((item) {
+                final isPublished = item['status'] == 'Published';
+                final statusColor = isPublished ? const Color(0xFF10B981) : Colors.amber;
+
+                return DataRow(cells: [
+                  DataCell(Row(
+                    children: [
+                      Icon(isPublished ? Icons.article_rounded : Icons.edit_note_rounded, size: 18, color: statusColor),
+                      const SizedBox(width: 8),
+                      Text(item['title'] ?? 'Untitled Form', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
+                    ],
+                  )),
+                  DataCell(Text(item['code'] ?? 'CRMF-001', style: GoogleFonts.robotoMono(fontSize: 11, color: textMuted))),
+                  DataCell(Text(item['marketerEmail'] ?? 'marketer@novasuite.com', style: GoogleFonts.inter(color: textMuted))),
+                  DataCell(Text(item['productCategory'] ?? 'General', style: GoogleFonts.inter(color: textColor))),
+                  DataCell(Text('${item['submissionsCount'] ?? 0} submissions', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF10B981)))),
+                  DataCell(Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                    child: Text(
+                      item['status']?.toString().toUpperCase() ?? 'DRAFT',
+                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
+                    ),
+                  )),
+                  DataCell(Text(item['updatedAt'] ?? 'Just now', style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
+                  DataCell(
+                    OutlinedButton.icon(
+                      onPressed: () => context.read<AppNavigationProvider>().setMarketingSubNavIndex(2),
+                      icon: const Icon(Icons.edit_rounded, size: 14),
+                      label: const Text('Edit Form'),
+                    ),
                   ),
-                ),
-              ]),
-            ],
+                ]);
+              }).toList(),
+            ),
           ),
         ),
       ],

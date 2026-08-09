@@ -445,10 +445,36 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
               Row(
                 children: [
-                  OutlinedButton(onPressed: () {}, child: const Text('Save draft')),
+                  OutlinedButton(
+                    onPressed: () {
+                      provider.addOrUpdateLeadForm(
+                        title: _formTitleController.text,
+                        marketerEmail: _digitalMarketerController.text,
+                        productCategory: provider.selectedProductCategory,
+                        status: 'Draft',
+                        redirectUrl: _redirectUrlController.text,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Color(0xFF3B82F6),
+                          content: Text('Form draft saved! Listed in Campaign Lead Forms. ✓'),
+                        ),
+                      );
+                    },
+                    child: const Text('Save draft'),
+                  ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: () => provider.setStep(1),
+                    onPressed: () {
+                      provider.addOrUpdateLeadForm(
+                        title: _formTitleController.text,
+                        marketerEmail: _digitalMarketerController.text,
+                        productCategory: provider.selectedProductCategory,
+                        status: 'Draft',
+                        redirectUrl: _redirectUrlController.text,
+                      );
+                      provider.setStep(1);
+                    },
                     style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
                     child: const Text('Continue to builder ➔'),
                   ),

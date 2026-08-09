@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Provider managing state for Campaign Form Builder, Offer Packages (with Cross-Product Free Gift Addons), Linked Items, Product Catalog Search, Custom Questions, Marketing Broadcasts, Email/SMS Templates, Layout Styles, and Supabase DB Sync.
+/// Provider managing state for Campaign Form Builder, Lead Forms Listing (Drafts & Published), Offer Packages (with Cross-Product Free Gift Addons), Linked Items, Product Catalog Search, Custom Questions, Marketing Broadcasts, Email/SMS Templates, Layout Styles, and Supabase DB Sync.
 class CampaignFormBuilderProvider extends ChangeNotifier {
   int _currentStep = 0;
   bool _isLoading = false;
@@ -9,6 +9,32 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   String _selectedProductCategory = 'Grazer Herbal Tea';
 
   bool get isLoading => _isLoading;
+
+  // Dynamic List of Lead Forms (Contains both Drafts & Published Forms)
+  final List<Map<String, dynamic>> _leadForms = [
+    {
+      'id': 'form-001',
+      'title': 'Grazer Tea Joel',
+      'code': 'CRMF-00223',
+      'marketerEmail': 'joelodufu@gmail.com',
+      'productCategory': 'Grazer Herbal Tea',
+      'submissionsCount': 142,
+      'status': 'Published',
+      'updatedAt': '2026-08-09 11:30',
+      'redirectUrl': 'https://detoxwithnova.xyz/ura-clear-detox-tea',
+    },
+    {
+      'id': 'form-002',
+      'title': 'Vitality Detox Booster Special Promo',
+      'code': 'CRMF-00224',
+      'marketerEmail': 'joelodufu@gmail.com',
+      'productCategory': 'Vitality Booster',
+      'submissionsCount': 0,
+      'status': 'Draft',
+      'updatedAt': '2026-08-09 12:15',
+      'redirectUrl': 'https://detoxwithnova.xyz/vitality-thank-you',
+    },
+  ];
 
   // Onboarded Available Products Catalog (Fetched from Supabase or Fallback Seed)
   List<Map<String, dynamic>> _availableProducts = [
@@ -67,7 +93,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     {'key': 'postal_code', 'label': 'Postal Code', 'required': false, 'visible': false},
   ];
 
-  // Offer Packages (Supports Same-Item Free Qty & Cross-Product Free Gift Addon Items!)
+  // Offer Packages
   final List<Map<String, dynamic>> _offerPackages = [
     {
       'id': 'pkg-1',
@@ -193,6 +219,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   int get currentStep => _currentStep;
   String get quantityDisplayMode => _quantityDisplayMode;
   String get selectedProductCategory => _selectedProductCategory;
+  List<Map<String, dynamic>> get leadForms => List.unmodifiable(_leadForms);
   List<Map<String, dynamic>> get availableProducts => List.unmodifiable(_availableProducts);
   List<Map<String, dynamic>> get coreFields => List.unmodifiable(_coreFields);
   List<Map<String, dynamic>> get offerPackages => List.unmodifiable(_offerPackages);
@@ -214,6 +241,37 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
 
   void setProductCategory(String cat) {
     _selectedProductCategory = cat;
+    notifyListeners();
+  }
+
+  /// Add or Update Form in the Lead Forms List (For both Drafts & Published Forms)
+  void addOrUpdateLeadForm({
+    required String title,
+    required String marketerEmail,
+    required String productCategory,
+    required String status, // 'Draft' or 'Published'
+    required String redirectUrl,
+  }) {
+    final cleanTitle = title.isNotEmpty ? title : 'Untitled Lead Form';
+    final existingIndex = _leadForms.indexWhere((f) => f['title'].toString().toLowerCase() == cleanTitle.toLowerCase());
+    
+    final newFormData = {
+      'id': existingIndex >= 0 ? _leadForms[existingIndex]['id'] : 'form-${DateTime.now().millisecondsSinceEpoch}',
+      'title': cleanTitle,
+      'code': existingIndex >= 0 ? _leadForms[existingIndex]['code'] : 'CRMF-00${_leadForms.length + 224}',
+      'marketerEmail': marketerEmail.isNotEmpty ? marketerEmail : 'joelodufu@gmail.com',
+      'productCategory': productCategory.isNotEmpty ? productCategory : _selectedProductCategory,
+      'submissionsCount': existingIndex >= 0 ? _leadForms[existingIndex]['submissionsCount'] : 0,
+      'status': status,
+      'updatedAt': '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')} ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+      'redirectUrl': redirectUrl,
+    };
+
+    if (existingIndex >= 0) {
+      _leadForms[existingIndex] = newFormData;
+    } else {
+      _leadForms.insert(0, newFormData);
+    }
     notifyListeners();
   }
 
@@ -366,9 +424,19 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     required String submitButtonText,
     required String description,
     Map<String, dynamic>? appearance,
+    String status = 'Published',
   }) async {
     _isLoading = true;
     notifyListeners();
+
+    // Register in Local Lead Forms List immediately so it appears on the Forms tab!
+    addOrUpdateLeadForm(
+      title: title,
+      marketerEmail: marketerEmail,
+      productCategory: _selectedProductCategory,
+      status: status,
+      redirectUrl: redirectUrl,
+    );
 
     try {
       final client = Supabase.instance.client;
