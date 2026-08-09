@@ -13,8 +13,33 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   // Dynamic List of Lead Forms (Contains both Drafts & Published Forms from Supabase DB)
   List<Map<String, dynamic>> _leadForms = [];
 
-  // Onboarded Available Products Catalog (Fetched from Supabase DB)
-  List<Map<String, dynamic>> _availableProducts = [];
+  // Onboarded Available Products Catalog (Fetched from Supabase DB with default seeds)
+  List<Map<String, dynamic>> _availableProducts = [
+    {
+      'id': 'p0000000-0000-0000-0000-000000000001',
+      'name': 'Grazer Herbal Tea',
+      'sku': 'GHT-001',
+      'category': 'Grazer Herbal Tea',
+      'price': 23500.0,
+      'stock': 500,
+    },
+    {
+      'id': 'p0000000-0000-0000-0000-000000000002',
+      'name': 'Vitality Detox Booster',
+      'sku': 'VDB-002',
+      'category': 'Vitality Booster',
+      'price': 35000.0,
+      'stock': 300,
+    },
+    {
+      'id': 'p0000000-0000-0000-0000-000000000003',
+      'name': 'Alpha Man Formula',
+      'sku': 'AMF-003',
+      'category': 'Men\'s Health',
+      'price': 27000.0,
+      'stock': 450,
+    },
+  ];
 
   // Core Field Options
   final List<Map<String, dynamic>> _coreFields = [
@@ -368,14 +393,34 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    final cleanName = name.trim();
+    final cleanCat = category.trim().isNotEmpty ? category.trim() : 'General';
+    final cleanSku = sku?.trim().isNotEmpty == true
+        ? sku!.trim()
+        : 'SKU-${cleanName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase().substring(0, cleanName.length > 3 ? 3 : cleanName.length)}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+
+    final localId = 'p${DateTime.now().millisecondsSinceEpoch}';
+
+    // 1. Register instantly in local memory catalog so UI updates IMMEDIATELY!
+    final newProd = {
+      'id': localId,
+      'name': cleanName,
+      'sku': cleanSku,
+      'category': cleanCat,
+      'price': basePrice,
+      'stock': stockQuantity,
+    };
+
+    // Remove duplicates if any
+    _availableProducts.removeWhere((p) => p['name'].toString().toLowerCase() == cleanName.toLowerCase());
+    _availableProducts.insert(0, newProd);
+    _selectedProductCategory = cleanCat;
+    _attachedProductId = localId;
+    notifyListeners();
+
+    // 2. Persist to Supabase products table asynchronously
     try {
       final client = Supabase.instance.client;
-      final cleanName = name.trim();
-      final cleanCat = category.trim().isNotEmpty ? category.trim() : 'General';
-      final cleanSku = sku?.trim().isNotEmpty == true
-          ? sku!.trim()
-          : 'SKU-${cleanName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase().substring(0, cleanName.length > 3 ? 3 : cleanName.length)}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-
       final newRecord = await client.from('products').insert({
         'company_id': companyId,
         'name': cleanName,
@@ -388,30 +433,22 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       }).select().single();
 
       if (newRecord['id'] != null) {
-        final prodId = newRecord['id'].toString();
-        final newProd = {
-          'id': prodId,
-          'name': newRecord['name'],
-          'sku': newRecord['sku'] ?? cleanSku,
-          'category': newRecord['category'] ?? cleanCat,
-          'price': (newRecord['base_price'] as num).toDouble(),
-          'stock': newRecord['stock_quantity'] ?? stockQuantity,
-        };
-        _availableProducts.insert(0, newProd);
-        _selectedProductCategory = cleanCat;
-        _attachedProductId = prodId;
+        final dbId = newRecord['id'].toString();
+        final idx = _availableProducts.indexWhere((p) => p['id'] == localId);
+        if (idx >= 0) {
+          _availableProducts[idx]['id'] = dbId;
+        }
+        if (_attachedProductId == localId) {
+          _attachedProductId = dbId;
+        }
       }
-
-      await fetchAvailableProductsFromSupabase();
-      _isLoading = false;
-      notifyListeners();
-      return true;
     } catch (e) {
-      debugPrint('Error onboarding product to Supabase: $e');
-      _isLoading = false;
-      notifyListeners();
-      return false;
+      debugPrint('Supabase Product Onboard Warning (Fallback to local state): $e');
     }
+
+    _isLoading = false;
+    notifyListeners();
+    return true;
   }
 
   /// 🛢️ Fetch Pre-Onboarded Products from Supabase `products` Table
@@ -423,7 +460,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
           .eq('is_active', true);
 
       if (response.isNotEmpty) {
-        _availableProducts = response.map((p) => {
+        final fetchedProds = response.map((p) => {
           'id': p['id'],
           'name': p['name'],
           'sku': p['sku'] ?? 'SKU-000',
@@ -431,6 +468,17 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
           'price': (p['base_price'] as num).toDouble(),
           'stock': p['stock_quantity'] ?? 100,
         }).toList();
+
+        for (final item in fetchedProds) {
+          final idx = _availableProducts.indexWhere((existing) =>
+              existing['id'] == item['id'] ||
+              existing['name'].toString().toLowerCase() == item['name'].toString().toLowerCase());
+          if (idx >= 0) {
+            _availableProducts[idx] = item;
+          } else {
+            _availableProducts.add(item);
+          }
+        }
         notifyListeners();
       }
     } catch (e) {

@@ -1308,7 +1308,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                 ] else ...[
                   DropdownButtonFormField<String>(
-                    initialValue: provider.attachedProductId,
+                    key: Key('attached-prod-${provider.attachedProductId}'),
+                    value: provider.attachedProductId,
                     dropdownColor: cardBg,
                     style: GoogleFonts.inter(color: textColor, fontSize: 13),
                     decoration: const InputDecoration(
