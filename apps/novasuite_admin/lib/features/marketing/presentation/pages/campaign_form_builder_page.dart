@@ -1352,6 +1352,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final placeholderColor = _parseColorFromHex(
         _placeholderColorController.text,
         defaultHex: '#94a3b8');
+    final dropdownMenuBg = _getDropdownMenuBgColor(inputBgColor);
+    final dropdownItemTextColor = _getHighContrastTextColor(dropdownMenuBg);
     final btnLabel = _submitButtonTextController.text;
 
     Map<String, dynamic>? selectedOfferPkg = provider.offerPackages.firstWhere(
@@ -1488,10 +1490,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
                                       color: placeholderColor)),
-                              const SizedBox(height: 4),
-                              DropdownButtonFormField<String>(
+                                                           DropdownButtonFormField<String>(
                                 initialValue: selectedCountry,
-                                dropdownColor: inputBgColor,
+                                dropdownColor: dropdownMenuBg,
                                 decoration: InputDecoration(
                                   fillColor: inputBgColor,
                                   filled: true,
@@ -1500,14 +1501,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                       horizontal: 10, vertical: 8),
                                 ),
                                 style: GoogleFonts.getFont(_fontFamily,
-                                    color: inputTextColor, fontSize: 12),
+                                    color: dropdownItemTextColor, fontSize: 12),
                                 items: AddressLocationService.countries
                                     .map((c) => DropdownMenuItem(
                                           value: c,
                                           child: Text(c,
                                               style: GoogleFonts.getFont(
                                                   _fontFamily,
-                                                  color: inputTextColor,
+                                                  color: dropdownItemTextColor,
                                                   fontSize: 12)),
                                         ))
                                     .toList(),
@@ -1543,7 +1544,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: selectedState,
-                                dropdownColor: inputBgColor,
+                                dropdownColor: dropdownMenuBg,
                                 decoration: InputDecoration(
                                   fillColor: inputBgColor,
                                   filled: true,
@@ -1552,7 +1553,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                       horizontal: 10, vertical: 8),
                                 ),
                                 style: GoogleFonts.getFont(_fontFamily,
-                                    color: inputTextColor, fontSize: 12),
+                                    color: dropdownItemTextColor, fontSize: 12),
                                 items: availableStates
                                     .map((s) => DropdownMenuItem(
                                           value: s,
@@ -1560,7 +1561,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                               overflow: TextOverflow.ellipsis,
                                               style: GoogleFonts.getFont(
                                                   _fontFamily,
-                                                  color: inputTextColor,
+                                                  color: dropdownItemTextColor,
                                                   fontSize: 12)),
                                         ))
                                     .toList(),
@@ -1595,7 +1596,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                           availableCitiesLgas.contains(selectedCityLga)
                               ? selectedCityLga
                               : availableCitiesLgas.first,
-                      dropdownColor: inputBgColor,
+                      dropdownColor: dropdownMenuBg,
                       decoration: InputDecoration(
                         fillColor: inputBgColor,
                         filled: true,
@@ -1604,13 +1605,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                             horizontal: 12, vertical: 10),
                       ),
                       style: GoogleFonts.getFont(_fontFamily,
-                          color: inputTextColor, fontSize: 13),
+                          color: dropdownItemTextColor, fontSize: 13),
                       items: availableCitiesLgas
                           .map((c) => DropdownMenuItem(
                                 value: c,
                                 child: Text(c,
                                     style: GoogleFonts.getFont(_fontFamily,
-                                        color: inputTextColor, fontSize: 13)),
+                                        color: dropdownItemTextColor, fontSize: 13)),
                               ))
                           .toList(),
                       onChanged: (v) {
@@ -1625,6 +1626,21 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         inputBgColor,
                         inputTextColor,
                         placeholderColor),
+                    if (provider.additionalQuestions.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      ...provider.additionalQuestions.map((q) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _buildCustomQuestionField(
+                          q,
+                          inputBgColor,
+                          inputTextColor,
+                          placeholderColor,
+                          dropdownMenuBg,
+                          dropdownItemTextColor,
+                          setModalState,
+                        ),
+                      )),
+                    ],
                     const SizedBox(height: 20),
 
                     // 2. SECTION 2: OFFER PACKAGES CHOICE CARDS (UNDER FORM INPUTS)
@@ -2444,6 +2460,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     } catch (_) {}
     final fallback = defaultHex.replaceAll('#', '').trim();
     return Color(int.parse('FF$fallback', radix: 16));
+  }
+
+  Color _getDropdownMenuBgColor(Color inputBg) {
+    return inputBg.computeLuminance() > 0.5 ? Colors.white : const Color(0xFF0F172A);
+  }
+
+  Color _getHighContrastTextColor(Color popupBg) {
+    return popupBg.computeLuminance() > 0.5 ? const Color(0xFF0F172A) : Colors.white;
   }
 
   // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL
@@ -3408,7 +3432,18 @@ class _AdditionalQuestionCardItemState
                           fontSize: 13),
                       decoration:
                           const InputDecoration(border: OutlineInputBorder()),
-                      items: ['Text', 'Phone', 'Dropdown']
+                      items: [
+                        'Text',
+                        'Paragraph',
+                        'Phone',
+                        'Dropdown',
+                        'Checkbox Group',
+                        'Radio Group',
+                        'Date',
+                        'Time',
+                        'Number',
+                        'File Upload'
+                      ]
                           .map((t) => DropdownMenuItem(
                                 value: t,
                                 child: Text(t,
@@ -3420,9 +3455,10 @@ class _AdditionalQuestionCardItemState
                               ))
                           .toList(),
                       onChanged: (v) {
-                        if (v != null)
+                        if (v != null) {
                           widget.provider.updateAdditionalQuestion(
                               widget.index, 'type', v);
+                        }
                       },
                     ),
                   ],
@@ -3434,4 +3470,266 @@ class _AdditionalQuestionCardItemState
       ),
     );
   }
+}
+
+Widget _buildCustomQuestionField(
+  Map<String, dynamic> q,
+  Color inputBgColor,
+  Color inputTextColor,
+  Color placeholderColor,
+  Color dropdownMenuBg,
+  Color dropdownItemTextColor,
+  StateSetter setModalState,
+) {
+  final label = (q['label'] ?? 'Custom Question').toString().toUpperCase();
+  final isRequired = q['required'] == true;
+  final labelText = '$label${isRequired ? " *" : ""}';
+  final type = (q['type'] ?? 'Text').toString();
+
+  if (type == 'Paragraph') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        TextField(
+          maxLines: 3,
+          style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: q['placeholder'] ?? 'Enter detailed response...',
+            hintStyle: GoogleFonts.inter(color: placeholderColor, fontSize: 12),
+            fillColor: inputBgColor,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.all(10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Phone') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        TextField(
+          keyboardType: TextInputType.phone,
+          style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.phone, size: 16),
+            hintText: q['placeholder'] ?? '08012345678',
+            hintStyle: GoogleFonts.inter(color: placeholderColor, fontSize: 12),
+            fillColor: inputBgColor,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Dropdown') {
+    final rawOpts = (q['options'] ?? 'Option 1, Option 2, Option 3').toString();
+    final opts = rawOpts.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          initialValue: opts.isNotEmpty ? opts.first : null,
+          dropdownColor: dropdownMenuBg,
+          style: GoogleFonts.inter(color: dropdownItemTextColor, fontSize: 13),
+          decoration: InputDecoration(
+            fillColor: inputBgColor,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          items: opts.map((opt) => DropdownMenuItem(
+            value: opt,
+            child: Text(opt, style: GoogleFonts.inter(color: dropdownItemTextColor, fontSize: 13)),
+          )).toList(),
+          onChanged: (v) {},
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Checkbox Group') {
+    final rawOpts = (q['options'] ?? 'Option A, Option B, Option C').toString();
+    final opts = rawOpts.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          children: opts.map((opt) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Checkbox(value: true, onChanged: (_) {}, activeColor: const Color(0xFF10B981)),
+              Text(opt, style: GoogleFonts.inter(color: inputTextColor, fontSize: 12)),
+            ],
+          )).toList(),
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Radio Group') {
+    final rawOpts = (q['options'] ?? 'Option 1, Option 2').toString();
+    final opts = rawOpts.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          children: opts.map((opt) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Radio(value: opt, groupValue: opts.first, onChanged: (_) {}, activeColor: const Color(0xFF10B981)),
+              Text(opt, style: GoogleFonts.inter(color: inputTextColor, fontSize: 12)),
+            ],
+          )).toList(),
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Date') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        TextField(
+          readOnly: true,
+          style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.calendar_today_rounded, size: 16),
+            hintText: 'Select Preferred Date (e.g. YYYY-MM-DD)',
+            hintStyle: GoogleFonts.inter(color: placeholderColor, fontSize: 12),
+            fillColor: inputBgColor,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Time') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          initialValue: 'Morning Slot (09:00 AM - 12:00 PM)',
+          dropdownColor: dropdownMenuBg,
+          style: GoogleFonts.inter(color: dropdownItemTextColor, fontSize: 12),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.access_time_rounded, size: 16),
+            fillColor: inputBgColor,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          items: [
+            'Morning Slot (09:00 AM - 12:00 PM)',
+            'Afternoon Slot (12:00 PM - 04:00 PM)',
+            'Evening Slot (04:00 PM - 07:00 PM)',
+          ].map((t) => DropdownMenuItem(
+            value: t,
+            child: Text(t, style: GoogleFonts.inter(color: dropdownItemTextColor, fontSize: 12)),
+          )).toList(),
+          onChanged: (v) {},
+        ),
+      ],
+    );
+  }
+
+  if (type == 'Number') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        TextField(
+          keyboardType: TextInputType.number,
+          style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: q['placeholder'] ?? 'Enter numeric value (e.g. 1, 2, 3...)',
+            hintStyle: GoogleFonts.inter(color: placeholderColor, fontSize: 12),
+            fillColor: inputBgColor,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  if (type == 'File Upload') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: inputBgColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.cloud_upload_rounded, color: Color(0xFF10B981), size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Click or drop file (Prescription / Receipt image)', style: GoogleFonts.inter(color: placeholderColor, fontSize: 12)),
+              ),
+              OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
+                child: Text('Browse', style: GoogleFonts.inter(fontSize: 11)),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Default: Text (Short Input)
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+      const SizedBox(height: 4),
+      TextField(
+        style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
+        decoration: InputDecoration(
+          hintText: q['placeholder'] ?? 'Enter response...',
+          hintStyle: GoogleFonts.inter(color: placeholderColor, fontSize: 12),
+          fillColor: inputBgColor,
+          filled: true,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        ),
+      ),
+    ],
+  );
 }
