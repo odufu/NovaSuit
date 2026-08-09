@@ -290,22 +290,58 @@ class _LoginScreenState extends State<LoginScreen> {
                           ValueListenableBuilder<String>(
                             valueListenable: _selectedRole,
                             builder: (context, selectedRole, _) {
-                              return Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _roleChip('super_admin', 'Super Admin', 'admin@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('hod', 'HOD Sales', 'hod.sales@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('assistant_hod', 'AHOD Sales', 'ahod.sales@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('supervisor', 'Supervisor', 'supervisor@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('sales_call_rep', 'Sales Call Rep', 'salesrep.john@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('logistics_call_rep', 'Logistics Rep', 'logisticsrep@novaexpress.com', isDarkMode, selectedRole),
-                                  _roleChip('inventory_manager', 'GM Logistics', 'inventory@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('delivery_agent', 'Rider / Agent', 'rider.kefas@novaexpress.com', isDarkMode, selectedRole),
-                                  _roleChip('digital_marketer', 'Marketer', 'marketer.david@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('finance_manager', 'Finance Mgr', 'finance@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('hr_manager', 'HR Manager', 'hr@novacare.com', isDarkMode, selectedRole),
-                                  _roleChip('agm', 'AGM Ops', 'agm@novacare.com', isDarkMode, selectedRole),
+                                  // Category 1: E-Commerce Merchant Roles (NovaCare)
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.shopping_bag_outlined, size: 14, color: Color(0xFF10B981)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'E-COMMERCE MERCHANT ROLES (NOVACARE)',
+                                        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: [
+                                      _roleChip('super_admin', 'Super Admin', 'superadmin@novacare.com', isDarkMode, selectedRole),
+                                      _roleChip('hod', 'HOD Sales', 'hodsales@novacare.com', isDarkMode, selectedRole),
+                                      _roleChip('supervisor', 'Supervisor', 'supervisor@novacare.com', isDarkMode, selectedRole),
+                                      _roleChip('sales_call_rep', 'Sales Call Rep', 'salesrep@novacare.com', isDarkMode, selectedRole),
+                                      _roleChip('digital_marketer', 'Marketer', 'marketer@novacare.com', isDarkMode, selectedRole),
+                                      _roleChip('finance_manager', 'Finance Mgr', 'finance@novacare.com', isDarkMode, selectedRole),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // Category 2: Logistics Provider Roles (Nova Express)
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.local_shipping_outlined, size: 14, color: Color(0xFF3B82F6)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'LOGISTICS PROVIDER ROLES (NOVA EXPRESS)',
+                                        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF3B82F6)),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: [
+                                      _roleChip('logistics_super_admin', 'Logistics Admin', 'admin@novaexpress.com', isDarkMode, selectedRole),
+                                      _roleChip('circuit_center_manager', 'CDC Manager', 'cdcmanager@novaexpress.com', isDarkMode, selectedRole),
+                                      _roleChip('inventory_manager', 'Hub Warehouse', 'warehouse@novaexpress.com', isDarkMode, selectedRole),
+                                      _roleChip('logistics_call_rep', 'Dispatcher', 'dispatcher@novaexpress.com', isDarkMode, selectedRole),
+                                      _roleChip('delivery_agent', 'IDP Rider', 'rider@novaexpress.com', isDarkMode, selectedRole),
+                                    ],
+                                  ),
                                 ],
                               );
                             },
