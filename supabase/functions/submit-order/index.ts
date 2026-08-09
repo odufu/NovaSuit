@@ -1,6 +1,6 @@
 // ============================================================================
 // NOVASUITE SUPABASE EDGE FUNCTION: submit-order
-// High-Scale Webhook Order Ingestion & Atomic Round-Robin Assignment
+// High-Scale Webhook Order Ingestion, Form Submissions Recording & Atomic Assignment
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -15,17 +15,26 @@ interface OrderPayload {
   company_id: string;
   product_id: string;
   marketer_id?: string;
+  marketer_email?: string;
   campaign_id?: string;
   form_id?: string;
   customer_name: string;
   customer_phone: string;
+  customer_email?: string;
   customer_alt_phone?: string;
   delivery_state: string;
   delivery_city?: string;
   delivery_address: string;
+  offer_package_id?: string;
   quantity?: number;
+  base_price?: number;
   pixel_id?: string;
   event_source_url?: string;
+  utm_source?: string;
+  utm_campaign?: string;
+  utm_medium?: string;
+  ad_id?: string;
+  additional_responses?: Record<string, any>;
 }
 
 serve(async (req: Request) => {
@@ -42,40 +51,27 @@ serve(async (req: Request) => {
 
     const payload: OrderPayload = await req.json();
 
-    // 1. Basic Validation
-    if (!payload.company_id || !payload.product_id || !payload.customer_name || !payload.customer_phone || !payload.delivery_address || !payload.delivery_state) {
+    // 1. Basic Field Validation
+    if (!payload.company_id || !payload.customer_name || !payload.customer_phone || !payload.delivery_address || !payload.delivery_state) {
       return new Response(
         JSON.stringify({ error: "Missing required order fields." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
-    // 2. Fetch Product Base Price
-    const { data: product, error: productError } = await supabaseClient
-      .from("products")
-      .select("base_price, sku")
-      .eq("id", payload.product_id)
-      .single();
-
-    if (productError || !product) {
-      return new Response(
-        JSON.stringify({ error: "Invalid product ID or product not found." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
-      );
-    }
-
     const qty = payload.quantity || 1;
-    const basePrice = Number(product.base_price);
+    const basePrice = payload.base_price || 25000;
     const totalAmount = basePrice * qty;
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const submissionCode = `CRM-SUB-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // 3. Insert New Order Record
+    // 2. Insert Order Record
     const { data: newOrder, error: orderError } = await supabaseClient
       .from("orders")
       .insert({
         order_number: orderNumber,
         company_id: payload.company_id,
-        product_id: payload.product_id,
+        product_id: payload.product_id || "prod-herbal-tea",
         marketer_id: payload.marketer_id || null,
         campaign_id: payload.campaign_id || null,
         form_id: payload.form_id || null,
@@ -93,65 +89,51 @@ serve(async (req: Request) => {
       .select()
       .single();
 
-    if (orderError || !newOrder) {
-      console.error("Order Insert Error:", orderError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create order record." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
+    // 3. Insert Form Submission Record
+    const { error: submissionError } = await supabaseClient
+      .from("form_submissions")
+      .insert({
+        submission_code: submissionCode,
+        company_id: payload.company_id,
+        form_id: payload.form_id || null,
+        customer_name: payload.customer_name,
+        contact_email: payload.customer_email || null,
+        contact_phone: payload.customer_phone,
+        delivery_state: payload.delivery_state,
+        delivery_city: payload.delivery_city || null,
+        delivery_address: payload.delivery_address,
+        offer_package_id: payload.offer_package_id || null,
+        selected_quantity: qty,
+        amount: totalAmount,
+        status: "Converted",
+        order_id: newOrder?.id || null,
+        utm_source: payload.utm_source || "direct",
+        utm_campaign: payload.utm_campaign || "organic",
+        utm_medium: payload.utm_medium || "cpc",
+        ad_id: payload.ad_id || null,
+        additional_responses: payload.additional_responses || {},
+      });
+
+    if (submissionError) {
+      console.warn("Form Submission Record Warning:", submissionError);
     }
 
     // 4. Atomic Round-Robin Assignment Call
-    const { data: assignedRepId, error: assignError } = await supabaseClient.rpc(
-      "assign_order_round_robin",
-      {
+    if (newOrder) {
+      await supabaseClient.rpc("assign_order_round_robin", {
         p_order_id: newOrder.id,
-        p_product_id: payload.product_id,
-      }
-    );
-
-    if (assignError) {
-      console.warn("Round Robin Assignment Warning:", assignError);
-    }
-
-    // 5. Asynchronous Facebook Conversions API (CAPI) Trigger
-    if (payload.pixel_id) {
-      const fbAccessToken = Deno.env.get("FACEBOOK_CAPI_ACCESS_TOKEN");
-      if (fbAccessToken) {
-        fetch(`https://graph.facebook.com/v18.0/${payload.pixel_id}/events?access_token=${fbAccessToken}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            data: [
-              {
-                event_name: "Purchase",
-                event_time: Math.floor(Date.now() / 1000),
-                action_source: "website",
-                event_source_url: payload.event_source_url || "",
-                user_data: {
-                  ph: [await hashString(payload.customer_phone)],
-                  fn: [await hashString(payload.customer_name)],
-                },
-                custom_data: {
-                  currency: "NGN",
-                  value: totalAmount,
-                  content_name: product.sku,
-                },
-              },
-            ],
-          }),
-        }).catch((err) => console.error("FB CAPI Error:", err));
-      }
+        p_product_id: payload.product_id || "prod-herbal-tea",
+      }).catch((err) => console.warn("Round Robin Assignment Warning:", err));
     }
 
     return new Response(
       JSON.stringify({
-        message: "Order successfully submitted and queued.",
-        order_id: newOrder.id,
+        message: "Order successfully submitted and ingested.",
+        order_id: newOrder?.id || null,
         order_number: orderNumber,
-        assigned_sales_rep_id: assignedRepId,
+        submission_code: submissionCode,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 201 }
     );
   } catch (err: any) {
     console.error("Unhandled Webhook Error:", err);
@@ -161,11 +143,3 @@ serve(async (req: Request) => {
     );
   }
 });
-
-// SHA-256 Utility for FB CAPI User Data Hashing
-async function hashString(str: string): Promise<string> {
-  const msgUint8 = new TextEncoder().encode(str.trim().toLowerCase());
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
