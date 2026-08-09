@@ -2267,6 +2267,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 </div>
 
 <!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & DYNAMIC LOCATION ENGINE SCRIPT -->
+<!-- OPEN-SOURCE NIGERIAN STATES, LGAS & TOWNS CDN SCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/nigerian-states-lgas-cities-towns@1.0.1/dist/index.min.js"></script>
 <script>
   const locationCascadeData = {
     "Nigeria": {
