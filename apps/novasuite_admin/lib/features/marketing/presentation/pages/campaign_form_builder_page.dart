@@ -5,6 +5,127 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
+/// Address Location Cascade Helper Service for Country, State, and City/LGA.
+class AddressLocationService {
+  static const List<String> countries = [
+    'Nigeria',
+    'Ghana',
+    'Kenya',
+    'South Africa',
+    'United Kingdom',
+    'United States',
+    'Canada',
+  ];
+
+  static const Map<String, List<String>> statesByCountry = {
+    'Nigeria': [
+      'Lagos',
+      'Abuja (FCT)',
+      'Rivers (Port Harcourt)',
+      'Oyo (Ibadan)',
+      'Kano',
+      'Ogun',
+      'Enugu',
+      'Delta',
+      'Anambra',
+      'Kaduna',
+      'Edo',
+      'Osun',
+      'Ondo',
+      'Imo',
+      'Kwara',
+      'Plateau',
+      'Akwa Ibom',
+      'Benue',
+      'Abia',
+      'Cross River',
+    ],
+    'Ghana': ['Greater Accra', 'Ashanti (Kumasi)', 'Western (Takoradi)', 'Northern (Tamale)'],
+    'Kenya': ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru'],
+    'South Africa': ['Gauteng (Johannesburg)', 'Western Cape (Cape Town)', 'KwaZulu-Natal (Durban)'],
+    'United Kingdom': ['England (London)', 'Scotland (Edinburgh)', 'Wales (Cardiff)', 'Northern Ireland'],
+    'United States': ['California', 'Texas', 'New York', 'Florida', 'Georgia'],
+    'Canada': ['Ontario (Toronto)', 'British Columbia (Vancouver)', 'Quebec (Montreal)'],
+  };
+
+  static const Map<String, List<String>> citiesLgasByState = {
+    'Lagos': [
+      'Ikeja',
+      'Victoria Island / Eti-Osa',
+      'Lekki / Ajah',
+      'Surulere',
+      'Alimosho',
+      'Kosofe / Ojota',
+      'Apapa',
+      'Ikorodu',
+      'Epe',
+      'Badagry',
+      'Mushin',
+      'Agege',
+      'Oshodi-Isolo',
+      'Yaba / Lagos Mainland',
+      'Amuwo-Odofin',
+    ],
+    'Abuja (FCT)': [
+      'Garki',
+      'Wuse',
+      'Maitama',
+      'Asokoro',
+      'Gwarinpa',
+      'Kubwa',
+      'Lugbe',
+      'Bwari',
+      'Kuje',
+      'Abaji',
+      'Utako',
+      'Jabi',
+    ],
+    'Rivers (Port Harcourt)': [
+      'Port Harcourt City',
+      'Obio-Akpor',
+      'Eleme',
+      'Ikwerre',
+      'Bonny Island',
+      'Oyigbo',
+      'Degema',
+    ],
+    'Oyo (Ibadan)': [
+      'Ibadan North',
+      'Ibadan Southwest',
+      'Ibadan Southeast',
+      'Ibadan Northwest',
+      'Oyo East',
+      'Ogbomoso',
+    ],
+    'Kano': [
+      'Kano Municipal',
+      'Fagge',
+      'Dala',
+      'Gwale',
+      'Tarauni',
+      'Nassarawa',
+    ],
+    'Ogun': [
+      'Abeokuta South',
+      'Abeokuta North',
+      'Ifo',
+      'Ota / Ado-Odo',
+      'Ijebu Ode',
+      'Sagamu',
+    ],
+    'Enugu': ['Enugu North', 'Enugu South', 'Enugu East', 'Nsukka'],
+    'Delta': ['Warri South', 'Asaba / Oshimili South', 'Uvwie / Effurun', 'Ughelli'],
+  };
+
+  static List<String> getStates(String country) {
+    return statesByCountry[country] ?? statesByCountry['Nigeria']!;
+  }
+
+  static List<String> getCitiesLgas(String state) {
+    return citiesLgasByState[state] ?? ['Central District', 'Metropolitan Area', 'Main City Zone'];
+  }
+}
+
 /// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, 2D HSV Spectrum Color Canvas, Typography Fonts, Layout Templates, Embed Code Generator, Live Form Preview), and Step 3: Upsells.
 /// Fully Responsive across Mobile (<768px), Tablet (768px-1023px), and Desktop (>=1024px).
 class CampaignFormBuilderPage extends StatefulWidget {
@@ -230,7 +351,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 1: BASICS (RESPONSIVE FOR MOBILE / DESKTOP)
+  // STEP 1: BASICS
   // ===========================================================================
   Widget _buildStep1Basics(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider, {required bool isMobile}) {
     return Container(
@@ -341,7 +462,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (RESPONSIVE SIDE-BY-SIDE ON DESKTOP, STACKED ON MOBILE/TABLET)
+  // STEP 2: BUILDER
   // ===========================================================================
   Widget _buildStep2Builder(
     bool isDark,
@@ -420,7 +541,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
         const SizedBox(height: 20),
 
-        // Core Field Options Container (Required / Visible Switches)
+        // Core Field Options Container
         _buildSectionCard(
           'Core field options',
           'Configure visibility, labels, and required state for built-in checkout fields.',
@@ -464,7 +585,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
         const SizedBox(height: 20),
 
-        // Offer Packages DataTable (Supports Cross-Product Free Gifts!)
+        // Offer Packages DataTable
         _buildSectionCard(
           'Offer packages',
           'Show package choices instead of listing the base item directly on the hosted form.',
@@ -581,7 +702,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
         const SizedBox(height: 20),
 
-        // Linked Items (Searchable Pre-Onboarded Product Picker!)
+        // Linked Items
         _buildSectionCard(
           'Linked items',
           'Add items through the picker, set quantity, and review price/qty in one table.',
@@ -861,12 +982,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
   // ===========================================================================
   // MODAL DIALOG: LIVE CUSTOMER ACQUISITION CHECKOUT FORM PREVIEW
+  // Re-ordered Layout: Form Inputs FIRST -> Package Selection SECOND -> Submit Button LAST
+  // Address Location Cascade: Country -> State -> City/LGA
+  // Form Name is NOT shown at the top of the preview form
+  // Submit button is disabled in preview mode until embedded live on landing page
   // ===========================================================================
   void _showLiveFormPreviewModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
-    final formTitle = _formTitleController.text;
     final formDesc = _descriptionController.text;
-    final redirectUrl = _redirectUrlController.text.isNotEmpty ? _redirectUrlController.text : 'https://detoxwithnova.xyz/thank-you';
-
     final btnBg = _parseColorFromHex(_buttonBgController.text, defaultHex: '#568500');
     final btnText = _parseColorFromHex(_buttonTextController.text, defaultHex: '#ffffff');
     final cardBgColor = _parseColorFromHex(_cardBgController.text, defaultHex: '#fafafc');
@@ -883,9 +1005,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
     final nameController = TextEditingController(text: 'Chief Customer Tester');
     final phoneController = TextEditingController(text: '08099887766');
-    final addressController = TextEditingController(text: '12 Victoria Island Expressway, Lagos');
-    String selectedState = 'Lagos';
-    bool isSubmittingOrder = false;
+    final addressController = TextEditingController(text: '12 Victoria Island Expressway');
+
+    String selectedCountry = 'Nigeria';
+    List<String> availableStates = AddressLocationService.getStates('Nigeria');
+    String selectedState = availableStates.first;
+    List<String> availableCitiesLgas = AddressLocationService.getCitiesLgas(selectedState);
+    String selectedCityLga = availableCitiesLgas.first;
 
     showDialog(
       context: context,
@@ -901,13 +1027,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   children: [
                     const Icon(Icons.visibility_rounded, color: Color(0xFF10B981), size: 22),
                     const SizedBox(width: 8),
-                    Text('Live Form Preview & Conversion Test', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 16, color: headingColor)),
+                    Text('Live Form Preview', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 16, color: headingColor)),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                  child: Text('LAYOUT: $_selectedLayoutTemplate', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+                  child: Text('PREVIEW MODE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
                 ),
               ],
             ),
@@ -918,11 +1044,128 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(formTitle, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 20, color: headingColor)),
-                    const SizedBox(height: 4),
-                    Text(formDesc, style: GoogleFonts.getFont(_fontFamily, fontSize: 12.5, color: placeholderColor)),
-                    const SizedBox(height: 16),
+                    // Preview Banner Notification (Submit disabled in preview mode)
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.amber)),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Preview Mode: Submissions are disabled here. Form active once embedded on your landing page.',
+                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: headingColor),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
 
+                    // Headline CTA Description (NO Form Name at top!)
+                    if (formDesc.isNotEmpty) ...[
+                      Text(formDesc, style: GoogleFonts.getFont(_fontFamily, fontSize: 13, fontWeight: FontWeight.w600, color: headingColor)),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 1. SECTION 1: FORM INPUTS FIRST
+                    Text('CUSTOMER & DELIVERY DETAILS', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 11, color: placeholderColor)),
+                    const SizedBox(height: 8),
+                    _buildCustomStyledTextField('FULL NAME *', nameController, 'Chief Customer Tester', inputBgColor, inputTextColor, placeholderColor),
+                    const SizedBox(height: 10),
+                    _buildCustomStyledTextField('PHONE NUMBER (FOR RIDER) *', phoneController, '08099887766', inputBgColor, inputTextColor, placeholderColor),
+                    const SizedBox(height: 10),
+
+                    // Address API Cascade: Country -> State -> City/LGA
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('COUNTRY *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+                              const SizedBox(height: 4),
+                              DropdownButtonFormField<String>(
+                                initialValue: selectedCountry,
+                                decoration: InputDecoration(
+                                  fillColor: inputBgColor,
+                                  filled: true,
+                                  border: const OutlineInputBorder(),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                                style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12),
+                                items: AddressLocationService.countries.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setModalState(() {
+                                      selectedCountry = v;
+                                      availableStates = AddressLocationService.getStates(v);
+                                      selectedState = availableStates.first;
+                                      availableCitiesLgas = AddressLocationService.getCitiesLgas(selectedState);
+                                      selectedCityLga = availableCitiesLgas.first;
+                                    });
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('STATE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+                              const SizedBox(height: 4),
+                              DropdownButtonFormField<String>(
+                                initialValue: selectedState,
+                                decoration: InputDecoration(
+                                  fillColor: inputBgColor,
+                                  filled: true,
+                                  border: const OutlineInputBorder(),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                                style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12),
+                                items: availableStates.map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis))).toList(),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setModalState(() {
+                                      selectedState = v;
+                                      availableCitiesLgas = AddressLocationService.getCitiesLgas(v);
+                                      selectedCityLga = availableCitiesLgas.first;
+                                    });
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    Text('CITY / LOCAL GOVERNMENT AREA (LGA) *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      initialValue: availableCitiesLgas.contains(selectedCityLga) ? selectedCityLga : availableCitiesLgas.first,
+                      decoration: InputDecoration(
+                        fillColor: inputBgColor,
+                        filled: true,
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13),
+                      items: availableCitiesLgas.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => selectedCityLga = v);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _buildCustomStyledTextField('DELIVERY ADDRESS *', addressController, '12 Victoria Island Expressway', inputBgColor, inputTextColor, placeholderColor),
+                    const SizedBox(height: 20),
+
+                    // 2. SECTION 2: OFFER PACKAGES CHOICE CARDS (UNDER FORM INPUTS)
                     Text('SELECT YOUR OFFER PACKAGE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 11, color: placeholderColor)),
                     const SizedBox(height: 8),
                     Column(
@@ -974,85 +1217,29 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 14),
-
-                    _buildCustomStyledTextField('FULL NAME *', nameController, 'Chief Customer Tester', inputBgColor, inputTextColor, placeholderColor),
-                    const SizedBox(height: 10),
-                    _buildCustomStyledTextField('PHONE NUMBER (FOR RIDER) *', phoneController, '08099887766', inputBgColor, inputTextColor, placeholderColor),
-                    const SizedBox(height: 10),
-
-                    Text('DELIVERY STATE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedState,
-                      decoration: InputDecoration(
-                        fillColor: inputBgColor,
-                        filled: true,
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                      style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13),
-                      items: ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                      onChanged: (v) {
-                        if (v != null) setModalState(() => selectedState = v);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _buildCustomStyledTextField('DELIVERY ADDRESS *', addressController, '12 Victoria Island Expressway, Lagos', inputBgColor, inputTextColor, placeholderColor),
                     const SizedBox(height: 20),
 
-                    ElevatedButton(
-                      onPressed: isSubmittingOrder
-                          ? null
-                          : () async {
-                              setModalState(() => isSubmittingOrder = true);
-                              await provider.saveLeadFormToSupabase(
-                                companyId: 'c0000000-0000-0000-0000-000000000001',
-                                title: formTitle,
-                                marketerEmail: _digitalMarketerController.text,
-                                redirectUrl: redirectUrl,
-                                successMessage: _successMessageController.text,
-                                submitButtonText: btnLabel,
-                                description: formDesc,
-                                appearance: {
-                                  'button_bg': _buttonBgController.text,
-                                  'button_text': _buttonTextController.text,
-                                  'page_bg': _pageBgController.text,
-                                  'card_bg': _cardBgController.text,
-                                  'heading_color': _headingColorController.text,
-                                  'input_bg': _inputBgController.text,
-                                  'input_text': _inputTextColorController.text,
-                                  'placeholder_color': _placeholderColorController.text,
-                                  'font_family': _fontFamily,
-                                  'layout_style': _selectedLayoutTemplate,
-                                  'border_radius': _borderRadiusController.text,
-                                },
-                              );
-
-                              if (context.mounted) {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: const Color(0xFF10B981),
-                                    content: Text('Test Order Ingested! Customer Acquisition recorded & Stock Deducted ✓ Redirecting to $redirectUrl...'),
-                                  ),
-                                );
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: btnBg,
-                        foregroundColor: btnText,
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    // 3. SECTION 3: SUBMIT BUTTON (FOLLOWED BY OFFER PACKAGES)
+                    Tooltip(
+                      message: 'Submissions are active once embedded on landing page.',
+                      child: ElevatedButton(
+                        onPressed: null, // Disabled in preview mode as requested
+                        style: ElevatedButton.styleFrom(
+                          disabledBackgroundColor: btnBg.withValues(alpha: 0.5),
+                          disabledForegroundColor: btnText.withValues(alpha: 0.8),
+                          minimumSize: const Size.fromHeight(50),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text('$btnLabel (Preview Disabled)', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 15)),
                       ),
-                      child: isSubmittingOrder
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text(btnLabel, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ],
                 ),
               ),
             ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close Preview')),
+            ],
           );
         },
       ),
@@ -1082,23 +1269,26 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // EMBED CODE GENERATOR & THANK-YOU REDIRECT DIALOG
+  // Generates complete HTML/JS embed code with:
+  // - Address Location Cascade (Country -> State -> City/LGA)
+  // - Form Inputs FIRST -> Package Choices SECOND -> Submit Button LAST
+  // - NO Form Title at the top
   void _showEmbedCodeModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
-    final formTitle = _formTitleController.text;
     final redirectUrl = _redirectUrlController.text.isNotEmpty ? _redirectUrlController.text : 'https://detoxwithnova.xyz/thank-you';
     final btnBg = _buttonBgController.text;
     final btnText = _buttonTextController.text;
     final btnLabel = _submitButtonTextController.text;
 
     final embedCodeSnippet = '''
-<!-- NOVASUITE EMBEDDABLE CHECKOUT FORM FOR $formTitle -->
+<!-- NOVASUITE EMBEDDABLE CHECKOUT FORM -->
 <div id="novasuite-form-container" style="max-width: 540px; margin: 0 auto; padding: 24px; background: ${_cardBgController.text}; border-radius: ${_borderRadiusController.text}; font-family: '$_fontFamily', sans-serif;">
-  <h2 style="color: ${_headingColorController.text}; font-size: 20px; font-weight: bold; margin-bottom: 8px;">$formTitle</h2>
-  <p style="color: ${_placeholderColorController.text}; font-size: 13px; margin-bottom: 20px;">${_descriptionController.text}</p>
+  <p style="color: ${_placeholderColorController.text}; font-size: 13px; font-weight: 600; margin-bottom: 20px;">${_descriptionController.text}</p>
   
   <form id="novasuite-checkout-form">
     <input type="hidden" name="company_id" value="c0000000-0000-0000-0000-000000000001" />
     <input type="hidden" name="redirect_url" value="$redirectUrl" />
 
+    <!-- SECTION 1: FORM INPUTS FIRST -->
     <div style="margin-bottom: 14px;">
       <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">FULL NAME *</label>
       <input type="text" name="customer_name" required placeholder="Enter full name" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
@@ -1109,22 +1299,64 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       <input type="tel" name="customer_phone" required placeholder="08012345678" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
     </div>
 
-    <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY STATE *</label>
-      <select name="delivery_state" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
-        <option value="Lagos">Lagos</option>
-        <option value="Abuja">Abuja (FCT)</option>
-        <option value="Rivers">Port Harcourt (Rivers)</option>
-        <option value="Oyo">Ibadan (Oyo)</option>
-        <option value="Kano">Kano</option>
-      </select>
+    <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+      <div style="flex: 1;">
+        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">COUNTRY *</label>
+        <select id="novasuite-country" name="country" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+          <option value="Nigeria">Nigeria</option>
+          <option value="Ghana">Ghana</option>
+          <option value="Kenya">Kenya</option>
+        </select>
+      </div>
+
+      <div style="flex: 1;">
+        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY STATE *</label>
+        <select id="novasuite-state" name="delivery_state" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+          <option value="Lagos">Lagos</option>
+          <option value="Abuja (FCT)">Abuja (FCT)</option>
+          <option value="Rivers (Port Harcourt)">Rivers (Port Harcourt)</option>
+          <option value="Oyo (Ibadan)">Oyo (Ibadan)</option>
+          <option value="Kano">Kano</option>
+        </select>
+      </div>
     </div>
 
     <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">CITY / LGA *</label>
+      <select id="novasuite-city" name="delivery_city" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+        <option value="Ikeja">Ikeja</option>
+        <option value="Victoria Island / Eti-Osa">Victoria Island / Eti-Osa</option>
+        <option value="Lekki / Ajah">Lekki / Ajah</option>
+        <option value="Surulere">Surulere</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 16px;">
       <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY ADDRESS *</label>
       <textarea name="delivery_address" required rows="2" placeholder="House number, street name, landmark" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"></textarea>
     </div>
 
+    <!-- SECTION 2: OFFER PACKAGES UNDER FORM INPUTS -->
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 8px;">SELECT YOUR OFFER PACKAGE *</label>
+      <div style="padding: 12px; background: ${_inputBgController.text}; border: 2px solid #10b981; border-radius: 8px; margin-bottom: 8px;">
+        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
+          <input type="radio" name="offer_package_id" value="pkg-1" checked /> 1 Grazer Detox Tea — ₦23,500
+        </label>
+      </div>
+      <div style="padding: 12px; background: ${_inputBgController.text}; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
+        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
+          <input type="radio" name="offer_package_id" value="pkg-2" /> 2 Grazer Detox Tea — ₦37,000 (Save ₦10,000)
+        </label>
+      </div>
+      <div style="padding: 12px; background: ${_inputBgController.text}; border: 1px solid #cbd5e1; border-radius: 8px;">
+        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
+          <input type="radio" name="offer_package_id" value="pkg-5" /> Buy 5 Grazer Tea + 1 Respira Detox Free 🎁 — ₦85,000
+        </label>
+      </div>
+    </div>
+
+    <!-- SECTION 3: SUBMIT BUTTON FOLLOWED BY OFFER PACKAGES -->
     <button type="submit" id="novasuite-submit-btn" style="width: 100%; padding: 14px; background-color: $btnBg; color: $btnText; font-size: 15px; font-weight: bold; border: none; border-radius: ${_borderRadiusController.text}; cursor: pointer;">
       $btnLabel
     </button>
@@ -1287,9 +1519,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  // ===========================================================================
   // 2D HSV SPECTRUM CANVAS & RAINBOW BAR COLOR PICKER MODAL DIALOG
-  // ===========================================================================
   void _showColorPickerDialog(
     BuildContext context, {
     required TextEditingController controller,
@@ -1331,7 +1561,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Active Color Preview Box
                     Container(
                       width: double.infinity,
                       height: 56,
@@ -1354,8 +1583,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // 🎨 2D HSV CANVAS & RAINBOW SPECTRUM BAR WIDGET
                     _HsvSpectrumColorPicker(
                       initialColor: selectedColor,
                       onColorChanged: (newColor) {
@@ -1369,7 +1596,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-
                     Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
                     const SizedBox(height: 8),
                     GridView.builder(
@@ -1406,7 +1632,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-
                     Text('CUSTOM HEX COLOR CODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
                     const SizedBox(height: 4),
                     TextField(
