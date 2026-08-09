@@ -138,15 +138,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           Row(
             children: [
               Expanded(
-                child: _buildTextField('FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
+                child: _buildInputGroup('FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildTextField('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com'),
+                child: _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com'),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildTextField('REDIRECT URL', _redirectUrlController, 'https://...'),
+                child: _buildInputGroup('REDIRECT URL', _redirectUrlController, 'https://...'),
               ),
             ],
           ),
@@ -154,11 +154,11 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           Row(
             children: [
               Expanded(
-                child: _buildTextField('SUCCESS MESSAGE', _successMessageController, 'Thanks!...'),
+                child: _buildInputGroup('SUCCESS MESSAGE', _successMessageController, 'Thanks!...'),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildTextField('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now'),
+                child: _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now'),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -206,7 +206,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTextField('DESCRIPTION', _descriptionController, 'Internal note or CTA shown above the form.', maxLines: 3),
+          _buildInputGroup('DESCRIPTION', _descriptionController, 'Internal note or CTA shown above the form.', maxLines: 3),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -235,7 +235,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Screenshots 3, 4 & 5)
+  // STEP 2: BUILDER (Screenshots 3, 4 & 5 - Stateful Offer Package Cards)
   // ===========================================================================
   Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Column(
@@ -335,7 +335,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Offer Packages Container (Screenshot 4)
+                  // Offer Packages Container (Interactive State-Safe Cards!)
                   _buildSectionCard(
                     'Offer packages',
                     'Show package choices instead of listing the base item directly on the hosted form.',
@@ -343,77 +343,31 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     isDark,
                     action: ElevatedButton.icon(
                       onPressed: () {
+                        final count = provider.offerPackages.length + 1;
                         provider.addOfferPackage({
                           'id': 'pkg-${DateTime.now().millisecondsSinceEpoch}',
-                          'label': 'New Offer Package',
-                          'buyQty': 1,
+                          'label': '$count Grazer Detox Tea',
+                          'buyQty': count,
                           'freeQty': 0,
-                          'amount': 25000.0,
+                          'amount': 25000.0 * count,
                           'discount': 0.0,
-                          'isDefault': false,
+                          'isDefault': provider.offerPackages.isEmpty,
                         });
                       },
-                      icon: const Icon(Icons.add, size: 16),
+                      icon: const Icon(Icons.add_rounded, size: 16),
                       label: const Text('+ Add package'),
+                      style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
                     ),
                     child: Column(
                       children: provider.offerPackages.asMap().entries.map((entry) {
                         final idx = entry.key;
                         final pkg = entry.value;
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Package ${idx + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 18),
-                                    onPressed: () => provider.removeOfferPackage(idx),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildTextField('PACKAGE LABEL', TextEditingController(text: pkg['label']), 'Label')),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: _buildTextField('BUY QUANTITY', TextEditingController(text: '${pkg['buyQty']}'), '1')),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildTextField('FREE QUANTITY', TextEditingController(text: '${pkg['freeQty']}'), '0')),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: _buildTextField('FIXED PACKAGE AMOUNT', TextEditingController(text: '${pkg['amount']}'), '23500')),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildTextField('DISCOUNT AMOUNT', TextEditingController(text: '${pkg['discount']}'), '0')),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: RadioListTile<bool>(
-                                      title: const Text('Default package', style: TextStyle(fontSize: 12)),
-                                      value: true,
-                                      groupValue: pkg['isDefault'] as bool,
-                                      onChanged: (val) => provider.setDefaultPackage(idx),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                        return _OfferPackageCardItem(
+                          key: ValueKey(pkg['id'] ?? 'pkg-$idx'),
+                          index: idx,
+                          package: pkg,
+                          isDark: isDark,
+                          provider: provider,
                         );
                       }).toList(),
                     ),
@@ -475,51 +429,12 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       children: provider.additionalQuestions.asMap().entries.map((entry) {
                         final idx = entry.key;
                         final q = entry.value;
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Question ${idx + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red), onPressed: () => provider.removeAdditionalQuestion(idx)),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildTextField('QUESTION LABEL', TextEditingController(text: q['label']), 'Label')),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('FIELD TYPE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
-                                        const SizedBox(height: 4),
-                                        DropdownButtonFormField<String>(
-                                          initialValue: q['type'] ?? 'Text',
-                                          decoration: const InputDecoration(border: OutlineInputBorder()),
-                                          items: const [
-                                            DropdownMenuItem(value: 'Text', child: Text('Text')),
-                                            DropdownMenuItem(value: 'Phone', child: Text('Phone')),
-                                            DropdownMenuItem(value: 'Dropdown', child: Text('Dropdown')),
-                                          ],
-                                          onChanged: (v) {},
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                        return _AdditionalQuestionCardItem(
+                          key: ValueKey(q['id'] ?? 'q-$idx'),
+                          index: idx,
+                          question: q,
+                          isDark: isDark,
+                          provider: provider,
                         );
                       }).toList(),
                     ),
@@ -541,17 +456,17 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     Text('Appearance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                     Text('Customize form colors, typography, and input shape.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
                     const SizedBox(height: 16),
-                    _buildTextField('BUTTON BACKGROUND', _buttonBgController, '#568500'),
+                    _buildInputGroup('BUTTON BACKGROUND', _buttonBgController, '#568500'),
                     const SizedBox(height: 12),
-                    _buildTextField('BUTTON TEXT COLOR', _buttonTextController, '#ffffff'),
+                    _buildInputGroup('BUTTON TEXT COLOR', _buttonTextController, '#ffffff'),
                     const SizedBox(height: 12),
-                    _buildTextField('PAGE BACKGROUND', _pageBgController, '#0f172a'),
+                    _buildInputGroup('PAGE BACKGROUND', _pageBgController, '#0f172a'),
                     const SizedBox(height: 12),
-                    _buildTextField('CARD BACKGROUND', _cardBgController, '#fafafc'),
+                    _buildInputGroup('CARD BACKGROUND', _cardBgController, '#fafafc'),
                     const SizedBox(height: 12),
-                    _buildTextField('HEADING COLOR', _headingColorController, '#0f172a'),
+                    _buildInputGroup('HEADING COLOR', _headingColorController, '#0f172a'),
                     const SizedBox(height: 12),
-                    _buildTextField('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
+                    _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
                     const SizedBox(height: 20),
                     OutlinedButton.icon(
                       onPressed: () {},
@@ -595,7 +510,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           const SizedBox(height: 4),
           Text('Offer an instant 1-click upsell immediately after initial checkout form submission.', style: GoogleFonts.inter(fontSize: 12.5, color: textMuted)),
           const SizedBox(height: 20),
-          _buildTextField('UPSELL OFFER TITLE', _upsellTitleController, 'Add 1 Extra Bottle...'),
+          _buildInputGroup('UPSELL OFFER TITLE', _upsellTitleController, 'Add 1 Extra Bottle...'),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -656,7 +571,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hint, {int maxLines = 1}) {
+  Widget _buildInputGroup(String label, TextEditingController controller, String hint, {int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -684,6 +599,315 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           child: Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
         ),
       ],
+    );
+  }
+}
+
+// =============================================================================
+// STATEFUL OFFER PACKAGE CARD (Preserves exact user typing across rebuilds!)
+// =============================================================================
+class _OfferPackageCardItem extends StatefulWidget {
+  final int index;
+  final Map<String, dynamic> package;
+  final bool isDark;
+  final CampaignFormBuilderProvider provider;
+
+  const _OfferPackageCardItem({
+    super.key,
+    required this.index,
+    required this.package,
+    required this.isDark,
+    required this.provider,
+  });
+
+  @override
+  State<_OfferPackageCardItem> createState() => _OfferPackageCardItemState();
+}
+
+class _OfferPackageCardItemState extends State<_OfferPackageCardItem> {
+  late final TextEditingController _labelController;
+  late final TextEditingController _buyQtyController;
+  late final TextEditingController _freeQtyController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _discountController;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelController = TextEditingController(text: widget.package['label'] ?? '');
+    _buyQtyController = TextEditingController(text: '${widget.package['buyQty'] ?? 1}');
+    _freeQtyController = TextEditingController(text: '${widget.package['freeQty'] ?? 0}');
+    _amountController = TextEditingController(text: '${widget.package['amount'] ?? 25000}');
+    _discountController = TextEditingController(text: '${widget.package['discount'] ?? 0}');
+  }
+
+  @override
+  void didUpdateWidget(covariant _OfferPackageCardItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.package['label'] != widget.package['label'] && _labelController.text != widget.package['label']) {
+      _labelController.text = widget.package['label'] ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _buyQtyController.dispose();
+    _freeQtyController.dispose();
+    _amountController.dispose();
+    _discountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDefault = widget.package['isDefault'] == true;
+    final discountVal = double.tryParse(_discountController.text) ?? 0.0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: widget.isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: isDefault ? const Color(0xFF10B981) : (widget.isDark ? Colors.white10 : Colors.black12), width: isDefault ? 2 : 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text('Package ${widget.index + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+                  if (isDefault) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                      child: Text('DEFAULT SELECTION', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                    ),
+                  ],
+                  if (discountVal > 0) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                      child: Text('SAVE ₦${discountVal.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.orange)),
+                    ),
+                  ],
+                ],
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.blue),
+                    tooltip: 'Duplicate Package',
+                    onPressed: () => widget.provider.duplicateOfferPackage(widget.index),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                    tooltip: 'Remove Package',
+                    onPressed: () => widget.provider.removeOfferPackage(widget.index),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFormField('PACKAGE LABEL', _labelController, 'e.g. 2 Bottles (Buy 1 Get 1 Free)', (val) {
+                  widget.provider.updateOfferPackage(widget.index, 'label', val);
+                }),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildFormField('BUY QUANTITY', _buyQtyController, '1', (val) {
+                  widget.provider.updateOfferPackage(widget.index, 'buyQty', int.tryParse(val) ?? 1);
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFormField('FREE QUANTITY', _freeQtyController, '0', (val) {
+                  widget.provider.updateOfferPackage(widget.index, 'freeQty', int.tryParse(val) ?? 0);
+                }),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildFormField('FIXED PACKAGE AMOUNT (₦)', _amountController, '25000', (val) {
+                  widget.provider.updateOfferPackage(widget.index, 'amount', double.tryParse(val) ?? 0.0);
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFormField('DISCOUNT AMOUNT (₦)', _discountController, '0', (val) {
+                  widget.provider.updateOfferPackage(widget.index, 'discount', double.tryParse(val) ?? 0.0);
+                  setState(() {});
+                }),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: () => widget.provider.setDefaultPackage(widget.index),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDefault ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isDefault ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(isDefault ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 18, color: isDefault ? const Color(0xFF10B981) : Colors.grey),
+                        const SizedBox(width: 8),
+                        Text('Set as Default Choice', style: GoogleFonts.inter(fontSize: 12, fontWeight: isDefault ? FontWeight.bold : FontWeight.normal)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormField(String label, TextEditingController controller, String hint, ValueChanged<String> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// STATEFUL ADDITIONAL QUESTION CARD ITEM
+// =============================================================================
+class _AdditionalQuestionCardItem extends StatefulWidget {
+  final int index;
+  final Map<String, dynamic> question;
+  final bool isDark;
+  final CampaignFormBuilderProvider provider;
+
+  const _AdditionalQuestionCardItem({
+    super.key,
+    required this.index,
+    required this.question,
+    required this.isDark,
+    required this.provider,
+  });
+
+  @override
+  State<_AdditionalQuestionCardItem> createState() => _AdditionalQuestionCardItemState();
+}
+
+class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem> {
+  late final TextEditingController _labelController;
+  late final TextEditingController _placeholderController;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelController = TextEditingController(text: widget.question['label'] ?? '');
+    _placeholderController = TextEditingController(text: widget.question['placeholder'] ?? '');
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _placeholderController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: widget.isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: widget.isDark ? Colors.white10 : Colors.black12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Question ${widget.index + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                onPressed: () => widget.provider.removeAdditionalQuestion(widget.index),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('QUESTION LABEL', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: _labelController,
+                      onChanged: (val) => widget.provider.updateAdditionalQuestion(widget.index, 'label', val),
+                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('FIELD TYPE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      initialValue: widget.question['type'] ?? 'Text',
+                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                      items: const [
+                        DropdownMenuItem(value: 'Text', child: Text('Text')),
+                        DropdownMenuItem(value: 'Phone', child: Text('Phone')),
+                        DropdownMenuItem(value: 'Dropdown', child: Text('Dropdown')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) widget.provider.updateAdditionalQuestion(widget.index, 'type', v);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

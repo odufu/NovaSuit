@@ -160,15 +160,39 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     }
   }
 
-  // Offer Package Methods
+  // ===========================================================================
+  // OFFER PACKAGE METHODS (Preserves User Edits Across Rebuilds!)
+  // ===========================================================================
   void addOfferPackage(Map<String, dynamic> pkg) {
-    _offerPackages.add(pkg);
+    _offerPackages.add(Map<String, dynamic>.from(pkg));
     notifyListeners();
+  }
+
+  void updateOfferPackage(int index, String key, dynamic value) {
+    if (index >= 0 && index < _offerPackages.length) {
+      _offerPackages[index][key] = value;
+      notifyListeners();
+    }
+  }
+
+  void duplicateOfferPackage(int index) {
+    if (index >= 0 && index < _offerPackages.length) {
+      final source = _offerPackages[index];
+      final copy = Map<String, dynamic>.from(source);
+      copy['id'] = 'pkg-${DateTime.now().millisecondsSinceEpoch}';
+      copy['label'] = '${source['label']} (Copy)';
+      copy['isDefault'] = false;
+      _offerPackages.insert(index + 1, copy);
+      notifyListeners();
+    }
   }
 
   void removeOfferPackage(int index) {
     if (index >= 0 && index < _offerPackages.length) {
       _offerPackages.removeAt(index);
+      if (_offerPackages.isNotEmpty && !_offerPackages.any((p) => p['isDefault'] == true)) {
+        _offerPackages[0]['isDefault'] = true;
+      }
       notifyListeners();
     }
   }
@@ -180,10 +204,19 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Additional Questions Methods
+  // ===========================================================================
+  // ADDITIONAL QUESTIONS METHODS
+  // ===========================================================================
   void addAdditionalQuestion(Map<String, dynamic> q) {
-    _additionalQuestions.add(q);
+    _additionalQuestions.add(Map<String, dynamic>.from(q));
     notifyListeners();
+  }
+
+  void updateAdditionalQuestion(int index, String key, dynamic value) {
+    if (index >= 0 && index < _additionalQuestions.length) {
+      _additionalQuestions[index][key] = value;
+      notifyListeners();
+    }
   }
 
   void removeAdditionalQuestion(int index) {
