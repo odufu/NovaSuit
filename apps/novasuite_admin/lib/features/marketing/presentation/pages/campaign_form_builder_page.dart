@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, Unrestricted Color Spectrum Pickers, Typography Fonts, Layout Templates, Embed Code Generator, Live Form Preview), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, 2D HSV Spectrum Color Canvas, Typography Fonts, Layout Templates, Embed Code Generator, Live Form Preview), and Step 3: Upsells.
+/// Fully Responsive across Mobile (<768px), Tablet (768px-1023px), and Desktop (>=1024px).
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -131,67 +132,84 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
         title: Text('Campaign Form Builder', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showLiveFormPreviewModalDialog(context, provider: builderProvider),
-            icon: const Icon(Icons.visibility_rounded, size: 16),
-            label: const Text('Live Form Preview'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white, elevation: 0),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton.icon(
-            onPressed: () => _showEmbedCodeModalDialog(context, provider: builderProvider),
-            icon: const Icon(Icons.code_rounded, size: 16),
-            label: const Text('Get Embed Code & Redirect ✓'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, elevation: 0),
-          ),
-          const SizedBox(width: 10),
-          OutlinedButton(
-            onPressed: widget.onBackToForms,
-            child: const Text('Back to forms'),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Description & Stepper Tabs
-            Text(
-              'Embed-ready forms for Facebook tabs, WordPress landing pages, or microsites. Submissions are tracked instantly and buyers redirect automatically to your Thank-You Page.',
-              style: GoogleFonts.inter(fontSize: 12.5, color: textMuted),
-            ),
-            const SizedBox(height: 20),
-
-            // Stepper Navigation Row
-            Row(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
-                _buildStepTab(0, 'Step 1: Basics', builderProvider, primaryColor),
-                const SizedBox(width: 10),
-                _buildStepTab(1, 'Step 2: Builder', builderProvider, primaryColor),
-                const SizedBox(width: 10),
-                _buildStepTab(2, 'Step 3: Upsell', builderProvider, primaryColor),
-                const Spacer(),
-                Text('RESUME DRAFT: ', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: textMuted)),
-                DropdownButton<String>(
-                  value: 'Grazer Tea Joel',
-                  items: const [DropdownMenuItem(value: 'Grazer Tea Joel', child: Text('Grazer Tea Joel'))],
-                  onChanged: (val) {},
+                ElevatedButton.icon(
+                  onPressed: () => _showLiveFormPreviewModalDialog(context, provider: builderProvider),
+                  icon: const Icon(Icons.visibility_rounded, size: 16),
+                  label: const Text('Live Form Preview'),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white, elevation: 0),
                 ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _showEmbedCodeModalDialog(context, provider: builderProvider),
+                  icon: const Icon(Icons.code_rounded, size: 16),
+                  label: const Text('Get Embed Code & Redirect ✓'),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, elevation: 0),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: widget.onBackToForms,
+                  child: const Text('Back to forms'),
+                ),
+                const SizedBox(width: 16),
               ],
             ),
-            const SizedBox(height: 24),
+          ),
+        ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 768;
+          final isDesktop = constraints.maxWidth >= 1024;
 
-            // Active Step Content View
-            if (builderProvider.currentStep == 0)
-              _buildStep1Basics(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider)
-            else if (builderProvider.currentStep == 1)
-              _buildStep2Builder(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider)
-            else
-              _buildStep3Upsell(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider),
-          ],
-        ),
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(isMobile ? 12 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Description & Responsive Stepper Navigation
+                Text(
+                  'Embed-ready forms for Facebook tabs, WordPress landing pages, or microsites. Submissions are tracked instantly and buyers redirect automatically to your Thank-You Page.',
+                  style: GoogleFonts.inter(fontSize: isMobile ? 11.5 : 12.5, color: textMuted),
+                ),
+                const SizedBox(height: 16),
+
+                // Responsive Stepper Navigation Row
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildStepTab(0, 'Step 1: Basics', builderProvider, primaryColor),
+                      const SizedBox(width: 8),
+                      _buildStepTab(1, 'Step 2: Builder', builderProvider, primaryColor),
+                      const SizedBox(width: 8),
+                      _buildStepTab(2, 'Step 3: Upsell', builderProvider, primaryColor),
+                      const SizedBox(width: 16),
+                      Text('RESUME DRAFT: ', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: textMuted)),
+                      DropdownButton<String>(
+                        value: 'Grazer Tea Joel',
+                        items: const [DropdownMenuItem(value: 'Grazer Tea Joel', child: Text('Grazer Tea Joel'))],
+                        onChanged: (val) {},
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Active Step Content View
+                if (builderProvider.currentStep == 0)
+                  _buildStep1Basics(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider, isMobile: isMobile)
+                else if (builderProvider.currentStep == 1)
+                  _buildStep2Builder(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider, isDesktop: isDesktop, isMobile: isMobile)
+                else
+                  _buildStep3Upsell(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider, isMobile: isMobile),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -204,93 +222,95 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         backgroundColor: isActive ? primaryColor : Colors.grey.withValues(alpha: 0.15),
         foregroundColor: isActive ? Colors.white : Colors.grey,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
+      child: Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12.5)),
     );
   }
 
   // ===========================================================================
-  // STEP 1: BASICS
+  // STEP 1: BASICS (RESPONSIVE FOR MOBILE / DESKTOP)
   // ===========================================================================
-  Widget _buildStep1Basics(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
+  Widget _buildStep1Basics(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider, {required bool isMobile}) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildInputGroup('FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com'),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildInputGroup('REDIRECT URL / THANK YOU LINK *', _redirectUrlController, 'https://detoxwithnova.xyz/thank-you'),
-              ),
-            ],
-          ),
+          if (isMobile) ...[
+            _buildInputGroup('FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
+            const SizedBox(height: 12),
+            _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com'),
+            const SizedBox(height: 12),
+            _buildInputGroup('REDIRECT URL / THANK YOU LINK *', _redirectUrlController, 'https://detoxwithnova.xyz/thank-you'),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(child: _buildInputGroup('FORM TITLE', _formTitleController, 'Grazer Tea Joel')),
+                const SizedBox(width: 16),
+                Expanded(child: _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com')),
+                const SizedBox(width: 16),
+                Expanded(child: _buildInputGroup('REDIRECT URL / THANK YOU LINK *', _redirectUrlController, 'https://detoxwithnova.xyz/thank-you')),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildInputGroup('SUCCESS MESSAGE', _successMessageController, 'Thanks!...'),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now'),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('QUANTITY DISPLAY MODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<String>(
-                      initialValue: provider.quantityDisplayMode,
-                      decoration: const InputDecoration(border: OutlineInputBorder()),
-                      items: const [
-                        DropdownMenuItem(value: 'Radio buttons', child: Text('Radio buttons')),
-                        DropdownMenuItem(value: 'Dropdown selector', child: Text('Dropdown selector')),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) provider.setQuantityDisplayMode(val);
-                      },
-                    ),
+
+          if (isMobile) ...[
+            _buildInputGroup('SUCCESS MESSAGE', _successMessageController, 'Thanks!...'),
+            const SizedBox(height: 12),
+            _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now'),
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('QUANTITY DISPLAY MODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: provider.quantityDisplayMode,
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                  items: const [
+                    DropdownMenuItem(value: 'Radio buttons', child: Text('Radio buttons')),
+                    DropdownMenuItem(value: 'Dropdown selector', child: Text('Dropdown selector')),
                   ],
+                  onChanged: (val) {
+                    if (val != null) provider.setQuantityDisplayMode(val);
+                  },
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('PRESET COUNTRY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<String>(
-                      initialValue: 'Nigeria',
-                      decoration: const InputDecoration(border: OutlineInputBorder()),
-                      items: const [DropdownMenuItem(value: 'Nigeria', child: Text('Nigeria'))],
-                      onChanged: (val) {},
-                    ),
-                  ],
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(child: _buildInputGroup('SUCCESS MESSAGE', _successMessageController, 'Thanks!...')),
+                const SizedBox(width: 16),
+                Expanded(child: _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now')),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('QUANTITY DISPLAY MODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: provider.quantityDisplayMode,
+                        decoration: const InputDecoration(border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(value: 'Radio buttons', child: Text('Radio buttons')),
+                          DropdownMenuItem(value: 'Dropdown selector', child: Text('Dropdown selector')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) provider.setQuantityDisplayMode(val);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(flex: 2, child: SizedBox()),
-            ],
-          ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           _buildInputGroup('DESCRIPTION', _descriptionController, 'Internal note or CTA shown above the form.', maxLines: 3),
           const SizedBox(height: 24),
@@ -321,418 +341,448 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Offer Packages, Linked Items, Unrestricted Color Spectrum Pickers & Layout Templates)
+  // STEP 2: BUILDER (RESPONSIVE SIDE-BY-SIDE ON DESKTOP, STACKED ON MOBILE/TABLET)
   // ===========================================================================
-  Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
-    return Column(
+  Widget _buildStep2Builder(
+    bool isDark,
+    Color cardBg,
+    Color textColor,
+    Color textMuted,
+    Color primaryColor,
+    CampaignFormBuilderProvider provider, {
+    required bool isDesktop,
+    required bool isMobile,
+  }) {
+    final leftContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Column: Order Dimensions, Core Fields, Offer Packages Table, Linked Items & Custom Questions
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Order Dimensions Container
-                  _buildSectionCard(
-                    'Order dimensions',
-                    'Select one product category. Brand and cost center are derived and applied automatically.',
-                    cardBg,
-                    isDark,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('PRODUCT CATEGORY *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
-                              const SizedBox(height: 6),
-                              DropdownButtonFormField<String>(
-                                initialValue: provider.selectedProductCategory,
-                                decoration: const InputDecoration(border: OutlineInputBorder()),
-                                items: const [
-                                  DropdownMenuItem(value: 'Grazer Herbal Tea', child: Text('Grazer Herbal Tea')),
-                                  DropdownMenuItem(value: 'Vitality Booster', child: Text('Vitality Booster')),
-                                ],
-                                onChanged: (val) {
-                                  if (val != null) provider.setProductCategory(val);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildReadOnlyField('RESOLVED BRAND', 'Novacare'),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildReadOnlyField('RESOLVED COST CENTER', 'Novacare - NL'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Core Field Options Container (Required / Visible Switches)
-                  _buildSectionCard(
-                    'Core field options',
-                    'Configure visibility, labels, and required state for built-in checkout fields.',
-                    cardBg,
-                    isDark,
-                    child: Column(
-                      children: provider.coreFields.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final field = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  initialValue: field['label'],
-                                  decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Row(
-                                children: [
-                                  Switch(
-                                    value: field['required'] as bool,
-                                    onChanged: (val) => provider.toggleCoreFieldRequired(idx),
-                                  ),
-                                  Text('Required', style: GoogleFonts.inter(fontSize: 12)),
-                                  const SizedBox(width: 16),
-                                  Switch(
-                                    value: field['visible'] as bool,
-                                    onChanged: (val) => provider.toggleCoreFieldVisible(idx),
-                                  ),
-                                  Text('Visible', style: GoogleFonts.inter(fontSize: 12)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Offer Packages DataTable (Supports Cross-Product Free Gifts!)
-                  _buildSectionCard(
-                    'Offer packages',
-                    'Show package choices instead of listing the base item directly on the hosted form.',
-                    cardBg,
-                    isDark,
-                    action: ElevatedButton.icon(
-                      onPressed: () => _showOfferPackageModalDialog(context, provider: provider),
-                      icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text('+ Add Offer Package'),
-                      style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10)),
-                    ),
-                    child: provider.offerPackages.isEmpty
-                        ? Container(
-                            padding: const EdgeInsets.all(24),
-                            alignment: Alignment.center,
-                            child: Text('No offer packages added yet. Click "+ Add Offer Package" to create one.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
-                          )
-                        : SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
-                              columns: const [
-                                DataColumn(label: Text('PACKAGE LABEL')),
-                                DataColumn(label: Text('BUY QTY')),
-                                DataColumn(label: Text('FREE GIFT / ADDON')),
-                                DataColumn(label: Text('TOTAL DEDUCTED STOCK')),
-                                DataColumn(label: Text('AMOUNT (₦)')),
-                                DataColumn(label: Text('SAVINGS')),
-                                DataColumn(label: Text('DEFAULT CHOICE')),
-                                DataColumn(label: Text('ACTIONS')),
-                              ],
-                              rows: provider.offerPackages.asMap().entries.map((entry) {
-                                final idx = entry.key;
-                                final pkg = entry.value;
-                                final isDefault = pkg['isDefault'] == true;
-                                final buyQty = (pkg['buyQty'] ?? 1) as int;
-                                final freeQty = (pkg['freeQty'] ?? 0) as int;
-                                final freeAddonName = pkg['freeAddonProductName'] as String?;
-                                final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
-                                final totalStockUnits = buyQty + freeQty + freeAddonQty;
-                                final discountVal = (pkg['discount'] ?? 0.0) as double;
-
-                                return DataRow(
-                                  color: isDefault ? WidgetStateProperty.all(primaryColor.withValues(alpha: 0.08)) : null,
-                                  cells: [
-                                    DataCell(Row(
-                                      children: [
-                                        Text(pkg['label'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
-                                        if (isDefault) ...[
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                                            child: Text('DEFAULT', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: primaryColor)),
-                                          ),
-                                        ],
-                                      ],
-                                    )),
-                                    DataCell(Text('$buyQty', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
-                                    DataCell(
-                                      freeAddonName != null && freeAddonQty > 0
-                                          ? Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                              decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                                              child: Text('🎁 ${freeAddonQty}x $freeAddonName (FREE)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
-                                            )
-                                          : Text(freeQty > 0 ? '${freeQty}x Same Product (Free)' : '—', style: GoogleFonts.inter(color: textMuted)),
-                                    ),
-                                    DataCell(Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                                      child: Text('$totalStockUnits units ($buyQty + ${freeQty + freeAddonQty} free)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
-                                    )),
-                                    DataCell(Text('₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
-                                    DataCell(
-                                      discountVal > 0
-                                          ? Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                              decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                                              child: Text('Save ₦${discountVal.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
-                                            )
-                                          : Text('—', style: TextStyle(color: textMuted)),
-                                    ),
-                                    DataCell(Radio<bool>(
-                                      value: true,
-                                      groupValue: isDefault,
-                                      activeColor: primaryColor,
-                                      onChanged: (v) => provider.setDefaultPackage(idx),
-                                    )),
-                                    DataCell(Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.blue),
-                                          tooltip: 'Edit Package',
-                                          onPressed: () => _showOfferPackageModalDialog(context, provider: provider, editIndex: idx, existingPkg: pkg),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.indigo),
-                                          tooltip: 'Duplicate Package',
-                                          onPressed: () => provider.duplicateOfferPackage(idx),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),
-                                          tooltip: 'Delete Package',
-                                          onPressed: () => provider.removeOfferPackage(idx),
-                                        ),
-                                      ],
-                                    )),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Linked Items (Searchable Pre-Onboarded Product Picker!)
-                  _buildSectionCard(
-                    'Linked items',
-                    'Add items through the picker, set quantity, and review price/qty in one table.',
-                    cardBg,
-                    isDark,
-                    action: ElevatedButton.icon(
-                      onPressed: () => _showAddLinkedItemModalDialog(context, provider: provider),
-                      icon: const Icon(Icons.search_rounded, size: 16),
-                      label: const Text('+ Attach Product Item'),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10)),
-                    ),
-                    child: provider.linkedItems.isEmpty
-                        ? Container(
-                            padding: const EdgeInsets.all(24),
-                            alignment: Alignment.center,
-                            child: Text('No product items attached yet. Click "+ Attach Product Item" to search onboarded catalog.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
-                          )
-                        : SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
-                              columns: const [
-                                DataColumn(label: Text('ITEM NAME')),
-                                DataColumn(label: Text('SKU')),
-                                DataColumn(label: Text('TYPE')),
-                                DataColumn(label: Text('QTY')),
-                                DataColumn(label: Text('PRICE (₦)')),
-                                DataColumn(label: Text('DEFAULT ITEM')),
-                                DataColumn(label: Text('ACTIONS')),
-                              ],
-                              rows: provider.linkedItems.asMap().entries.map((entry) {
-                                final idx = entry.key;
-                                final item = entry.value;
-                                final isDefault = item['isDefault'] == true;
-
-                                return DataRow(
-                                  color: isDefault ? WidgetStateProperty.all(const Color(0xFF3B82F6).withValues(alpha: 0.08)) : null,
-                                  cells: [
-                                    DataCell(Text(item['name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
-                                    DataCell(Text(item['sku'] ?? 'SKU-001', style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
-                                    DataCell(Chip(
-                                      label: Text(item['type'] ?? 'Main', style: const TextStyle(fontSize: 10, color: Colors.white)),
-                                      backgroundColor: item['type'] == 'Main' ? Colors.blue : Colors.purple,
-                                    )),
-                                    DataCell(Text('${item['qty'] ?? 1}', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
-                                    DataCell(Text('₦${(item['price'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
-                                    DataCell(Radio<bool>(
-                                      value: true,
-                                      groupValue: isDefault,
-                                      activeColor: const Color(0xFF3B82F6),
-                                      onChanged: (v) => provider.setDefaultLinkedItem(idx),
-                                    )),
-                                    DataCell(IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
-                                      tooltip: 'Remove Item',
-                                      onPressed: () => provider.removeLinkedItem(idx),
-                                    )),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Additional Questions Container
-                  _buildSectionCard(
-                    'Additional questions',
-                    'Optional custom fields for pickup store, delivery instructions, or financing choices.',
-                    cardBg,
-                    isDark,
-                    action: ElevatedButton.icon(
-                      onPressed: () {
-                        provider.addAdditionalQuestion({
-                          'id': 'q-${DateTime.now().millisecondsSinceEpoch}',
-                          'label': 'New Question',
-                          'type': 'Text',
-                          'placeholder': 'Enter response...',
-                          'required': false,
-                        });
-                      },
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('+ Add question'),
-                    ),
-                    child: Column(
-                      children: provider.additionalQuestions.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final q = entry.value;
-                        return _AdditionalQuestionCardItem(
-                          key: ValueKey(q['id'] ?? 'q-$idx'),
-                          index: idx,
-                          question: q,
-                          isDark: isDark,
-                          provider: provider,
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 20),
-
-            // Right Column: Advanced Appearance & Theme Controls Drawer
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        // Order Dimensions Container
+        _buildSectionCard(
+          'Order dimensions',
+          'Select one product category. Brand and cost center are derived and applied automatically.',
+          cardBg,
+          isDark,
+          child: isMobile
+              ? Column(
                   children: [
-                    Text('Appearance & Styling Controls', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
-                    Text('Choose layout templates, typography fonts, input background/placeholder colors, and fine-tune RGB spectrum colors.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
-                    const SizedBox(height: 16),
-
-                    // Prebuilt Form Layout Style / Template Selector
-                    Text('PREBUILT LAYOUT STYLE / TEMPLATE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedLayoutTemplate,
-                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                      items: const [
-                        DropdownMenuItem(value: 'High-Converting E-Commerce', child: Text('High-Converting E-Commerce')),
-                        DropdownMenuItem(value: 'Minimalist Clean', child: Text('Minimalist Clean')),
-                        DropdownMenuItem(value: 'Luxury Glassmorphism', child: Text('Luxury Dark Glassmorphism')),
-                        DropdownMenuItem(value: 'Compact Express Checkout', child: Text('Compact Express Checkout')),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('PRODUCT CATEGORY *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: provider.selectedProductCategory,
+                          decoration: const InputDecoration(border: OutlineInputBorder()),
+                          items: const [
+                            DropdownMenuItem(value: 'Grazer Herbal Tea', child: Text('Grazer Herbal Tea')),
+                            DropdownMenuItem(value: 'Vitality Booster', child: Text('Vitality Booster')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) provider.setProductCategory(val);
+                          },
+                        ),
                       ],
-                      onChanged: (val) {
-                        if (val != null) _applyLayoutTemplatePreset(val);
-                      },
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
+                    _buildReadOnlyField('RESOLVED BRAND', 'Novacare'),
+                    const SizedBox(height: 10),
+                    _buildReadOnlyField('RESOLVED COST CENTER', 'Novacare - NL'),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('PRODUCT CATEGORY *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<String>(
+                            initialValue: provider.selectedProductCategory,
+                            decoration: const InputDecoration(border: OutlineInputBorder()),
+                            items: const [
+                              DropdownMenuItem(value: 'Grazer Herbal Tea', child: Text('Grazer Herbal Tea')),
+                              DropdownMenuItem(value: 'Vitality Booster', child: Text('Vitality Booster')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) provider.setProductCategory(val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildReadOnlyField('RESOLVED BRAND', 'Novacare')),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildReadOnlyField('RESOLVED COST CENTER', 'Novacare - NL')),
+                  ],
+                ),
+        ),
+        const SizedBox(height: 20),
 
-                    // Typography Font Family Selector
-                    Text('TYPOGRAPHY FONT FAMILY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      initialValue: _fontFamily,
-                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                      items: const [
-                        DropdownMenuItem(value: 'Inter', child: Text('Inter (Clean Modern)')),
-                        DropdownMenuItem(value: 'Outfit', child: Text('Outfit (Sleek Geometric)')),
-                        DropdownMenuItem(value: 'Roboto', child: Text('Roboto (Standard Sans)')),
-                        DropdownMenuItem(value: 'Poppins', child: Text('Poppins (Bold Friendly)')),
-                        DropdownMenuItem(value: 'Montserrat', child: Text('Montserrat (Modern Display)')),
-                        DropdownMenuItem(value: 'Plus Jakarta Sans', child: Text('Plus Jakarta Sans (Corporate)')),
-                        DropdownMenuItem(value: 'Playfair Display', child: Text('Playfair Display (Luxury Serif)')),
+        // Core Field Options Container (Required / Visible Switches)
+        _buildSectionCard(
+          'Core field options',
+          'Configure visibility, labels, and required state for built-in checkout fields.',
+          cardBg,
+          isDark,
+          child: Column(
+            children: provider.coreFields.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final field = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: field['label'],
+                        decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Row(
+                      children: [
+                        Switch(
+                          value: field['required'] as bool,
+                          onChanged: (val) => provider.toggleCoreFieldRequired(idx),
+                        ),
+                        Text('Req', style: GoogleFonts.inter(fontSize: 11)),
+                        const SizedBox(width: 8),
+                        Switch(
+                          value: field['visible'] as bool,
+                          onChanged: (val) => provider.toggleCoreFieldVisible(idx),
+                        ),
+                        Text('Vis', style: GoogleFonts.inter(fontSize: 11)),
                       ],
-                      onChanged: (val) {
-                        if (val != null) setState(() => _fontFamily = val);
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Unrestricted Color Palette Controls
-                    _buildColorPickerGroup('BUTTON BACKGROUND', _buttonBgController, defaultHex: '#568500'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('BUTTON TEXT COLOR', _buttonTextController, defaultHex: '#ffffff'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('PAGE BACKGROUND', _pageBgController, defaultHex: '#0f172a'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('CARD BACKGROUND', _cardBgController, defaultHex: '#fafafc'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('HEADING TEXT COLOR', _headingColorController, defaultHex: '#0f172a'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('FORM INPUT BACKGROUND', _inputBgController, defaultHex: '#ffffff'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('FORM INPUT TEXT COLOR', _inputTextColorController, defaultHex: '#0f172a'),
-                    const SizedBox(height: 10),
-                    _buildColorPickerGroup('PLACEHOLDER TEXT COLOR', _placeholderColorController, defaultHex: '#94a3b8'),
-                    const SizedBox(height: 10),
-                    _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
-                    const SizedBox(height: 20),
-
-                    OutlinedButton.icon(
-                      onPressed: () => _showLiveFormPreviewModalDialog(context, provider: provider),
-                      icon: const Icon(Icons.visibility_rounded, size: 16),
-                      label: const Text('Open Live Customer Form Preview'),
-                      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      onPressed: () => _showEmbedCodeModalDialog(context, provider: provider),
-                      icon: const Icon(Icons.code_rounded, size: 16),
-                      label: const Text('Get Embed Code & Redirect ✓'),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, minimumSize: const Size.fromHeight(44)),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
+              );
+            }).toList(),
+          ),
         ),
+        const SizedBox(height: 20),
+
+        // Offer Packages DataTable (Supports Cross-Product Free Gifts!)
+        _buildSectionCard(
+          'Offer packages',
+          'Show package choices instead of listing the base item directly on the hosted form.',
+          cardBg,
+          isDark,
+          action: ElevatedButton.icon(
+            onPressed: () => _showOfferPackageModalDialog(context, provider: provider),
+            icon: const Icon(Icons.add_rounded, size: 16),
+            label: const Text('+ Add Offer Package'),
+            style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+          ),
+          child: provider.offerPackages.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.all(24),
+                  alignment: Alignment.center,
+                  child: Text('No offer packages added yet. Click "+ Add Offer Package" to create one.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+                )
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+                    columns: const [
+                      DataColumn(label: Text('PACKAGE LABEL')),
+                      DataColumn(label: Text('BUY QTY')),
+                      DataColumn(label: Text('FREE GIFT / ADDON')),
+                      DataColumn(label: Text('TOTAL DEDUCTED STOCK')),
+                      DataColumn(label: Text('AMOUNT (₦)')),
+                      DataColumn(label: Text('SAVINGS')),
+                      DataColumn(label: Text('DEFAULT CHOICE')),
+                      DataColumn(label: Text('ACTIONS')),
+                    ],
+                    rows: provider.offerPackages.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final pkg = entry.value;
+                      final isDefault = pkg['isDefault'] == true;
+                      final buyQty = (pkg['buyQty'] ?? 1) as int;
+                      final freeQty = (pkg['freeQty'] ?? 0) as int;
+                      final freeAddonName = pkg['freeAddonProductName'] as String?;
+                      final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
+                      final totalStockUnits = buyQty + freeQty + freeAddonQty;
+                      final discountVal = (pkg['discount'] ?? 0.0) as double;
+
+                      return DataRow(
+                        color: isDefault ? WidgetStateProperty.all(primaryColor.withValues(alpha: 0.08)) : null,
+                        cells: [
+                          DataCell(Row(
+                            children: [
+                              Text(pkg['label'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
+                              if (isDefault) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                                  child: Text('DEFAULT', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: primaryColor)),
+                                ),
+                              ],
+                            ],
+                          )),
+                          DataCell(Text('$buyQty', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
+                          DataCell(
+                            freeAddonName != null && freeAddonQty > 0
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                                    child: Text('🎁 ${freeAddonQty}x $freeAddonName (FREE)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
+                                  )
+                                : Text(freeQty > 0 ? '${freeQty}x Same Product (Free)' : '—', style: GoogleFonts.inter(color: textMuted)),
+                          ),
+                          DataCell(Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                            child: Text('$totalStockUnits units ($buyQty + ${freeQty + freeAddonQty} free)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
+                          )),
+                          DataCell(Text('₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                          DataCell(
+                            discountVal > 0
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                                    child: Text('Save ₦${discountVal.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                  )
+                                : Text('—', style: TextStyle(color: textMuted)),
+                          ),
+                          DataCell(Radio<bool>(
+                            value: true,
+                            groupValue: isDefault,
+                            activeColor: primaryColor,
+                            onChanged: (v) => provider.setDefaultPackage(idx),
+                          )),
+                          DataCell(Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.blue),
+                                tooltip: 'Edit Package',
+                                onPressed: () => _showOfferPackageModalDialog(context, provider: provider, editIndex: idx, existingPkg: pkg),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.indigo),
+                                tooltip: 'Duplicate Package',
+                                onPressed: () => provider.duplicateOfferPackage(idx),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),
+                                tooltip: 'Delete Package',
+                                onPressed: () => provider.removeOfferPackage(idx),
+                              ),
+                            ],
+                          )),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+        ),
+        const SizedBox(height: 20),
+
+        // Linked Items (Searchable Pre-Onboarded Product Picker!)
+        _buildSectionCard(
+          'Linked items',
+          'Add items through the picker, set quantity, and review price/qty in one table.',
+          cardBg,
+          isDark,
+          action: ElevatedButton.icon(
+            onPressed: () => _showAddLinkedItemModalDialog(context, provider: provider),
+            icon: const Icon(Icons.search_rounded, size: 16),
+            label: const Text('+ Attach Product Item'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+          ),
+          child: provider.linkedItems.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.all(24),
+                  alignment: Alignment.center,
+                  child: Text('No product items attached yet. Click "+ Attach Product Item" to search onboarded catalog.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+                )
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+                    columns: const [
+                      DataColumn(label: Text('ITEM NAME')),
+                      DataColumn(label: Text('SKU')),
+                      DataColumn(label: Text('TYPE')),
+                      DataColumn(label: Text('QTY')),
+                      DataColumn(label: Text('PRICE (₦)')),
+                      DataColumn(label: Text('DEFAULT ITEM')),
+                      DataColumn(label: Text('ACTIONS')),
+                    ],
+                    rows: provider.linkedItems.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final item = entry.value;
+                      final isDefault = item['isDefault'] == true;
+
+                      return DataRow(
+                        color: isDefault ? WidgetStateProperty.all(const Color(0xFF3B82F6).withValues(alpha: 0.08)) : null,
+                        cells: [
+                          DataCell(Text(item['name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                          DataCell(Text(item['sku'] ?? 'SKU-001', style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
+                          DataCell(Chip(
+                            label: Text(item['type'] ?? 'Main', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                            backgroundColor: item['type'] == 'Main' ? Colors.blue : Colors.purple,
+                          )),
+                          DataCell(Text('${item['qty'] ?? 1}', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
+                          DataCell(Text('₦${(item['price'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                          DataCell(Radio<bool>(
+                            value: true,
+                            groupValue: isDefault,
+                            activeColor: const Color(0xFF3B82F6),
+                            onChanged: (v) => provider.setDefaultLinkedItem(idx),
+                          )),
+                          DataCell(IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                            tooltip: 'Remove Item',
+                            onPressed: () => provider.removeLinkedItem(idx),
+                          )),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+        ),
+        const SizedBox(height: 20),
+
+        // Additional Questions Container
+        _buildSectionCard(
+          'Additional questions',
+          'Optional custom fields for pickup store, delivery instructions, or financing choices.',
+          cardBg,
+          isDark,
+          action: ElevatedButton.icon(
+            onPressed: () {
+              provider.addAdditionalQuestion({
+                'id': 'q-${DateTime.now().millisecondsSinceEpoch}',
+                'label': 'New Question',
+                'type': 'Text',
+                'placeholder': 'Enter response...',
+                'required': false,
+              });
+            },
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('+ Add question'),
+          ),
+          child: Column(
+            children: provider.additionalQuestions.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final q = entry.value;
+              return _AdditionalQuestionCardItem(
+                key: ValueKey(q['id'] ?? 'q-$idx'),
+                index: idx,
+                question: q,
+                isDark: isDark,
+                provider: provider,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+
+    final appearanceDrawer = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Appearance & Styling Controls', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+          Text('Choose layout templates, typography fonts, input background/placeholder colors, and fine-tune RGB spectrum colors.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+          const SizedBox(height: 16),
+
+          Text('PREBUILT LAYOUT STYLE / TEMPLATE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+          const SizedBox(height: 4),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedLayoutTemplate,
+            decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+            items: const [
+              DropdownMenuItem(value: 'High-Converting E-Commerce', child: Text('High-Converting E-Commerce')),
+              DropdownMenuItem(value: 'Minimalist Clean', child: Text('Minimalist Clean')),
+              DropdownMenuItem(value: 'Luxury Glassmorphism', child: Text('Luxury Dark Glassmorphism')),
+              DropdownMenuItem(value: 'Compact Express Checkout', child: Text('Compact Express Checkout')),
+            ],
+            onChanged: (val) {
+              if (val != null) _applyLayoutTemplatePreset(val);
+            },
+          ),
+          const SizedBox(height: 14),
+
+          Text('TYPOGRAPHY FONT FAMILY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+          const SizedBox(height: 4),
+          DropdownButtonFormField<String>(
+            initialValue: _fontFamily,
+            decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+            items: const [
+              DropdownMenuItem(value: 'Inter', child: Text('Inter (Clean Modern)')),
+              DropdownMenuItem(value: 'Outfit', child: Text('Outfit (Sleek Geometric)')),
+              DropdownMenuItem(value: 'Roboto', child: Text('Roboto (Standard Sans)')),
+              DropdownMenuItem(value: 'Poppins', child: Text('Poppins (Bold Friendly)')),
+              DropdownMenuItem(value: 'Montserrat', child: Text('Montserrat (Modern Display)')),
+              DropdownMenuItem(value: 'Plus Jakarta Sans', child: Text('Plus Jakarta Sans (Corporate)')),
+              DropdownMenuItem(value: 'Playfair Display', child: Text('Playfair Display (Luxury Serif)')),
+            ],
+            onChanged: (val) {
+              if (val != null) setState(() => _fontFamily = val);
+            },
+          ),
+          const SizedBox(height: 14),
+
+          _buildColorPickerGroup('BUTTON BACKGROUND', _buttonBgController, defaultHex: '#568500'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('BUTTON TEXT COLOR', _buttonTextController, defaultHex: '#ffffff'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('PAGE BACKGROUND', _pageBgController, defaultHex: '#0f172a'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('CARD BACKGROUND', _cardBgController, defaultHex: '#fafafc'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('HEADING TEXT COLOR', _headingColorController, defaultHex: '#0f172a'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('FORM INPUT BACKGROUND', _inputBgController, defaultHex: '#ffffff'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('FORM INPUT TEXT COLOR', _inputTextColorController, defaultHex: '#0f172a'),
+          const SizedBox(height: 10),
+          _buildColorPickerGroup('PLACEHOLDER TEXT COLOR', _placeholderColorController, defaultHex: '#94a3b8'),
+          const SizedBox(height: 10),
+          _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
+          const SizedBox(height: 20),
+
+          OutlinedButton.icon(
+            onPressed: () => _showLiveFormPreviewModalDialog(context, provider: provider),
+            icon: const Icon(Icons.visibility_rounded, size: 16),
+            label: const Text('Open Live Customer Form Preview'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            onPressed: () => _showEmbedCodeModalDialog(context, provider: provider),
+            icon: const Icon(Icons.code_rounded, size: 16),
+            label: const Text('Get Embed Code & Redirect ✓'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, minimumSize: const Size.fromHeight(44)),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isDesktop) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: leftContent),
+              const SizedBox(width: 20),
+              Expanded(flex: 2, child: appearanceDrawer),
+            ],
+          ),
+        ] else ...[
+          leftContent,
+          const SizedBox(height: 24),
+          appearanceDrawer,
+        ],
         const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -752,9 +802,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   // ===========================================================================
   // STEP 3: UPSELL
   // ===========================================================================
-  Widget _buildStep3Upsell(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
+  Widget _buildStep3Upsell(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider, {required bool isMobile}) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -873,7 +923,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     Text(formDesc, style: GoogleFonts.getFont(_fontFamily, fontSize: 12.5, color: placeholderColor)),
                     const SizedBox(height: 16),
 
-                    // Offer Packages Choice Selection Cards
                     Text('SELECT YOUR OFFER PACKAGE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 11, color: placeholderColor)),
                     const SizedBox(height: 8),
                     Column(
@@ -927,7 +976,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Styled Customer Contact Inputs
                     _buildCustomStyledTextField('FULL NAME *', nameController, 'Chief Customer Tester', inputBgColor, inputTextColor, placeholderColor),
                     const SizedBox(height: 10),
                     _buildCustomStyledTextField('PHONE NUMBER (FOR RIDER) *', phoneController, '08099887766', inputBgColor, inputTextColor, placeholderColor),
@@ -953,7 +1001,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     _buildCustomStyledTextField('DELIVERY ADDRESS *', addressController, '12 Victoria Island Expressway, Lagos', inputBgColor, inputTextColor, placeholderColor),
                     const SizedBox(height: 20),
 
-                    // Custom Styled Submit Action Button
                     ElevatedButton(
                       onPressed: isSubmittingOrder
                           ? null
@@ -1201,7 +1248,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             GestureDetector(
               onTap: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
               child: Tooltip(
-                message: 'Click to open Color Picker Palette',
+                message: 'Click to open 2D HSV Spectrum Color Canvas',
                 child: Container(
                   width: 38,
                   height: 38,
@@ -1231,7 +1278,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             const SizedBox(width: 6),
             IconButton(
               icon: const Icon(Icons.palette_rounded, size: 20, color: Color(0xFF10B981)),
-              tooltip: 'Choose Color Palette',
+              tooltip: 'Choose Color Canvas',
               onPressed: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
             ),
           ],
@@ -1241,7 +1288,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // UNRESTRICTED FULL-SPECTRUM RGB & SWATCH COLOR PICKER MODAL DIALOG
+  // 2D HSV SPECTRUM CANVAS & RAINBOW BAR COLOR PICKER MODAL DIALOG
   // ===========================================================================
   void _showColorPickerDialog(
     BuildContext context, {
@@ -1250,9 +1297,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     required String defaultHex,
   }) {
     Color selectedColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
-    double rVal = selectedColor.r * 255.0;
-    double gVal = selectedColor.g * 255.0;
-    double bVal = selectedColor.b * 255.0;
 
     final List<Map<String, dynamic>> paletteSwatches = [
       {'name': 'Emerald Green', 'hex': '#10B981', 'color': const Color(0xFF10B981)},
@@ -1265,43 +1309,32 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       {'name': 'Deep Dark', 'hex': '#09140E', 'color': const Color(0xFF09140E)},
       {'name': 'Pure White', 'hex': '#FFFFFF', 'color': const Color(0xFFFFFFFF)},
       {'name': 'Soft Card Gray', 'hex': '#FAFAFC', 'color': const Color(0xFFFAFAFC)},
-      {'name': 'Cyan Glow', 'hex': '#06B6D4', 'color': const Color(0xFF06B6D4)},
-      {'name': 'Amber Gold', 'hex': '#F59E0B', 'color': const Color(0xFFF59E0B)},
-      {'name': 'Rose Pink', 'hex': '#F43F5E', 'color': const Color(0xFFF43F5E)},
-      {'name': 'Teal Dark', 'hex': '#14B8A6', 'color': const Color(0xFF14B8A6)},
-      {'name': 'Indigo Luxury', 'hex': '#6366F1', 'color': const Color(0xFF6366F1)},
     ];
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
-          void updateColorFromSliders() {
-            selectedColor = Color.fromRGBO(rVal.round(), gVal.round(), bVal.round(), 1.0);
-            final hex = '#${rVal.round().toRadixString(16).padLeft(2, '0')}${gVal.round().toRadixString(16).padLeft(2, '0')}${bVal.round().toRadixString(16).padLeft(2, '0')}';
-            controller.text = hex;
-          }
-
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
                 const Icon(Icons.color_lens_rounded, color: Color(0xFF10B981), size: 22),
                 const SizedBox(width: 8),
-                Text('Unrestricted Color Picker: $title', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text('2D Spectrum Color Canvas: $title', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
             content: SizedBox(
-              width: 420,
+              width: 440,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Active Color Live Preview Box
+                    // Active Color Preview Box
                     Container(
                       width: double.infinity,
-                      height: 64,
+                      height: 56,
                       decoration: BoxDecoration(
                         color: selectedColor,
                         borderRadius: BorderRadius.circular(12),
@@ -1315,83 +1348,27 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(6)),
                         child: Text(
-                          '${controller.text.toUpperCase()} | RGB(${rVal.round()}, ${gVal.round()}, ${bVal.round()})',
+                          '${controller.text.toUpperCase()} | RGB(${selectedColor.r.toInt()}, ${selectedColor.g.toInt()}, ${selectedColor.b.toInt()})',
                           style: GoogleFonts.robotoMono(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Unrestricted RGB Spectrum Sliders
-                    Text('FULL SPECTRUM RGB SLIDERS (16.7M COLORS)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
-                    const SizedBox(height: 6),
-
-                    // Red Slider
-                    Row(
-                      children: [
-                        Text('R', style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.red)),
-                        Expanded(
-                          child: Slider(
-                            value: rVal,
-                            min: 0,
-                            max: 255,
-                            activeColor: Colors.red,
-                            onChanged: (val) {
-                              setModalState(() {
-                                rVal = val;
-                                updateColorFromSliders();
-                              });
-                            },
-                          ),
-                        ),
-                        Text('${rVal.round()}', style: GoogleFonts.robotoMono(fontSize: 11)),
-                      ],
+                    // 🎨 2D HSV CANVAS & RAINBOW SPECTRUM BAR WIDGET
+                    _HsvSpectrumColorPicker(
+                      initialColor: selectedColor,
+                      onColorChanged: (newColor) {
+                        setModalState(() {
+                          selectedColor = newColor;
+                          final cleanR = (newColor.r * 255.0).round().toRadixString(16).padLeft(2, '0');
+                          final cleanG = (newColor.g * 255.0).round().toRadixString(16).padLeft(2, '0');
+                          final cleanB = (newColor.b * 255.0).round().toRadixString(16).padLeft(2, '0');
+                          controller.text = '#$cleanR$cleanG$cleanB';
+                        });
+                      },
                     ),
-
-                    // Green Slider
-                    Row(
-                      children: [
-                        Text('G', style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.green)),
-                        Expanded(
-                          child: Slider(
-                            value: gVal,
-                            min: 0,
-                            max: 255,
-                            activeColor: Colors.green,
-                            onChanged: (val) {
-                              setModalState(() {
-                                gVal = val;
-                                updateColorFromSliders();
-                              });
-                            },
-                          ),
-                        ),
-                        Text('${gVal.round()}', style: GoogleFonts.robotoMono(fontSize: 11)),
-                      ],
-                    ),
-
-                    // Blue Slider
-                    Row(
-                      children: [
-                        Text('B', style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.blue)),
-                        Expanded(
-                          child: Slider(
-                            value: bVal,
-                            min: 0,
-                            max: 255,
-                            activeColor: Colors.blue,
-                            onChanged: (val) {
-                              setModalState(() {
-                                bVal = val;
-                                updateColorFromSliders();
-                              });
-                            },
-                          ),
-                        ),
-                        Text('${bVal.round()}', style: GoogleFonts.robotoMono(fontSize: 11)),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
 
                     Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
                     const SizedBox(height: 8),
@@ -1411,9 +1388,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                             setModalState(() {
                               selectedColor = swatchColor;
                               controller.text = hex;
-                              rVal = swatchColor.r * 255.0;
-                              gVal = swatchColor.g * 255.0;
-                              bVal = swatchColor.b * 255.0;
                             });
                           },
                           child: Tooltip(
@@ -1440,9 +1414,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       onChanged: (val) {
                         setModalState(() {
                           selectedColor = _parseColorFromHex(val, defaultHex: defaultHex);
-                          rVal = selectedColor.r * 255.0;
-                          gVal = selectedColor.g * 255.0;
-                          bVal = selectedColor.b * 255.0;
                         });
                       },
                       decoration: const InputDecoration(hintText: '#10B981', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
@@ -1479,9 +1450,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     return Color(int.parse('FF$fallback', radix: 16));
   }
 
-  // ===========================================================================
   // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL
-  // ===========================================================================
   void _showOfferPackageModalDialog(
     BuildContext context, {
     required CampaignFormBuilderProvider provider,
@@ -1689,9 +1658,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  // ===========================================================================
   // MODAL DIALOG: SEARCHABLE ONBOARDED PRODUCT PICKER (Linked Items)
-  // ===========================================================================
   void _showAddLinkedItemModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
     String searchQuery = '';
     Map<String, dynamic>? selectedProduct = provider.availableProducts.isNotEmpty ? provider.availableProducts.first : null;
@@ -1914,6 +1881,203 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
       ],
     );
+  }
+}
+
+// =============================================================================
+// 🎨 2D HSV CANVAS & RAINBOW SPECTRUM BAR COLOR PICKER WIDGET
+// =============================================================================
+class _HsvSpectrumColorPicker extends StatefulWidget {
+  final Color initialColor;
+  final ValueChanged<Color> onColorChanged;
+
+  const _HsvSpectrumColorPicker({
+    required this.initialColor,
+    required this.onColorChanged,
+  });
+
+  @override
+  State<_HsvSpectrumColorPicker> createState() => _HsvSpectrumColorPickerState();
+}
+
+class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
+  late double _hue; // 0.0 to 360.0
+  late double _saturation; // 0.0 to 1.0
+  late double _value; // 0.0 to 1.0
+
+  @override
+  void initState() {
+    super.initState();
+    final hsv = HSVColor.fromColor(widget.initialColor);
+    _hue = hsv.hue;
+    _saturation = hsv.saturation;
+    _value = hsv.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant _HsvSpectrumColorPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialColor != widget.initialColor) {
+      final hsv = HSVColor.fromColor(widget.initialColor);
+      _hue = hsv.hue;
+      _saturation = hsv.saturation;
+      _value = hsv.value;
+    }
+  }
+
+  void _notifyColor() {
+    final currentColor = HSVColor.fromAHSV(1.0, _hue, _saturation, _value).toColor();
+    widget.onColorChanged(currentColor);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeHueColor = HSVColor.fromAHSV(1.0, _hue, 1.0, 1.0).toColor();
+    final currentColor = HSVColor.fromAHSV(1.0, _hue, _saturation, _value).toColor();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Rainbow Spectrum Hue Bar (Top horizontal gradient bar)
+        GestureDetector(
+          onPanDown: (details) => _updateHueFromPos(details.localPosition, context),
+          onPanUpdate: (details) => _updateHueFromPos(details.localPosition, context),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final barWidth = constraints.maxWidth;
+              final thumbX = (_hue / 360.0) * barWidth;
+
+              return Container(
+                height: 24,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFFF0000), // Red
+                      Color(0xFFFFFF00), // Yellow
+                      Color(0xFF00FF00), // Green
+                      Color(0xFF00FFFF), // Cyan
+                      Color(0xFF0000FF), // Blue
+                      Color(0xFFFF00FF), // Magenta
+                      Color(0xFFFF0000), // Red
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: (thumbX - 10).clamp(0.0, barWidth - 20),
+                      top: 2,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: activeHueColor,
+                          border: Border.all(color: Colors.white, width: 2.5),
+                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 4)],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // 2. 2D Saturation-Value Canvas (Main gradient canvas box)
+        GestureDetector(
+          onPanDown: (details) => _updateSvFromPos(details.localPosition, context),
+          onPanUpdate: (details) => _updateSvFromPos(details.localPosition, context),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final canvasWidth = constraints.maxWidth;
+              final canvasHeight = 160.0;
+              final thumbX = _saturation * canvasWidth;
+              final thumbY = (1.0 - _value) * canvasHeight;
+
+              return Container(
+                height: canvasHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: activeHueColor,
+                ),
+                child: Stack(
+                  children: [
+                    // Horizontal Saturation Overlay (White to Transparent)
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [Colors.white, Colors.transparent],
+                        ),
+                      ),
+                    ),
+                    // Vertical Value Overlay (Transparent to Black)
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black],
+                        ),
+                      ),
+                    ),
+                    // Draggable White Selector Circle Thumb (O)
+                    Positioned(
+                      left: (thumbX - 10).clamp(0.0, canvasWidth - 20),
+                      top: (thumbY - 10).clamp(0.0, canvasHeight - 20),
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: currentColor,
+                          border: Border.all(color: Colors.white, width: 2.5),
+                          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 5)],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _updateHueFromPos(Offset localPos, BuildContext context) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final width = box.size.width;
+    final clampedX = localPos.dx.clamp(0.0, width);
+    setState(() {
+      _hue = (clampedX / width) * 360.0;
+      _notifyColor();
+    });
+  }
+
+  void _updateSvFromPos(Offset localPos, BuildContext context) {
+    final canvasWidth = context.size?.width ?? 300.0;
+    final canvasHeight = 160.0;
+    final clampedX = localPos.dx.clamp(0.0, canvasWidth);
+    final clampedY = localPos.dy.clamp(0.0, canvasHeight);
+
+    setState(() {
+      _saturation = clampedX / canvasWidth;
+      _value = 1.0 - (clampedY / canvasHeight);
+      _notifyColor();
+    });
   }
 }
 
