@@ -1406,8 +1406,93 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   </form>
 </div>
 
-<!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & ENGINE SCRIPT -->
+<!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & DYNAMIC LOCATION ENGINE SCRIPT -->
 <script>
+  const locationCascadeData = {
+    "Nigeria": {
+      "Lagos": ["Ikeja", "Victoria Island / Eti-Osa", "Lekki / Ajah", "Surulere", "Alimosho", "Kosofe / Ojota", "Apapa", "Ikorodu", "Epe", "Badagry", "Mushin", "Agege", "Oshodi-Isolo", "Yaba / Lagos Mainland", "Amuwo-Odofin"],
+      "Abuja (FCT)": ["Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa", "Kubwa", "Lugbe", "Bwari", "Kuje", "Abaji", "Utako", "Jabi"],
+      "Rivers (Port Harcourt)": ["Port Harcourt City", "Obio-Akpor", "Eleme", "Ikwerre", "Bonny Island", "Oyigbo", "Degema"],
+      "Oyo (Ibadan)": ["Ibadan North", "Ibadan Southwest", "Ibadan Southeast", "Ibadan Northwest", "Oyo East", "Ogbomoso"],
+      "Kano": ["Kano Municipal", "Fagge", "Dala", "Gwale", "Tarauni", "Nassarawa"],
+      "Ogun": ["Abeokuta South", "Abeokuta North", "Ifo", "Ota / Ado-Odo", "Ijebu Ode", "Sagamu"],
+      "Enugu": ["Enugu North", "Enugu South", "Enugu East", "Nsukka"],
+      "Delta": ["Warri South", "Asaba / Oshimili South", "Uvwie / Effurun", "Ughelli"]
+    },
+    "Ghana": {
+      "Greater Accra": ["Accra Central", "Tema", "East Legon", "Madina", "Spintex"],
+      "Ashanti (Kumasi)": ["Kumasi Central", "Adum", "Bantama", "Asokwa"],
+      "Western (Takoradi)": ["Sekondi", "Takoradi Central", "Tarkwa"],
+      "Northern (Tamale)": ["Tamale Central", "Sagnarigu"]
+    },
+    "Kenya": {
+      "Nairobi": ["Nairobi Central", "Westlands", "Kilimani", "Karen", "Kasarani"],
+      "Mombasa": ["Mombasa Island", "Nyali", "Bamburi", "Likoni"],
+      "Kisumu": ["Kisumu Central", "Milimani"],
+      "Nakuru": ["Nakuru Town", "Naivasha"]
+    },
+    "South Africa": {
+      "Gauteng (Johannesburg)": ["Sandton", "Rosebank", "Soweto", "Midrand", "Pretoria"],
+      "Western Cape (Cape Town)": ["Cape Town CBD", "Stellenbosch", "Bellville", "Camps Bay"],
+      "KwaZulu-Natal (Durban)": ["Durban Central", "Umhlanga", "Pinetown"]
+    },
+    "United Kingdom": {
+      "England (London)": ["Central London", "Westminster", "Camden", "Greenwich", "Croydon"],
+      "Scotland (Edinburgh)": ["City Centre", "Leith", "Morningside"],
+      "Wales (Cardiff)": ["Cardiff Central", "Cardiff Bay"],
+      "Northern Ireland": ["Belfast", "Derry"]
+    },
+    "United States": {
+      "California": ["Los Angeles", "San Francisco", "San Diego", "San Jose"],
+      "Texas": ["Houston", "Dallas", "Austin", "San Antonio"],
+      "New York": ["New York City", "Brooklyn", "Queens", "Buffalo"],
+      "Florida": ["Miami", "Orlando", "Tampa", "Jacksonville"],
+      "Georgia": ["Atlanta", "Savannah", "Augusta"]
+    },
+    "Canada": {
+      "Ontario (Toronto)": ["Toronto Downtown", "Mississauga", "Brampton", "Ottawa"],
+      "British Columbia (Vancouver)": ["Vancouver CBD", "Burnaby", "Richmond"],
+      "Quebec (Montreal)": ["Montreal Downtown", "Laval", "Gatineau"]
+    }
+  };
+
+  const countrySel = document.getElementById('novasuite-country');
+  const stateSel = document.getElementById('novasuite-state');
+  const citySel = document.getElementById('novasuite-city');
+
+  function populateStates() {
+    const selectedCountry = countrySel.value;
+    const statesObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
+    stateSel.innerHTML = '';
+    Object.keys(statesObj).forEach(function(state) {
+      const opt = document.createElement('option');
+      opt.value = state;
+      opt.innerText = state;
+      stateSel.appendChild(opt);
+    });
+    populateCities();
+  }
+
+  function populateCities() {
+    const selectedCountry = countrySel.value;
+    const selectedState = stateSel.value;
+    const statesObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
+    const citiesArr = statesObj[selectedState] || ["Central District", "Metropolitan Area", "Main City Zone"];
+    citySel.innerHTML = '';
+    citiesArr.forEach(function(city) {
+      const opt = document.createElement('option');
+      opt.value = city;
+      opt.innerText = city;
+      citySel.appendChild(opt);
+    });
+  }
+
+  if (countrySel && stateSel && citySel) {
+    countrySel.addEventListener('change', populateStates);
+    stateSel.addEventListener('change', populateCities);
+    populateStates();
+  }
+
   document.getElementById('novasuite-checkout-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('novasuite-submit-btn');
