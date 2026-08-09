@@ -40,12 +40,30 @@ class AddressLocationService {
       'Abia',
       'Cross River',
     ],
-    'Ghana': ['Greater Accra', 'Ashanti (Kumasi)', 'Western (Takoradi)', 'Northern (Tamale)'],
+    'Ghana': [
+      'Greater Accra',
+      'Ashanti (Kumasi)',
+      'Western (Takoradi)',
+      'Northern (Tamale)'
+    ],
     'Kenya': ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru'],
-    'South Africa': ['Gauteng (Johannesburg)', 'Western Cape (Cape Town)', 'KwaZulu-Natal (Durban)'],
-    'United Kingdom': ['England (London)', 'Scotland (Edinburgh)', 'Wales (Cardiff)', 'Northern Ireland'],
+    'South Africa': [
+      'Gauteng (Johannesburg)',
+      'Western Cape (Cape Town)',
+      'KwaZulu-Natal (Durban)'
+    ],
+    'United Kingdom': [
+      'England (London)',
+      'Scotland (Edinburgh)',
+      'Wales (Cardiff)',
+      'Northern Ireland'
+    ],
     'United States': ['California', 'Texas', 'New York', 'Florida', 'Georgia'],
-    'Canada': ['Ontario (Toronto)', 'British Columbia (Vancouver)', 'Quebec (Montreal)'],
+    'Canada': [
+      'Ontario (Toronto)',
+      'British Columbia (Vancouver)',
+      'Quebec (Montreal)'
+    ],
   };
 
   static const Map<String, List<String>> citiesLgasByState = {
@@ -114,7 +132,12 @@ class AddressLocationService {
       'Sagamu',
     ],
     'Enugu': ['Enugu North', 'Enugu South', 'Enugu East', 'Nsukka'],
-    'Delta': ['Warri South', 'Asaba / Oshimili South', 'Uvwie / Effurun', 'Ughelli'],
+    'Delta': [
+      'Warri South',
+      'Asaba / Oshimili South',
+      'Uvwie / Effurun',
+      'Ughelli'
+    ],
   };
 
   static List<String> getStates(String country) {
@@ -122,7 +145,8 @@ class AddressLocationService {
   }
 
   static List<String> getCitiesLgas(String state) {
-    return citiesLgasByState[state] ?? ['Central District', 'Metropolitan Area', 'Main City Zone'];
+    return citiesLgasByState[state] ??
+        ['Central District', 'Metropolitan Area', 'Main City Zone'];
   }
 }
 
@@ -139,17 +163,23 @@ class CampaignFormBuilderPage extends StatefulWidget {
   });
 
   @override
-  State<CampaignFormBuilderPage> createState() => _CampaignFormBuilderPageState();
+  State<CampaignFormBuilderPage> createState() =>
+      _CampaignFormBuilderPageState();
 }
 
 class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   // Step 1: Basics Controllers
   final _formTitleController = TextEditingController(text: 'Grazer Tea Joel');
-  final _digitalMarketerController = TextEditingController(text: 'joelodufu@gmail.com');
-  final _redirectUrlController = TextEditingController(text: 'https://detoxwithnova.xyz/ura-clear-detox-tea');
-  final _successMessageController = TextEditingController(text: 'Thanks! Our concierge team will confirm shortly.');
-  final _submitButtonTextController = TextEditingController(text: 'Get Yours Now');
-  final _descriptionController = TextEditingController(text: 'Internal note or CTA shown above the form.');
+  final _digitalMarketerController =
+      TextEditingController(text: 'joelodufu@gmail.com');
+  final _redirectUrlController = TextEditingController(
+      text: 'https://detoxwithnova.xyz/ura-clear-detox-tea');
+  final _successMessageController = TextEditingController(
+      text: 'Thanks! Our concierge team will confirm shortly.');
+  final _submitButtonTextController =
+      TextEditingController(text: 'Get Yours Now');
+  final _descriptionController =
+      TextEditingController(text: 'Internal note or CTA shown above the form.');
 
   // Step 2: Appearance & Styling Customization Controls
   final _buttonBgController = TextEditingController(text: '#568500');
@@ -166,13 +196,16 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   String _selectedLayoutTemplate = 'High-Converting E-Commerce';
 
   // Step 3: Upsell Controller
-  final _upsellTitleController = TextEditingController(text: 'Add 1 Extra Bottle of Detox Tea for 50% Off!');
+  final _upsellTitleController = TextEditingController(
+      text: 'Add 1 Extra Bottle of Detox Tea for 50% Off!');
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CampaignFormBuilderProvider>().fetchAvailableProductsFromSupabase();
+      context
+          .read<CampaignFormBuilderProvider>()
+          .fetchAvailableProductsFromSupabase();
     });
   }
 
@@ -239,11 +272,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF0C1F17) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final textMuted =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
     final primaryColor = const Color(0xFF10B981);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: cardBg,
         elevation: 0,
@@ -251,24 +286,34 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: widget.onBackToForms,
         ),
-        title: Text('Campaign Form Builder', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
+        title: Text('Campaign Form Builder',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
         actions: [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => _showLiveFormPreviewModalDialog(context, provider: builderProvider),
+                  onPressed: () => _showLiveFormPreviewModalDialog(context,
+                      provider: builderProvider),
                   icon: const Icon(Icons.visibility_rounded, size: 16),
                   label: const Text('Live Form Preview'),
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white, elevation: 0),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      elevation: 0),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
-                  onPressed: () => _showEmbedCodeModalDialog(context, provider: builderProvider),
+                  onPressed: () => _showEmbedCodeModalDialog(context,
+                      provider: builderProvider),
                   icon: const Icon(Icons.code_rounded, size: 16),
                   label: const Text('Get Embed Code & Redirect ✓'),
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, elevation: 0),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                      elevation: 0),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton(
@@ -294,7 +339,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 // Header Description & Responsive Stepper Navigation
                 Text(
                   'Embed-ready forms for Facebook tabs, WordPress landing pages, or microsites. Submissions are tracked instantly and buyers redirect automatically to your Thank-You Page.',
-                  style: GoogleFonts.inter(fontSize: isMobile ? 11.5 : 12.5, color: textMuted),
+                  style: GoogleFonts.inter(
+                      fontSize: isMobile ? 11.5 : 12.5, color: textMuted),
                 ),
                 const SizedBox(height: 16),
 
@@ -303,16 +349,27 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildStepTab(0, 'Step 1: Basics', builderProvider, primaryColor),
+                      _buildStepTab(
+                          0, 'Step 1: Basics', builderProvider, primaryColor),
                       const SizedBox(width: 8),
-                      _buildStepTab(1, 'Step 2: Builder', builderProvider, primaryColor),
+                      _buildStepTab(
+                          1, 'Step 2: Builder', builderProvider, primaryColor),
                       const SizedBox(width: 8),
-                      _buildStepTab(2, 'Step 3: Upsell', builderProvider, primaryColor),
+                      _buildStepTab(
+                          2, 'Step 3: Upsell', builderProvider, primaryColor),
                       const SizedBox(width: 16),
-                      Text('RESUME DRAFT: ', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: textMuted)),
+                      Text('RESUME DRAFT: ',
+                          style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: textMuted)),
                       DropdownButton<String>(
                         value: 'Grazer Tea Joel',
-                        items: const [DropdownMenuItem(value: 'Grazer Tea Joel', child: Text('Grazer Tea Joel'))],
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'Grazer Tea Joel',
+                              child: Text('Grazer Tea Joel'))
+                        ],
                         onChanged: (val) {},
                       ),
                     ],
@@ -322,11 +379,16 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
                 // Active Step Content View
                 if (builderProvider.currentStep == 0)
-                  _buildStep1Basics(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider, isMobile: isMobile)
+                  _buildStep1Basics(isDark, cardBg, textColor, textMuted,
+                      primaryColor, builderProvider, isMobile: isMobile)
                 else if (builderProvider.currentStep == 1)
-                  _buildStep2Builder(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider, isDesktop: isDesktop, isMobile: isMobile)
+                  _buildStep2Builder(isDark, cardBg, textColor, textMuted,
+                      primaryColor, builderProvider,
+                      isDesktop: isDesktop, isMobile: isMobile)
                 else
-                  _buildStep3Upsell(isDark, cardBg, textColor, textMuted, primaryColor, builderProvider, isMobile: isMobile),
+                  _buildStep3Upsell(isDark, cardBg, textColor, textMuted,
+                      primaryColor, builderProvider,
+                      isMobile: isMobile),
               ],
             ),
           );
@@ -335,69 +397,99 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  Widget _buildStepTab(int stepIndex, String label, CampaignFormBuilderProvider provider, Color primaryColor) {
+  Widget _buildStepTab(int stepIndex, String label,
+      CampaignFormBuilderProvider provider, Color primaryColor) {
     final isActive = provider.currentStep == stepIndex;
     return ElevatedButton(
       onPressed: () => provider.setStep(stepIndex),
       style: ElevatedButton.styleFrom(
-        backgroundColor: isActive ? primaryColor : Colors.grey.withValues(alpha: 0.15),
+        backgroundColor:
+            isActive ? primaryColor : Colors.grey.withValues(alpha: 0.15),
         foregroundColor: isActive ? Colors.white : Colors.grey,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12.5)),
+      child: Text(label,
+          style:
+              GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12.5)),
     );
   }
 
   // ===========================================================================
   // STEP 1: BASICS
   // ===========================================================================
-  Widget _buildStep1Basics(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider, {required bool isMobile}) {
+  Widget _buildStep1Basics(bool isDark, Color cardBg, Color textColor,
+      Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider,
+      {required bool isMobile}) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
-      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
+      decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isMobile) ...[
-            _buildInputGroup('FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
+            _buildInputGroup(
+                'FORM TITLE', _formTitleController, 'Grazer Tea Joel'),
             const SizedBox(height: 12),
-            _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com'),
+            _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController,
+                'joelodufu@gmail.com'),
             const SizedBox(height: 12),
-            _buildInputGroup('REDIRECT URL / THANK YOU LINK *', _redirectUrlController, 'https://detoxwithnova.xyz/thank-you'),
+            _buildInputGroup('REDIRECT URL / THANK YOU LINK *',
+                _redirectUrlController, 'https://detoxwithnova.xyz/thank-you'),
           ] else ...[
             Row(
               children: [
-                Expanded(child: _buildInputGroup('FORM TITLE', _formTitleController, 'Grazer Tea Joel')),
+                Expanded(
+                    child: _buildInputGroup(
+                        'FORM TITLE', _formTitleController, 'Grazer Tea Joel')),
                 const SizedBox(width: 16),
-                Expanded(child: _buildInputGroup('DIGITAL MARKETER', _digitalMarketerController, 'joelodufu@gmail.com')),
+                Expanded(
+                    child: _buildInputGroup('DIGITAL MARKETER',
+                        _digitalMarketerController, 'joelodufu@gmail.com')),
                 const SizedBox(width: 16),
-                Expanded(child: _buildInputGroup('REDIRECT URL / THANK YOU LINK *', _redirectUrlController, 'https://detoxwithnova.xyz/thank-you')),
+                Expanded(
+                    child: _buildInputGroup(
+                        'REDIRECT URL / THANK YOU LINK *',
+                        _redirectUrlController,
+                        'https://detoxwithnova.xyz/thank-you')),
               ],
             ),
           ],
           const SizedBox(height: 16),
-
           if (isMobile) ...[
-            _buildInputGroup('SUCCESS MESSAGE', _successMessageController, 'Thanks!...'),
+            _buildInputGroup(
+                'SUCCESS MESSAGE', _successMessageController, 'Thanks!...'),
             const SizedBox(height: 12),
-            _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now'),
+            _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController,
+                'Get Yours Now'),
             const SizedBox(height: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('QUANTITY DISPLAY MODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                Text('QUANTITY DISPLAY MODE',
+                    style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: textMuted)),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   initialValue: provider.quantityDisplayMode,
                   dropdownColor: cardBg,
                   style: GoogleFonts.inter(color: textColor, fontSize: 13),
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  items: ['Radio buttons', 'Dropdown selector'].map((m) => DropdownMenuItem(
-                    value: m,
-                    child: Text(m, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-                  )).toList(),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  items: ['Radio buttons', 'Dropdown selector']
+                      .map((m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(m,
+                                style: GoogleFonts.inter(
+                                    color: textColor, fontSize: 13)),
+                          ))
+                      .toList(),
                   onChanged: (val) {
                     if (val != null) provider.setQuantityDisplayMode(val);
                   },
@@ -407,25 +499,39 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           ] else ...[
             Row(
               children: [
-                Expanded(child: _buildInputGroup('SUCCESS MESSAGE', _successMessageController, 'Thanks!...')),
+                Expanded(
+                    child: _buildInputGroup('SUCCESS MESSAGE',
+                        _successMessageController, 'Thanks!...')),
                 const SizedBox(width: 16),
-                Expanded(child: _buildInputGroup('SUBMIT BUTTON TEXT', _submitButtonTextController, 'Get Yours Now')),
+                Expanded(
+                    child: _buildInputGroup('SUBMIT BUTTON TEXT',
+                        _submitButtonTextController, 'Get Yours Now')),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('QUANTITY DISPLAY MODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                      Text('QUANTITY DISPLAY MODE',
+                          style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: textMuted)),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
                         initialValue: provider.quantityDisplayMode,
                         dropdownColor: cardBg,
-                        style: GoogleFonts.inter(color: textColor, fontSize: 13),
-                        decoration: const InputDecoration(border: OutlineInputBorder()),
-                        items: ['Radio buttons', 'Dropdown selector'].map((m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(m, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-                        )).toList(),
+                        style:
+                            GoogleFonts.inter(color: textColor, fontSize: 13),
+                        decoration:
+                            const InputDecoration(border: OutlineInputBorder()),
+                        items: ['Radio buttons', 'Dropdown selector']
+                            .map((m) => DropdownMenuItem(
+                                  value: m,
+                                  child: Text(m,
+                                      style: GoogleFonts.inter(
+                                          color: textColor, fontSize: 13)),
+                                ))
+                            .toList(),
                         onChanged: (val) {
                           if (val != null) provider.setQuantityDisplayMode(val);
                         },
@@ -437,7 +543,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ),
           ],
           const SizedBox(height: 16),
-          _buildInputGroup('DESCRIPTION', _descriptionController, 'Internal note or CTA shown above the form.', maxLines: 3),
+          _buildInputGroup('DESCRIPTION', _descriptionController,
+              'Internal note or CTA shown above the form.',
+              maxLines: 3),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -461,7 +569,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           backgroundColor: Color(0xFF3B82F6),
-                          content: Text('Form draft saved! Listed in Campaign Lead Forms. ✓'),
+                          content: Text(
+                              'Form draft saved! Listed in Campaign Lead Forms. ✓'),
                         ),
                       );
                     },
@@ -479,7 +588,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       );
                       provider.setStep(1);
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white),
                     child: const Text('Continue to builder ➔'),
                   ),
                 ],
@@ -519,17 +630,27 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('PRODUCT CATEGORY *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                        Text('PRODUCT CATEGORY *',
+                            style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: textMuted)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           initialValue: provider.selectedProductCategory,
                           dropdownColor: cardBg,
-                          style: GoogleFonts.inter(color: textColor, fontSize: 13),
-                          decoration: const InputDecoration(border: OutlineInputBorder()),
-                          items: ['Grazer Herbal Tea', 'Vitality Booster'].map((c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-                          )).toList(),
+                          style:
+                              GoogleFonts.inter(color: textColor, fontSize: 13),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder()),
+                          items: ['Grazer Herbal Tea', 'Vitality Booster']
+                              .map((c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(c,
+                                        style: GoogleFonts.inter(
+                                            color: textColor, fontSize: 13)),
+                                  ))
+                              .toList(),
                           onChanged: (val) {
                             if (val != null) provider.setProductCategory(val);
                           },
@@ -539,7 +660,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     const SizedBox(height: 10),
                     _buildReadOnlyField('RESOLVED BRAND', 'Novacare'),
                     const SizedBox(height: 10),
-                    _buildReadOnlyField('RESOLVED COST CENTER', 'Novacare - NL'),
+                    _buildReadOnlyField(
+                        'RESOLVED COST CENTER', 'Novacare - NL'),
                   ],
                 )
               : Row(
@@ -548,17 +670,27 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('PRODUCT CATEGORY *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: textMuted)),
+                          Text('PRODUCT CATEGORY *',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: textMuted)),
                           const SizedBox(height: 6),
                           DropdownButtonFormField<String>(
                             initialValue: provider.selectedProductCategory,
                             dropdownColor: cardBg,
-                            style: GoogleFonts.inter(color: textColor, fontSize: 13),
-                            decoration: const InputDecoration(border: OutlineInputBorder()),
-                            items: ['Grazer Herbal Tea', 'Vitality Booster'].map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(c, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-                            )).toList(),
+                            style: GoogleFonts.inter(
+                                color: textColor, fontSize: 13),
+                            decoration: const InputDecoration(
+                                border: OutlineInputBorder()),
+                            items: ['Grazer Herbal Tea', 'Vitality Booster']
+                                .map((c) => DropdownMenuItem(
+                                      value: c,
+                                      child: Text(c,
+                                          style: GoogleFonts.inter(
+                                              color: textColor, fontSize: 13)),
+                                    ))
+                                .toList(),
                             onChanged: (val) {
                               if (val != null) provider.setProductCategory(val);
                             },
@@ -567,9 +699,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildReadOnlyField('RESOLVED BRAND', 'Novacare')),
+                    Expanded(
+                        child:
+                            _buildReadOnlyField('RESOLVED BRAND', 'Novacare')),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildReadOnlyField('RESOLVED COST CENTER', 'Novacare - NL')),
+                    Expanded(
+                        child: _buildReadOnlyField(
+                            'RESOLVED COST CENTER', 'Novacare - NL')),
                   ],
                 ),
         ),
@@ -592,7 +728,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     Expanded(
                       child: TextFormField(
                         initialValue: field['label'],
-                        decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -600,13 +739,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       children: [
                         Switch(
                           value: field['required'] as bool,
-                          onChanged: (val) => provider.toggleCoreFieldRequired(idx),
+                          onChanged: (val) =>
+                              provider.toggleCoreFieldRequired(idx),
                         ),
                         Text('Req', style: GoogleFonts.inter(fontSize: 11)),
                         const SizedBox(width: 8),
                         Switch(
                           value: field['visible'] as bool,
-                          onChanged: (val) => provider.toggleCoreFieldVisible(idx),
+                          onChanged: (val) =>
+                              provider.toggleCoreFieldVisible(idx),
                         ),
                         Text('Vis', style: GoogleFonts.inter(fontSize: 11)),
                       ],
@@ -626,21 +767,30 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           cardBg,
           isDark,
           action: ElevatedButton.icon(
-            onPressed: () => _showOfferPackageModalDialog(context, provider: provider),
+            onPressed: () =>
+                _showOfferPackageModalDialog(context, provider: provider),
             icon: const Icon(Icons.add_rounded, size: 16),
             label: const Text('+ Add Offer Package'),
-            style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
           ),
           child: provider.offerPackages.isEmpty
               ? Container(
                   padding: const EdgeInsets.all(24),
                   alignment: Alignment.center,
-                  child: Text('No offer packages added yet. Click "+ Add Offer Package" to create one.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+                  child: Text(
+                      'No offer packages added yet. Click "+ Add Offer Package" to create one.',
+                      style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
                 )
               : SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+                    headingRowColor: WidgetStateProperty.all(isDark
+                        ? const Color(0xFF09140E)
+                        : const Color(0xFFF1F5F9)),
                     columns: const [
                       DataColumn(label: Text('PACKAGE LABEL')),
                       DataColumn(label: Text('BUY QTY')),
@@ -657,49 +807,101 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       final isDefault = pkg['isDefault'] == true;
                       final buyQty = (pkg['buyQty'] ?? 1) as int;
                       final freeQty = (pkg['freeQty'] ?? 0) as int;
-                      final freeAddonName = pkg['freeAddonProductName'] as String?;
+                      final freeAddonName =
+                          pkg['freeAddonProductName'] as String?;
                       final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
                       final totalStockUnits = buyQty + freeQty + freeAddonQty;
                       final discountVal = (pkg['discount'] ?? 0.0) as double;
 
                       return DataRow(
-                        color: isDefault ? WidgetStateProperty.all(primaryColor.withValues(alpha: 0.08)) : null,
+                        color: isDefault
+                            ? WidgetStateProperty.all(
+                                primaryColor.withValues(alpha: 0.08))
+                            : null,
                         cells: [
                           DataCell(Row(
                             children: [
-                              Text(pkg['label'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
+                              Text(pkg['label'] ?? '',
+                                  style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor)),
                               if (isDefault) ...[
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                                  child: Text('DEFAULT', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: primaryColor)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                      color:
+                                          primaryColor.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8)),
+                                  child: Text('DEFAULT',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryColor)),
                                 ),
                               ],
                             ],
                           )),
-                          DataCell(Text('$buyQty', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
+                          DataCell(Text('$buyQty',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600))),
                           DataCell(
                             freeAddonName != null && freeAddonQty > 0
                                 ? Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                                    child: Text('🎁 ${freeAddonQty}x $freeAddonName (FREE)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                        color: Colors.purple
+                                            .withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(8)),
+                                    child: Text(
+                                        '🎁 ${freeAddonQty}x $freeAddonName (FREE)',
+                                        style: GoogleFonts.inter(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.purple)),
                                   )
-                                : Text(freeQty > 0 ? '${freeQty}x Same Product (Free)' : '—', style: GoogleFonts.inter(color: textMuted)),
+                                : Text(
+                                    freeQty > 0
+                                        ? '${freeQty}x Same Product (Free)'
+                                        : '—',
+                                    style: GoogleFonts.inter(color: textMuted)),
                           ),
                           DataCell(Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                            child: Text('$totalStockUnits units ($buyQty + ${freeQty + freeAddonQty} free)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Text(
+                                '$totalStockUnits units ($buyQty + ${freeQty + freeAddonQty} free)',
+                                style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue)),
                           )),
-                          DataCell(Text('₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                          DataCell(Text(
+                              '₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor))),
                           DataCell(
                             discountVal > 0
                                 ? Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                                    child: Text('Save ₦${discountVal.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                        color: Colors.orange
+                                            .withValues(alpha: 0.15),
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child: Text(
+                                        'Save ₦${discountVal.toStringAsFixed(0)}',
+                                        style: GoogleFonts.inter(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange)),
                                   )
                                 : Text('—', style: TextStyle(color: textMuted)),
                           ),
@@ -712,19 +914,28 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                           DataCell(Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.blue),
+                                icon: const Icon(Icons.edit_outlined,
+                                    size: 16, color: Colors.blue),
                                 tooltip: 'Edit Package',
-                                onPressed: () => _showOfferPackageModalDialog(context, provider: provider, editIndex: idx, existingPkg: pkg),
+                                onPressed: () => _showOfferPackageModalDialog(
+                                    context,
+                                    provider: provider,
+                                    editIndex: idx,
+                                    existingPkg: pkg),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.indigo),
+                                icon: const Icon(Icons.copy_rounded,
+                                    size: 16, color: Colors.indigo),
                                 tooltip: 'Duplicate Package',
-                                onPressed: () => provider.duplicateOfferPackage(idx),
+                                onPressed: () =>
+                                    provider.duplicateOfferPackage(idx),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    size: 16, color: Colors.red),
                                 tooltip: 'Delete Package',
-                                onPressed: () => provider.removeOfferPackage(idx),
+                                onPressed: () =>
+                                    provider.removeOfferPackage(idx),
                               ),
                             ],
                           )),
@@ -743,21 +954,30 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           cardBg,
           isDark,
           action: ElevatedButton.icon(
-            onPressed: () => _showAddLinkedItemModalDialog(context, provider: provider),
+            onPressed: () =>
+                _showAddLinkedItemModalDialog(context, provider: provider),
             icon: const Icon(Icons.search_rounded, size: 16),
             label: const Text('+ Attach Product Item'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
           ),
           child: provider.linkedItems.isEmpty
               ? Container(
                   padding: const EdgeInsets.all(24),
                   alignment: Alignment.center,
-                  child: Text('No product items attached yet. Click "+ Attach Product Item" to search onboarded catalog.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+                  child: Text(
+                      'No product items attached yet. Click "+ Attach Product Item" to search onboarded catalog.',
+                      style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
                 )
               : SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+                    headingRowColor: WidgetStateProperty.all(isDark
+                        ? const Color(0xFF09140E)
+                        : const Color(0xFFF1F5F9)),
                     columns: const [
                       DataColumn(label: Text('ITEM NAME')),
                       DataColumn(label: Text('SKU')),
@@ -773,24 +993,44 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       final isDefault = item['isDefault'] == true;
 
                       return DataRow(
-                        color: isDefault ? WidgetStateProperty.all(const Color(0xFF3B82F6).withValues(alpha: 0.08)) : null,
+                        color: isDefault
+                            ? WidgetStateProperty.all(
+                                const Color(0xFF3B82F6).withValues(alpha: 0.08))
+                            : null,
                         cells: [
-                          DataCell(Text(item['name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
-                          DataCell(Text(item['sku'] ?? 'SKU-001', style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
+                          DataCell(Text(item['name'] ?? '',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor))),
+                          DataCell(Text(item['sku'] ?? 'SKU-001',
+                              style: GoogleFonts.inter(
+                                  fontSize: 11, color: textMuted))),
                           DataCell(Chip(
-                            label: Text(item['type'] ?? 'Main', style: const TextStyle(fontSize: 10, color: Colors.white)),
-                            backgroundColor: item['type'] == 'Main' ? Colors.blue : Colors.purple,
+                            label: Text(item['type'] ?? 'Main',
+                                style: const TextStyle(
+                                    fontSize: 10, color: Colors.white)),
+                            backgroundColor: item['type'] == 'Main'
+                                ? Colors.blue
+                                : Colors.purple,
                           )),
-                          DataCell(Text('${item['qty'] ?? 1}', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
-                          DataCell(Text('₦${(item['price'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                          DataCell(Text('${item['qty'] ?? 1}',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600))),
+                          DataCell(Text(
+                              '₦${(item['price'] ?? 0.0).toStringAsFixed(0)}',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor))),
                           DataCell(Radio<bool>(
                             value: true,
                             groupValue: isDefault,
                             activeColor: const Color(0xFF3B82F6),
-                            onChanged: (v) => provider.setDefaultLinkedItem(idx),
+                            onChanged: (v) =>
+                                provider.setDefaultLinkedItem(idx),
                           )),
                           DataCell(IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                            icon: const Icon(Icons.delete_outline_rounded,
+                                size: 18, color: Colors.red),
                             tooltip: 'Remove Item',
                             onPressed: () => provider.removeLinkedItem(idx),
                           )),
@@ -840,79 +1080,134 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
     final appearanceDrawer = Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
+      decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Appearance & Styling Controls', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
-          Text('Choose layout templates, typography fonts, input background/placeholder colors, and fine-tune RGB spectrum colors.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+          Text('Appearance & Styling Controls',
+              style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+          Text(
+              'Choose layout templates, typography fonts, input background/placeholder colors, and fine-tune RGB spectrum colors.',
+              style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
           const SizedBox(height: 16),
-
-          Text('PREBUILT LAYOUT STYLE / TEMPLATE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+          Text('PREBUILT LAYOUT STYLE / TEMPLATE',
+              style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                  color: Colors.grey)),
           const SizedBox(height: 4),
           DropdownButtonFormField<String>(
             initialValue: _selectedLayoutTemplate,
             dropdownColor: cardBg,
             style: GoogleFonts.inter(color: textColor, fontSize: 13),
-            decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-            items: ['High-Converting E-Commerce', 'Minimalist Clean', 'Luxury Glassmorphism', 'Compact Express Checkout'].map((t) => DropdownMenuItem(
-              value: t,
-              child: Text(t, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-            )).toList(),
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+            items: [
+              'High-Converting E-Commerce',
+              'Minimalist Clean',
+              'Luxury Glassmorphism',
+              'Compact Express Checkout'
+            ]
+                .map((t) => DropdownMenuItem(
+                      value: t,
+                      child: Text(t,
+                          style: GoogleFonts.inter(
+                              color: textColor, fontSize: 13)),
+                    ))
+                .toList(),
             onChanged: (val) {
               if (val != null) _applyLayoutTemplatePreset(val);
             },
           ),
           const SizedBox(height: 14),
-
-          Text('TYPOGRAPHY FONT FAMILY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+          Text('TYPOGRAPHY FONT FAMILY',
+              style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                  color: Colors.grey)),
           const SizedBox(height: 4),
           DropdownButtonFormField<String>(
             initialValue: _fontFamily,
             dropdownColor: cardBg,
             style: GoogleFonts.inter(color: textColor, fontSize: 13),
-            decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-            items: ['Inter', 'Outfit', 'Roboto', 'Poppins', 'Montserrat', 'Plus Jakarta Sans', 'Playfair Display'].map((f) => DropdownMenuItem(
-              value: f,
-              child: Text(f, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-            )).toList(),
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+            items: [
+              'Inter',
+              'Outfit',
+              'Roboto',
+              'Poppins',
+              'Montserrat',
+              'Plus Jakarta Sans',
+              'Playfair Display'
+            ]
+                .map((f) => DropdownMenuItem(
+                      value: f,
+                      child: Text(f,
+                          style: GoogleFonts.inter(
+                              color: textColor, fontSize: 13)),
+                    ))
+                .toList(),
             onChanged: (val) {
               if (val != null) setState(() => _fontFamily = val);
             },
           ),
           const SizedBox(height: 14),
-
-          _buildColorPickerGroup('BUTTON BACKGROUND', _buttonBgController, defaultHex: '#568500'),
+          _buildColorPickerGroup('BUTTON BACKGROUND', _buttonBgController,
+              defaultHex: '#568500'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('BUTTON TEXT COLOR', _buttonTextController, defaultHex: '#ffffff'),
+          _buildColorPickerGroup('BUTTON TEXT COLOR', _buttonTextController,
+              defaultHex: '#ffffff'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('PAGE BACKGROUND', _pageBgController, defaultHex: '#0f172a'),
+          _buildColorPickerGroup('PAGE BACKGROUND', _pageBgController,
+              defaultHex: '#0f172a'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('CARD BACKGROUND', _cardBgController, defaultHex: '#fafafc'),
+          _buildColorPickerGroup('CARD BACKGROUND', _cardBgController,
+              defaultHex: '#fafafc'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('HEADING TEXT COLOR', _headingColorController, defaultHex: '#0f172a'),
+          _buildColorPickerGroup('HEADING TEXT COLOR', _headingColorController,
+              defaultHex: '#0f172a'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('FORM INPUT BACKGROUND', _inputBgController, defaultHex: '#ffffff'),
+          _buildColorPickerGroup('FORM INPUT BACKGROUND', _inputBgController,
+              defaultHex: '#ffffff'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('FORM INPUT TEXT COLOR', _inputTextColorController, defaultHex: '#0f172a'),
+          _buildColorPickerGroup(
+              'FORM INPUT TEXT COLOR', _inputTextColorController,
+              defaultHex: '#0f172a'),
           const SizedBox(height: 10),
-          _buildColorPickerGroup('PLACEHOLDER TEXT COLOR', _placeholderColorController, defaultHex: '#94a3b8'),
+          _buildColorPickerGroup(
+              'PLACEHOLDER TEXT COLOR', _placeholderColorController,
+              defaultHex: '#94a3b8'),
           const SizedBox(height: 10),
-          _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
+          _buildInputGroup(
+              'INPUT BORDER RADIUS', _borderRadiusController, '10px'),
           const SizedBox(height: 20),
-
           OutlinedButton.icon(
-            onPressed: () => _showLiveFormPreviewModalDialog(context, provider: provider),
+            onPressed: () =>
+                _showLiveFormPreviewModalDialog(context, provider: provider),
             icon: const Icon(Icons.visibility_rounded, size: 16),
             label: const Text('Open Live Customer Form Preview'),
-            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+            style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44)),
           ),
           const SizedBox(height: 10),
           ElevatedButton.icon(
-            onPressed: () => _showEmbedCodeModalDialog(context, provider: provider),
+            onPressed: () =>
+                _showEmbedCodeModalDialog(context, provider: provider),
             icon: const Icon(Icons.code_rounded, size: 16),
             label: const Text('Get Embed Code & Redirect ✓'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, minimumSize: const Size.fromHeight(44)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(44)),
           ),
         ],
       ),
@@ -939,10 +1234,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            OutlinedButton(onPressed: () => provider.setStep(0), child: const Text('Back to basics')),
+            OutlinedButton(
+                onPressed: () => provider.setStep(0),
+                child: const Text('Back to basics')),
             ElevatedButton(
               onPressed: () => provider.setStep(2),
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor, foregroundColor: Colors.white),
               child: const Text('Continue to upsell ➔'),
             ),
           ],
@@ -954,23 +1252,35 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   // ===========================================================================
   // STEP 3: UPSELL
   // ===========================================================================
-  Widget _buildStep3Upsell(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider, {required bool isMobile}) {
+  Widget _buildStep3Upsell(bool isDark, Color cardBg, Color textColor,
+      Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider,
+      {required bool isMobile}) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
-      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
+      decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Post-Checkout Upsell Configuration', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+          Text('Post-Checkout Upsell Configuration',
+              style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
           const SizedBox(height: 4),
-          Text('Offer an instant 1-click upsell immediately after initial checkout form submission.', style: GoogleFonts.inter(fontSize: 12.5, color: textMuted)),
+          Text(
+              'Offer an instant 1-click upsell immediately after initial checkout form submission.',
+              style: GoogleFonts.inter(fontSize: 12.5, color: textMuted)),
           const SizedBox(height: 20),
-          _buildInputGroup('UPSELL OFFER TITLE', _upsellTitleController, 'Add 1 Extra Bottle...'),
+          _buildInputGroup('UPSELL OFFER TITLE', _upsellTitleController,
+              'Add 1 Extra Bottle...'),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              OutlinedButton(onPressed: () => provider.setStep(1), child: const Text('Back to builder')),
+              OutlinedButton(
+                  onPressed: () => provider.setStep(1),
+                  child: const Text('Back to builder')),
               ElevatedButton(
                 onPressed: () async {
                   await provider.saveLeadFormToSupabase(
@@ -999,9 +1309,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     _showEmbedCodeModalDialog(context, provider: provider);
                   }
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white),
                 child: provider.isLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
                     : const Text('Save, Publish & Get Embed Code ✓'),
               ),
             ],
@@ -1018,30 +1334,42 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   // Form Name is NOT shown at the top of the preview form
   // Submit button is disabled in preview mode until embedded live on landing page
   // ===========================================================================
-  void _showLiveFormPreviewModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
+  void _showLiveFormPreviewModalDialog(BuildContext context,
+      {required CampaignFormBuilderProvider provider}) {
     final formDesc = _descriptionController.text;
-    final btnBg = _parseColorFromHex(_buttonBgController.text, defaultHex: '#568500');
-    final btnText = _parseColorFromHex(_buttonTextController.text, defaultHex: '#ffffff');
-    final cardBgColor = _parseColorFromHex(_cardBgController.text, defaultHex: '#fafafc');
-    final headingColor = _parseColorFromHex(_headingColorController.text, defaultHex: '#0f172a');
-    final inputBgColor = _parseColorFromHex(_inputBgController.text, defaultHex: '#ffffff');
-    final inputTextColor = _parseColorFromHex(_inputTextColorController.text, defaultHex: '#0f172a');
-    final placeholderColor = _parseColorFromHex(_placeholderColorController.text, defaultHex: '#94a3b8');
+    final btnBg =
+        _parseColorFromHex(_buttonBgController.text, defaultHex: '#568500');
+    final btnText =
+        _parseColorFromHex(_buttonTextController.text, defaultHex: '#ffffff');
+    final cardBgColor =
+        _parseColorFromHex(_cardBgController.text, defaultHex: '#fafafc');
+    final headingColor =
+        _parseColorFromHex(_headingColorController.text, defaultHex: '#0f172a');
+    final inputBgColor =
+        _parseColorFromHex(_inputBgController.text, defaultHex: '#ffffff');
+    final inputTextColor = _parseColorFromHex(_inputTextColorController.text,
+        defaultHex: '#0f172a');
+    final placeholderColor = _parseColorFromHex(
+        _placeholderColorController.text,
+        defaultHex: '#94a3b8');
     final btnLabel = _submitButtonTextController.text;
 
     Map<String, dynamic>? selectedOfferPkg = provider.offerPackages.firstWhere(
       (p) => p['isDefault'] == true,
-      orElse: () => provider.offerPackages.isNotEmpty ? provider.offerPackages.first : {},
+      orElse: () =>
+          provider.offerPackages.isNotEmpty ? provider.offerPackages.first : {},
     );
 
     final nameController = TextEditingController(text: 'Chief Customer Tester');
     final phoneController = TextEditingController(text: '08099887766');
-    final addressController = TextEditingController(text: '12 Victoria Island Expressway');
+    final addressController =
+        TextEditingController(text: '12 Victoria Island Expressway');
 
     String selectedCountry = 'Nigeria';
     List<String> availableStates = AddressLocationService.getStates('Nigeria');
     String selectedState = availableStates.first;
-    List<String> availableCitiesLgas = AddressLocationService.getCitiesLgas(selectedState);
+    List<String> availableCitiesLgas =
+        AddressLocationService.getCitiesLgas(selectedState);
     String selectedCityLga = availableCitiesLgas.first;
 
     showDialog(
@@ -1050,21 +1378,34 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         builder: (context, setModalState) {
           return AlertDialog(
             backgroundColor: cardBgColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.visibility_rounded, color: Color(0xFF10B981), size: 22),
+                    const Icon(Icons.visibility_rounded,
+                        color: Color(0xFF10B981), size: 22),
                     const SizedBox(width: 8),
-                    Text('Live Form Preview', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 16, color: headingColor)),
+                    Text('Live Form Preview',
+                        style: GoogleFonts.getFont(_fontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: headingColor)),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                  child: Text('PREVIEW MODE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Text('PREVIEW MODE',
+                      style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue)),
                 ),
               ],
             ),
@@ -1078,15 +1419,22 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     // Preview Banner Notification (Submit disabled in preview mode)
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.amber)),
+                      decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.amber)),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 18),
+                          const Icon(Icons.info_outline_rounded,
+                              color: Colors.amber, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Preview Mode: Submissions are disabled here. Form active once embedded on your landing page.',
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: headingColor),
+                              style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: headingColor),
                             ),
                           ),
                         ],
@@ -1096,16 +1444,36 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
                     // Headline CTA Description (NO Form Name at top!)
                     if (formDesc.isNotEmpty) ...[
-                      Text(formDesc, style: GoogleFonts.getFont(_fontFamily, fontSize: 13, fontWeight: FontWeight.w600, color: headingColor)),
+                      Text(formDesc,
+                          style: GoogleFonts.getFont(_fontFamily,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: headingColor)),
                       const SizedBox(height: 16),
                     ],
 
                     // 1. SECTION 1: FORM INPUTS FIRST
-                    Text('CUSTOMER & DELIVERY DETAILS', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 11, color: placeholderColor)),
+                    Text('CUSTOMER & DELIVERY DETAILS',
+                        style: GoogleFonts.getFont(_fontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: placeholderColor)),
                     const SizedBox(height: 8),
-                    _buildCustomStyledTextField('FULL NAME *', nameController, 'Chief Customer Tester', inputBgColor, inputTextColor, placeholderColor),
+                    _buildCustomStyledTextField(
+                        'FULL NAME *',
+                        nameController,
+                        'Chief Customer Tester',
+                        inputBgColor,
+                        inputTextColor,
+                        placeholderColor),
                     const SizedBox(height: 10),
-                    _buildCustomStyledTextField('PHONE NUMBER (FOR RIDER) *', phoneController, '08099887766', inputBgColor, inputTextColor, placeholderColor),
+                    _buildCustomStyledTextField(
+                        'PHONE NUMBER (FOR RIDER) *',
+                        phoneController,
+                        '08099887766',
+                        inputBgColor,
+                        inputTextColor,
+                        placeholderColor),
                     const SizedBox(height: 10),
 
                     // Address API Cascade: Country -> State -> City/LGA
@@ -1115,7 +1483,11 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('COUNTRY *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+                              Text('COUNTRY *',
+                                  style: GoogleFonts.getFont(_fontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      color: placeholderColor)),
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: selectedCountry,
@@ -1124,21 +1496,33 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   fillColor: inputBgColor,
                                   filled: true,
                                   border: const OutlineInputBorder(),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 8),
                                 ),
-                                style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12),
-                                items: AddressLocationService.countries.map((c) => DropdownMenuItem(
-                                  value: c,
-                                  child: Text(c, style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12)),
-                                )).toList(),
+                                style: GoogleFonts.getFont(_fontFamily,
+                                    color: inputTextColor, fontSize: 12),
+                                items: AddressLocationService.countries
+                                    .map((c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(c,
+                                              style: GoogleFonts.getFont(
+                                                  _fontFamily,
+                                                  color: inputTextColor,
+                                                  fontSize: 12)),
+                                        ))
+                                    .toList(),
                                 onChanged: (v) {
                                   if (v != null) {
                                     setModalState(() {
                                       selectedCountry = v;
-                                      availableStates = AddressLocationService.getStates(v);
+                                      availableStates =
+                                          AddressLocationService.getStates(v);
                                       selectedState = availableStates.first;
-                                      availableCitiesLgas = AddressLocationService.getCitiesLgas(selectedState);
-                                      selectedCityLga = availableCitiesLgas.first;
+                                      availableCitiesLgas =
+                                          AddressLocationService.getCitiesLgas(
+                                              selectedState);
+                                      selectedCityLga =
+                                          availableCitiesLgas.first;
                                     });
                                   }
                                 },
@@ -1151,7 +1535,11 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('STATE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+                              Text('STATE *',
+                                  style: GoogleFonts.getFont(_fontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      color: placeholderColor)),
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: selectedState,
@@ -1160,19 +1548,31 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   fillColor: inputBgColor,
                                   filled: true,
                                   border: const OutlineInputBorder(),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 8),
                                 ),
-                                style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12),
-                                items: availableStates.map((s) => DropdownMenuItem(
-                                  value: s,
-                                  child: Text(s, overflow: TextOverflow.ellipsis, style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12)),
-                                )).toList(),
+                                style: GoogleFonts.getFont(_fontFamily,
+                                    color: inputTextColor, fontSize: 12),
+                                items: availableStates
+                                    .map((s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(s,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.getFont(
+                                                  _fontFamily,
+                                                  color: inputTextColor,
+                                                  fontSize: 12)),
+                                        ))
+                                    .toList(),
                                 onChanged: (v) {
                                   if (v != null) {
                                     setModalState(() {
                                       selectedState = v;
-                                      availableCitiesLgas = AddressLocationService.getCitiesLgas(v);
-                                      selectedCityLga = availableCitiesLgas.first;
+                                      availableCitiesLgas =
+                                          AddressLocationService.getCitiesLgas(
+                                              v);
+                                      selectedCityLga =
+                                          availableCitiesLgas.first;
                                     });
                                   }
                                 },
@@ -1184,32 +1584,55 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    Text('CITY / LOCAL GOVERNMENT AREA (LGA) *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+                    Text('CITY / LOCAL GOVERNMENT AREA (LGA) *',
+                        style: GoogleFonts.getFont(_fontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: placeholderColor)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
-                      initialValue: availableCitiesLgas.contains(selectedCityLga) ? selectedCityLga : availableCitiesLgas.first,
+                      initialValue:
+                          availableCitiesLgas.contains(selectedCityLga)
+                              ? selectedCityLga
+                              : availableCitiesLgas.first,
                       dropdownColor: inputBgColor,
                       decoration: InputDecoration(
                         fillColor: inputBgColor,
                         filled: true,
                         border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                       ),
-                      style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13),
-                      items: availableCitiesLgas.map((c) => DropdownMenuItem(
-                        value: c,
-                        child: Text(c, style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13)),
-                      )).toList(),
+                      style: GoogleFonts.getFont(_fontFamily,
+                          color: inputTextColor, fontSize: 13),
+                      items: availableCitiesLgas
+                          .map((c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c,
+                                    style: GoogleFonts.getFont(_fontFamily,
+                                        color: inputTextColor, fontSize: 13)),
+                              ))
+                          .toList(),
                       onChanged: (v) {
                         if (v != null) setModalState(() => selectedCityLga = v);
                       },
                     ),
                     const SizedBox(height: 10),
-                    _buildCustomStyledTextField('DELIVERY ADDRESS *', addressController, '12 Victoria Island Expressway', inputBgColor, inputTextColor, placeholderColor),
+                    _buildCustomStyledTextField(
+                        'DELIVERY ADDRESS *',
+                        addressController,
+                        '12 Victoria Island Expressway',
+                        inputBgColor,
+                        inputTextColor,
+                        placeholderColor),
                     const SizedBox(height: 20),
 
                     // 2. SECTION 2: OFFER PACKAGES CHOICE CARDS (UNDER FORM INPUTS)
-                    Text('SELECT YOUR OFFER PACKAGE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 11, color: placeholderColor)),
+                    Text('SELECT YOUR OFFER PACKAGE *',
+                        style: GoogleFonts.getFont(_fontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: placeholderColor)),
                     const SizedBox(height: 8),
                     Column(
                       children: provider.offerPackages.map((pkg) {
@@ -1217,7 +1640,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         final label = pkg['label'] ?? '';
                         final amount = (pkg['amount'] ?? 0.0) as double;
                         final discount = (pkg['discount'] ?? 0.0) as double;
-                        final freeAddonName = pkg['freeAddonProductName'] as String?;
+                        final freeAddonName =
+                            pkg['freeAddonProductName'] as String?;
                         final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
 
                         return GestureDetector(
@@ -1228,30 +1652,67 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: isSelected ? const Color(0xFF10B981).withValues(alpha: 0.1) : inputBgColor,
+                              color: isSelected
+                                  ? const Color(0xFF10B981)
+                                      .withValues(alpha: 0.1)
+                                  : inputBgColor,
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3), width: isSelected ? 2 : 1),
+                              border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF10B981)
+                                      : Colors.grey.withValues(alpha: 0.3),
+                                  width: isSelected ? 2 : 1),
                             ),
                             child: Row(
                               children: [
-                                Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 20, color: isSelected ? const Color(0xFF10B981) : Colors.grey),
+                                Icon(
+                                    isSelected
+                                        ? Icons.radio_button_checked
+                                        : Icons.radio_button_unchecked,
+                                    size: 20,
+                                    color: isSelected
+                                        ? const Color(0xFF10B981)
+                                        : Colors.grey),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(label, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: inputTextColor)),
-                                      if (freeAddonName != null && freeAddonQty > 0)
-                                        Text('🎁 Includes FREE ${freeAddonQty}x $freeAddonName', style: GoogleFonts.getFont(_fontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
+                                      Text(label,
+                                          style: GoogleFonts.getFont(
+                                              _fontFamily,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              color: inputTextColor)),
+                                      if (freeAddonName != null &&
+                                          freeAddonQty > 0)
+                                        Text(
+                                            '🎁 Includes FREE ${freeAddonQty}x $freeAddonName',
+                                            style: GoogleFonts.getFont(
+                                                _fontFamily,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.purple)),
                                     ],
                                   ),
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text('₦${amount.toStringAsFixed(0)}', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF10B981))),
+                                    Text('₦${amount.toStringAsFixed(0)}',
+                                        style: GoogleFonts.getFont(_fontFamily,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: const Color(0xFF10B981))),
                                     if (discount > 0)
-                                      Text('Save ₦${discount.toStringAsFixed(0)}', style: GoogleFonts.getFont(_fontFamily, fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                      Text(
+                                          'Save ₦${discount.toStringAsFixed(0)}',
+                                          style: GoogleFonts.getFont(
+                                              _fontFamily,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.orange)),
                                   ],
                                 ),
                               ],
@@ -1264,16 +1725,22 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
                     // 3. SECTION 3: SUBMIT BUTTON (FOLLOWED BY OFFER PACKAGES)
                     Tooltip(
-                      message: 'Submissions are active once embedded on landing page.',
+                      message:
+                          'Submissions are active once embedded on landing page.',
                       child: ElevatedButton(
-                        onPressed: null, // Disabled in preview mode as requested
+                        onPressed:
+                            null, // Disabled in preview mode as requested
                         style: ElevatedButton.styleFrom(
                           disabledBackgroundColor: btnBg.withValues(alpha: 0.5),
-                          disabledForegroundColor: btnText.withValues(alpha: 0.8),
+                          disabledForegroundColor:
+                              btnText.withValues(alpha: 0.8),
                           minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: Text('$btnLabel (Preview Disabled)', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 15)),
+                        child: Text('$btnLabel (Preview Disabled)',
+                            style: GoogleFonts.getFont(_fontFamily,
+                                fontWeight: FontWeight.bold, fontSize: 15)),
                       ),
                     ),
                   ],
@@ -1281,7 +1748,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close Preview')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close Preview')),
             ],
           );
         },
@@ -1289,22 +1758,32 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  Widget _buildCustomStyledTextField(String label, TextEditingController controller, String hint, Color bg, Color text, Color placeholder) {
+  Widget _buildCustomStyledTextField(
+      String label,
+      TextEditingController controller,
+      String hint,
+      Color bg,
+      Color text,
+      Color placeholder) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholder)),
+        Text(label,
+            style: GoogleFonts.getFont(_fontFamily,
+                fontWeight: FontWeight.bold, fontSize: 10, color: placeholder)),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           style: GoogleFonts.getFont(_fontFamily, color: text, fontSize: 13),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.getFont(_fontFamily, color: placeholder, fontSize: 12),
+            hintStyle: GoogleFonts.getFont(_fontFamily,
+                color: placeholder, fontSize: 12),
             fillColor: bg,
             filled: true,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
       ],
@@ -1316,8 +1795,11 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   // - Address Location Cascade (Country -> State -> City/LGA)
   // - Form Inputs FIRST -> Package Choices SECOND -> Submit Button LAST
   // - NO Form Title at the top
-  void _showEmbedCodeModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
-    final redirectUrl = _redirectUrlController.text.isNotEmpty ? _redirectUrlController.text : 'https://detoxwithnova.xyz/thank-you';
+  void _showEmbedCodeModalDialog(BuildContext context,
+      {required CampaignFormBuilderProvider provider}) {
+    final redirectUrl = _redirectUrlController.text.isNotEmpty
+        ? _redirectUrlController.text
+        : 'https://detoxwithnova.xyz/thank-you';
     final btnBg = _buttonBgController.text;
     final btnText = _buttonTextController.text;
     final btnLabel = _submitButtonTextController.text;
@@ -1460,11 +1942,36 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   const stateSel = document.getElementById('novasuite-state');
   const citySel = document.getElementById('novasuite-city');
 
-  function populateStates() {
+  // HYBRID LOCATION API ENGINE (API-First + Instant Local Fallback)
+  async function fetchLiveStates(country) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 800);
+      const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country: country }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (data && data.data && data.data.states && data.data.states.length > 0) {
+        return data.data.states.map(s => s.name);
+      }
+    } catch (e) {
+      // Network/AdBlocker fallback to preloaded local dictionary
+    }
+    const fallbackObj = locationCascadeData[country] || locationCascadeData['Nigeria'];
+    return Object.keys(fallbackObj);
+  }
+
+  async function populateStates() {
     const selectedCountry = countrySel.value;
-    const statesObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
+    stateSel.disabled = true;
+    const states = await fetchLiveStates(selectedCountry);
+    stateSel.disabled = false;
     stateSel.innerHTML = '';
-    Object.keys(statesObj).forEach(function(state) {
+    states.forEach(function(state) {
       const opt = document.createElement('option');
       opt.value = state;
       opt.innerText = state;
@@ -1531,7 +2038,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           children: [
             const Icon(Icons.code_rounded, color: Color(0xFF3B82F6), size: 22),
             const SizedBox(width: 8),
-            Text('Embed Code & Thank-You Redirect Settings', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('Embed Code & Thank-You Redirect Settings',
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         content: SizedBox(
@@ -1543,17 +2052,29 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF10B981))),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF10B981))),
                   child: Row(
                     children: [
-                      const Icon(Icons.link_rounded, color: Color(0xFF10B981), size: 20),
+                      const Icon(Icons.link_rounded,
+                          color: Color(0xFF10B981), size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('CONFIGURED THANK-YOU REDIRECT PAGE:', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
-                            Text(redirectUrl, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                            Text('CONFIGURED THANK-YOU REDIRECT PAGE:',
+                                style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF10B981))),
+                            Text(redirectUrl,
+                                style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF0F172A))),
                           ],
                         ),
                       ),
@@ -1561,14 +2082,23 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('COPY & PASTE HTML / JS CODE FOR WORDPRESS / ELEMENTOR:', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                Text('COPY & PASTE HTML / JS CODE FOR WORDPRESS / ELEMENTOR:',
+                    style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey)),
                 const SizedBox(height: 6),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(10)),
                   child: SelectableText(
                     embedCodeSnippet,
-                    style: GoogleFonts.robotoMono(color: const Color(0xFF38BDF8), fontSize: 11, height: 1.4),
+                    style: GoogleFonts.robotoMono(
+                        color: const Color(0xFF38BDF8),
+                        fontSize: 11,
+                        height: 1.4),
                   ),
                 ),
               ],
@@ -1576,18 +2106,23 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
           ElevatedButton.icon(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: embedCodeSnippet));
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Embed HTML/JS Code copied to clipboard! Paste into your landing page editor. ✓')),
+                const SnackBar(
+                    content: Text(
+                        'Embed HTML/JS Code copied to clipboard! Paste into your landing page editor. ✓')),
               );
             },
             icon: const Icon(Icons.copy_rounded, size: 16),
             label: const Text('Copy Embed Code ✓'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white),
           ),
         ],
       ),
@@ -1595,18 +2130,23 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // Helper Methods
-  Widget _buildColorPickerGroup(String label, TextEditingController controller, {required String defaultHex}) {
-    final activeColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
+  Widget _buildColorPickerGroup(String label, TextEditingController controller,
+      {required String defaultHex}) {
+    final activeColor =
+        _parseColorFromHex(controller.text, defaultHex: defaultHex);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+        Text(label,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
         const SizedBox(height: 4),
         Row(
           children: [
             GestureDetector(
-              onTap: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
+              onTap: () => _showColorPickerDialog(context,
+                  controller: controller, title: label, defaultHex: defaultHex),
               child: Tooltip(
                 message: 'Click to open 2D HSV Spectrum Color Canvas',
                 child: Container(
@@ -1615,9 +2155,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   decoration: BoxDecoration(
                     color: activeColor,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.4), width: 1.5),
+                    border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.4), width: 1.5),
                     boxShadow: [
-                      BoxShadow(color: activeColor.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
+                      BoxShadow(
+                          color: activeColor.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2)),
                     ],
                   ),
                 ),
@@ -1631,15 +2175,18 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 decoration: const InputDecoration(
                   hintText: '#568500',
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
               ),
             ),
             const SizedBox(width: 6),
             IconButton(
-              icon: const Icon(Icons.palette_rounded, size: 20, color: Color(0xFF10B981)),
+              icon: const Icon(Icons.palette_rounded,
+                  size: 20, color: Color(0xFF10B981)),
               tooltip: 'Choose Color Canvas',
-              onPressed: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
+              onPressed: () => _showColorPickerDialog(context,
+                  controller: controller, title: label, defaultHex: defaultHex),
             ),
           ],
         ),
@@ -1654,19 +2201,56 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     required String title,
     required String defaultHex,
   }) {
-    Color selectedColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
+    Color selectedColor =
+        _parseColorFromHex(controller.text, defaultHex: defaultHex);
 
     final List<Map<String, dynamic>> paletteSwatches = [
-      {'name': 'Emerald Green', 'hex': '#10B981', 'color': const Color(0xFF10B981)},
-      {'name': 'Olive Brand', 'hex': '#568500', 'color': const Color(0xFF568500)},
-      {'name': 'Midnight Slate', 'hex': '#0F172A', 'color': const Color(0xFF0F172A)},
-      {'name': 'Royal Blue', 'hex': '#3B82F6', 'color': const Color(0xFF3B82F6)},
-      {'name': 'Vibrant Purple', 'hex': '#8B5CF6', 'color': const Color(0xFF8B5CF6)},
-      {'name': 'Sunset Orange', 'hex': '#F97316', 'color': const Color(0xFFF97316)},
-      {'name': 'Crimson Red', 'hex': '#EF4444', 'color': const Color(0xFFEF4444)},
+      {
+        'name': 'Emerald Green',
+        'hex': '#10B981',
+        'color': const Color(0xFF10B981)
+      },
+      {
+        'name': 'Olive Brand',
+        'hex': '#568500',
+        'color': const Color(0xFF568500)
+      },
+      {
+        'name': 'Midnight Slate',
+        'hex': '#0F172A',
+        'color': const Color(0xFF0F172A)
+      },
+      {
+        'name': 'Royal Blue',
+        'hex': '#3B82F6',
+        'color': const Color(0xFF3B82F6)
+      },
+      {
+        'name': 'Vibrant Purple',
+        'hex': '#8B5CF6',
+        'color': const Color(0xFF8B5CF6)
+      },
+      {
+        'name': 'Sunset Orange',
+        'hex': '#F97316',
+        'color': const Color(0xFFF97316)
+      },
+      {
+        'name': 'Crimson Red',
+        'hex': '#EF4444',
+        'color': const Color(0xFFEF4444)
+      },
       {'name': 'Deep Dark', 'hex': '#09140E', 'color': const Color(0xFF09140E)},
-      {'name': 'Pure White', 'hex': '#FFFFFF', 'color': const Color(0xFFFFFFFF)},
-      {'name': 'Soft Card Gray', 'hex': '#FAFAFC', 'color': const Color(0xFFFAFAFC)},
+      {
+        'name': 'Pure White',
+        'hex': '#FFFFFF',
+        'color': const Color(0xFFFFFFFF)
+      },
+      {
+        'name': 'Soft Card Gray',
+        'hex': '#FAFAFC',
+        'color': const Color(0xFFFAFAFC)
+      },
     ];
 
     showDialog(
@@ -1674,12 +2258,16 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                const Icon(Icons.color_lens_rounded, color: Color(0xFF10B981), size: 22),
+                const Icon(Icons.color_lens_rounded,
+                    color: Color(0xFF10B981), size: 22),
                 const SizedBox(width: 8),
-                Text('2D Spectrum Color Canvas: $title', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text('2D Spectrum Color Canvas: $title',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
             content: SizedBox(
@@ -1695,18 +2283,28 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       decoration: BoxDecoration(
                         color: selectedColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.3)),
                         boxShadow: [
-                          BoxShadow(color: selectedColor.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3)),
+                          BoxShadow(
+                              color: selectedColor.withValues(alpha: 0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3)),
                         ],
                       ),
                       alignment: Alignment.center,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(6)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(6)),
                         child: Text(
                           '${controller.text.toUpperCase()} | RGB(${selectedColor.r.toInt()}, ${selectedColor.g.toInt()}, ${selectedColor.b.toInt()})',
-                          style: GoogleFonts.robotoMono(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.robotoMono(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -1716,26 +2314,44 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       onColorChanged: (newColor) {
                         setModalState(() {
                           selectedColor = newColor;
-                          final cleanR = (newColor.r * 255.0).round().toRadixString(16).padLeft(2, '0');
-                          final cleanG = (newColor.g * 255.0).round().toRadixString(16).padLeft(2, '0');
-                          final cleanB = (newColor.b * 255.0).round().toRadixString(16).padLeft(2, '0');
+                          final cleanR = (newColor.r * 255.0)
+                              .round()
+                              .toRadixString(16)
+                              .padLeft(2, '0');
+                          final cleanG = (newColor.g * 255.0)
+                              .round()
+                              .toRadixString(16)
+                              .padLeft(2, '0');
+                          final cleanB = (newColor.b * 255.0)
+                              .round()
+                              .toRadixString(16)
+                              .padLeft(2, '0');
                           controller.text = '#$cleanR$cleanG$cleanB';
                         });
                       },
                     ),
                     const SizedBox(height: 16),
-                    Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('BRAND PALETTE PRESETS',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 8),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, crossAxisSpacing: 8, mainAxisSpacing: 8),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 5,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8),
                       itemCount: paletteSwatches.length,
                       itemBuilder: (context, idx) {
                         final item = paletteSwatches[idx];
                         final swatchColor = item['color'] as Color;
                         final hex = item['hex'] as String;
-                        final isSelected = controller.text.toLowerCase() == hex.toLowerCase();
+                        final isSelected =
+                            controller.text.toLowerCase() == hex.toLowerCase();
 
                         return GestureDetector(
                           onTap: () {
@@ -1750,39 +2366,66 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               decoration: BoxDecoration(
                                 color: swatchColor,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3), width: isSelected ? 3 : 1),
-                                boxShadow: isSelected ? [BoxShadow(color: swatchColor.withValues(alpha: 0.4), blurRadius: 6)] : null,
+                                border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF10B981)
+                                        : Colors.grey.withValues(alpha: 0.3),
+                                    width: isSelected ? 3 : 1),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                            color: swatchColor.withValues(
+                                                alpha: 0.4),
+                                            blurRadius: 6)
+                                      ]
+                                    : null,
                               ),
-                              child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                              child: isSelected
+                                  ? const Icon(Icons.check,
+                                      size: 16, color: Colors.white)
+                                  : null,
                             ),
                           ),
                         );
                       },
                     ),
                     const SizedBox(height: 16),
-                    Text('CUSTOM HEX COLOR CODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('CUSTOM HEX COLOR CODE',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 4),
                     TextField(
                       controller: controller,
                       onChanged: (val) {
                         setModalState(() {
-                          selectedColor = _parseColorFromHex(val, defaultHex: defaultHex);
+                          selectedColor =
+                              _parseColorFromHex(val, defaultHex: defaultHex);
                         });
                       },
-                      decoration: const InputDecoration(hintText: '#10B981', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                      decoration: const InputDecoration(
+                          hintText: '#10B981',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8)),
                     ),
                   ],
                 ),
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close')),
               ElevatedButton(
                 onPressed: () {
                   setState(() {});
                   Navigator.pop(ctx);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white),
                 child: const Text('Apply Color ✓'),
               ),
             ],
@@ -1812,10 +2455,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }) {
     final isEditing = editIndex != null && existingPkg != null;
     final labelCtrl = TextEditingController(text: existingPkg?['label'] ?? '');
-    final buyQtyCtrl = TextEditingController(text: '${existingPkg?['buyQty'] ?? 1}');
-    final freeQtyCtrl = TextEditingController(text: '${existingPkg?['freeQty'] ?? 0}');
-    final amountCtrl = TextEditingController(text: '${existingPkg?['amount'] ?? 25000}');
-    final discountCtrl = TextEditingController(text: '${existingPkg?['discount'] ?? 0}');
+    final buyQtyCtrl =
+        TextEditingController(text: '${existingPkg?['buyQty'] ?? 1}');
+    final freeQtyCtrl =
+        TextEditingController(text: '${existingPkg?['freeQty'] ?? 0}');
+    final amountCtrl =
+        TextEditingController(text: '${existingPkg?['amount'] ?? 25000}');
+    final discountCtrl =
+        TextEditingController(text: '${existingPkg?['discount'] ?? 0}');
     bool isDefaultPkg = existingPkg?['isDefault'] == true;
 
     Map<String, dynamic>? selectedFreeAddonProduct;
@@ -1837,12 +2484,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           final totalDeductedStock = buyQty + sameFreeQty + freeAddonQty;
 
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                const Icon(Icons.card_giftcard_rounded, color: Color(0xFF10B981), size: 22),
+                const Icon(Icons.card_giftcard_rounded,
+                    color: Color(0xFF10B981), size: 22),
                 const SizedBox(width: 8),
-                Text(isEditing ? 'Edit Offer Package' : 'Create New Offer Package', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text(
+                    isEditing
+                        ? 'Edit Offer Package'
+                        : 'Create New Offer Package',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
             content: SizedBox(
@@ -1852,21 +2506,32 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildModalTextField('PACKAGE LABEL', labelCtrl, 'e.g. Buy 5 Grazer Tea + 1 Respira Detox Free'),
+                    _buildModalTextField('PACKAGE LABEL', labelCtrl,
+                        'e.g. Buy 5 Grazer Tea + 1 Respira Detox Free'),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _buildModalTextField('PRIMARY BUY QUANTITY', buyQtyCtrl, '1')),
+                        Expanded(
+                            child: _buildModalTextField(
+                                'PRIMARY BUY QUANTITY', buyQtyCtrl, '1')),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildModalTextField('SAME-ITEM FREE QUANTITY', freeQtyCtrl, '0')),
+                        Expanded(
+                            child: _buildModalTextField(
+                                'SAME-ITEM FREE QUANTITY', freeQtyCtrl, '0')),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _buildModalTextField('FIXED PACKAGE AMOUNT (₦)', amountCtrl, '25000')),
+                        Expanded(
+                            child: _buildModalTextField(
+                                'FIXED PACKAGE AMOUNT (₦)',
+                                amountCtrl,
+                                '25000')),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildModalTextField('DISCOUNT / SAVINGS (₦)', discountCtrl, '0')),
+                        Expanded(
+                            child: _buildModalTextField(
+                                'DISCOUNT / SAVINGS (₦)', discountCtrl, '0')),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -1875,20 +2540,29 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       decoration: BoxDecoration(
                         color: Colors.purple.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: Colors.purple.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.card_giftcard_rounded, color: Colors.purple, size: 18),
+                              const Icon(Icons.card_giftcard_rounded,
+                                  color: Colors.purple, size: 18),
                               const SizedBox(width: 6),
-                              Text('CROSS-PRODUCT FREE GIFT ADDON (OPTIONAL)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.purple)),
+                              Text('CROSS-PRODUCT FREE GIFT ADDON (OPTIONAL)',
+                                  style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                      color: Colors.purple)),
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Text('Reward buyers with a free gift item from a different product line (e.g. Buy 5 Tea, Get 1 Respira Free).', style: GoogleFonts.inter(fontSize: 11, color: Colors.grey)),
+                          Text(
+                              'Reward buyers with a free gift item from a different product line (e.g. Buy 5 Tea, Get 1 Respira Free).',
+                              style: GoogleFonts.inter(
+                                  fontSize: 11, color: Colors.grey)),
                           const SizedBox(height: 10),
                           Row(
                             children: [
@@ -1897,15 +2571,32 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 child: DropdownButtonFormField<String>(
                                   initialValue: selectedFreeAddonProduct?['id'],
                                   dropdownColor: const Color(0xFF0F172A),
-                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
-                                  decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                                  hint: Text('Select Free Gift Product...', style: GoogleFonts.inter(color: Colors.grey, fontSize: 12)),
+                                  style: GoogleFonts.inter(
+                                      color: Colors.white, fontSize: 12),
+                                  decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 8)),
+                                  hint: Text('Select Free Gift Product...',
+                                      style: GoogleFonts.inter(
+                                          color: Colors.grey, fontSize: 12)),
                                   items: [
-                                    DropdownMenuItem<String>(value: null, child: Text('None (No cross-product free gift)', style: GoogleFonts.inter(color: Colors.white, fontSize: 12))),
-                                    ...provider.availableProducts.map((p) => DropdownMenuItem<String>(
-                                          value: p['id'] as String,
-                                          child: Text('${p['name']} [${p['sku']}]', style: GoogleFonts.inter(color: Colors.white, fontSize: 12)),
-                                        )),
+                                    DropdownMenuItem<String>(
+                                        value: null,
+                                        child: Text(
+                                            'None (No cross-product free gift)',
+                                            style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontSize: 12))),
+                                    ...provider.availableProducts
+                                        .map((p) => DropdownMenuItem<String>(
+                                              value: p['id'] as String,
+                                              child: Text(
+                                                  '${p['name']} [${p['sku']}]',
+                                                  style: GoogleFonts.inter(
+                                                      color: Colors.white,
+                                                      fontSize: 12)),
+                                            )),
                                   ],
                                   onChanged: (val) {
                                     setModalState(() {
@@ -1913,7 +2604,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                         selectedFreeAddonProduct = null;
                                         freeAddonQty = 0;
                                       } else {
-                                        selectedFreeAddonProduct = provider.availableProducts.firstWhere((p) => p['id'] == val);
+                                        selectedFreeAddonProduct = provider
+                                            .availableProducts
+                                            .firstWhere((p) => p['id'] == val);
                                         if (freeAddonQty == 0) freeAddonQty = 1;
                                       }
                                     });
@@ -1924,13 +2617,26 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: DropdownButtonFormField<int>(
-                                    initialValue: freeAddonQty > 0 ? freeAddonQty : 1,
+                                    initialValue:
+                                        freeAddonQty > 0 ? freeAddonQty : 1,
                                     dropdownColor: const Color(0xFF0F172A),
-                                    style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
-                                    decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                                    items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q Free', style: GoogleFonts.inter(color: Colors.white, fontSize: 12)))).toList(),
+                                    style: GoogleFonts.inter(
+                                        color: Colors.white, fontSize: 12),
+                                    decoration: const InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 8)),
+                                    items: [1, 2, 3, 4, 5]
+                                        .map((q) => DropdownMenuItem(
+                                            value: q,
+                                            child: Text('$q Free',
+                                                style: GoogleFonts.inter(
+                                                    color: Colors.white,
+                                                    fontSize: 12))))
+                                        .toList(),
                                     onChanged: (v) {
-                                      if (v != null) setModalState(() => freeAddonQty = v);
+                                      if (v != null)
+                                        setModalState(() => freeAddonQty = v);
                                     },
                                   ),
                                 ),
@@ -1942,16 +2648,25 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     ),
                     const SizedBox(height: 14),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue.withValues(alpha: 0.3))),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: Colors.blue.withValues(alpha: 0.3))),
                       child: Row(
                         children: [
-                          const Icon(Icons.inventory_rounded, color: Colors.blue, size: 18),
+                          const Icon(Icons.inventory_rounded,
+                              color: Colors.blue, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'TOTAL STOCK ACCOUNTING DEDUCTION: $totalDeductedStock Units (${buyQty}x Primary + ${sameFreeQty}x Same Free ${selectedFreeAddonProduct != null ? "+ ${freeAddonQty}x ${selectedFreeAddonProduct!['name']}" : ""})',
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue),
+                              style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue),
                             ),
                           ),
                         ],
@@ -1959,7 +2674,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     ),
                     const SizedBox(height: 14),
                     CheckboxListTile(
-                      title: const Text('Set as Default Choice for Buyers', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      title: const Text('Set as Default Choice for Buyers',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.bold)),
                       value: isDefaultPkg,
                       activeColor: const Color(0xFF10B981),
                       onChanged: (val) {
@@ -1971,42 +2688,62 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel')),
               ElevatedButton.icon(
                 onPressed: () {
                   final pkgData = {
-                    'id': existingPkg?['id'] ?? 'pkg-${DateTime.now().millisecondsSinceEpoch}',
-                    'label': labelCtrl.text.isNotEmpty ? labelCtrl.text : 'New Offer Package',
+                    'id': existingPkg?['id'] ??
+                        'pkg-${DateTime.now().millisecondsSinceEpoch}',
+                    'label': labelCtrl.text.isNotEmpty
+                        ? labelCtrl.text
+                        : 'New Offer Package',
                     'buyQty': int.tryParse(buyQtyCtrl.text) ?? 1,
                     'freeQty': int.tryParse(freeQtyCtrl.text) ?? 0,
                     'freeAddonProductId': selectedFreeAddonProduct?['id'],
                     'freeAddonProductName': selectedFreeAddonProduct?['name'],
-                    'freeAddonQty': selectedFreeAddonProduct != null ? freeAddonQty : 0,
+                    'freeAddonQty':
+                        selectedFreeAddonProduct != null ? freeAddonQty : 0,
                     'amount': double.tryParse(amountCtrl.text) ?? 25000.0,
                     'discount': double.tryParse(discountCtrl.text) ?? 0.0,
                     'isDefault': isDefaultPkg,
                   };
 
                   if (isEditing) {
-                    provider.updateOfferPackage(editIndex, 'label', pkgData['label']);
-                    provider.updateOfferPackage(editIndex, 'buyQty', pkgData['buyQty']);
-                    provider.updateOfferPackage(editIndex, 'freeQty', pkgData['freeQty']);
-                    provider.updateOfferPackage(editIndex, 'freeAddonProductId', pkgData['freeAddonProductId']);
-                    provider.updateOfferPackage(editIndex, 'freeAddonProductName', pkgData['freeAddonProductName']);
-                    provider.updateOfferPackage(editIndex, 'freeAddonQty', pkgData['freeAddonQty']);
-                    provider.updateOfferPackage(editIndex, 'amount', pkgData['amount']);
-                    provider.updateOfferPackage(editIndex, 'discount', pkgData['discount']);
+                    provider.updateOfferPackage(
+                        editIndex, 'label', pkgData['label']);
+                    provider.updateOfferPackage(
+                        editIndex, 'buyQty', pkgData['buyQty']);
+                    provider.updateOfferPackage(
+                        editIndex, 'freeQty', pkgData['freeQty']);
+                    provider.updateOfferPackage(editIndex, 'freeAddonProductId',
+                        pkgData['freeAddonProductId']);
+                    provider.updateOfferPackage(
+                        editIndex,
+                        'freeAddonProductName',
+                        pkgData['freeAddonProductName']);
+                    provider.updateOfferPackage(
+                        editIndex, 'freeAddonQty', pkgData['freeAddonQty']);
+                    provider.updateOfferPackage(
+                        editIndex, 'amount', pkgData['amount']);
+                    provider.updateOfferPackage(
+                        editIndex, 'discount', pkgData['discount']);
                     if (isDefaultPkg) provider.setDefaultPackage(editIndex);
                   } else {
                     provider.addOfferPackage(pkgData);
-                    if (isDefaultPkg) provider.setDefaultPackage(provider.offerPackages.length - 1);
+                    if (isDefaultPkg)
+                      provider
+                          .setDefaultPackage(provider.offerPackages.length - 1);
                   }
 
                   Navigator.pop(ctx);
                 },
                 icon: const Icon(Icons.check_rounded, size: 16),
                 label: Text(isEditing ? 'Save Changes' : 'Create Package'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white),
               ),
             ],
           );
@@ -2016,9 +2753,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // MODAL DIALOG: SEARCHABLE ONBOARDED PRODUCT PICKER (Linked Items)
-  void _showAddLinkedItemModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
+  void _showAddLinkedItemModalDialog(BuildContext context,
+      {required CampaignFormBuilderProvider provider}) {
     String searchQuery = '';
-    Map<String, dynamic>? selectedProduct = provider.availableProducts.isNotEmpty ? provider.availableProducts.first : null;
+    Map<String, dynamic>? selectedProduct =
+        provider.availableProducts.isNotEmpty
+            ? provider.availableProducts.first
+            : null;
     int selectedQty = 1;
     String itemType = 'Main';
 
@@ -2034,12 +2775,16 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           }).toList();
 
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                const Icon(Icons.inventory_2_rounded, color: Color(0xFF3B82F6), size: 22),
+                const Icon(Icons.inventory_2_rounded,
+                    color: Color(0xFF3B82F6), size: 22),
                 const SizedBox(width: 8),
-                Text('Attach Onboarded Product Item', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text('Attach Onboarded Product Item',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
             content: SizedBox(
@@ -2049,7 +2794,11 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('SEARCH ONBOARDED PRODUCTS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('SEARCH ONBOARDED PRODUCTS',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 4),
                     TextField(
                       onChanged: (val) {
@@ -2059,31 +2808,57 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         hintText: 'Type product name or SKU to search...',
                         prefixIcon: Icon(Icons.search_rounded, size: 18),
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
                     ),
                     const SizedBox(height: 14),
-
-                    Text('SELECT PRODUCT ITEM *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('SELECT PRODUCT ITEM *',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 4),
                     Container(
                       height: 160,
-                      decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(8)),
                       child: filteredProducts.isEmpty
-                          ? const Center(child: Text('No products match search query.'))
+                          ? const Center(
+                              child: Text('No products match search query.'))
                           : ListView.builder(
                               itemCount: filteredProducts.length,
                               itemBuilder: (context, idx) {
                                 final p = filteredProducts[idx];
-                                final isSelected = selectedProduct?['id'] == p['id'];
+                                final isSelected =
+                                    selectedProduct?['id'] == p['id'];
                                 return ListTile(
                                   dense: true,
                                   selected: isSelected,
-                                  selectedTileColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                                  leading: Icon(isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked, color: isSelected ? const Color(0xFF3B82F6) : Colors.grey, size: 18),
-                                  title: Text(p['name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  subtitle: Text('SKU: ${p['sku']} | Category: ${p['category']}', style: const TextStyle(fontSize: 11)),
-                                  trailing: Text('₦${(p['price'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                  selectedTileColor: const Color(0xFF3B82F6)
+                                      .withValues(alpha: 0.1),
+                                  leading: Icon(
+                                      isSelected
+                                          ? Icons.check_circle_rounded
+                                          : Icons.radio_button_unchecked,
+                                      color: isSelected
+                                          ? const Color(0xFF3B82F6)
+                                          : Colors.grey,
+                                      size: 18),
+                                  title: Text(p['name'] ?? '',
+                                      style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13)),
+                                  subtitle: Text(
+                                      'SKU: ${p['sku']} | Category: ${p['category']}',
+                                      style: const TextStyle(fontSize: 11)),
+                                  trailing: Text(
+                                      '₦${(p['price'] ?? 0.0).toStringAsFixed(0)}',
+                                      style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF10B981))),
                                   onTap: () {
                                     setModalState(() => selectedProduct = p);
                                   },
@@ -2092,26 +2867,42 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                             ),
                     ),
                     const SizedBox(height: 14),
-
                     Row(
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('ITEM TYPE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                              Text('ITEM TYPE',
+                                  style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      color: Colors.grey)),
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: itemType,
                                 dropdownColor: const Color(0xFF0F172A),
-                                style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
-                                decoration: const InputDecoration(border: OutlineInputBorder()),
+                                style: GoogleFonts.inter(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: const InputDecoration(
+                                    border: OutlineInputBorder()),
                                 items: [
-                                  DropdownMenuItem(value: 'Main', child: Text('Main Product', style: GoogleFonts.inter(color: Colors.white, fontSize: 13))),
-                                  DropdownMenuItem(value: 'Addon', child: Text('Addon / Upsell', style: GoogleFonts.inter(color: Colors.white, fontSize: 13))),
+                                  DropdownMenuItem(
+                                      value: 'Main',
+                                      child: Text('Main Product',
+                                          style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: 13))),
+                                  DropdownMenuItem(
+                                      value: 'Addon',
+                                      child: Text('Addon / Upsell',
+                                          style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: 13))),
                                 ],
                                 onChanged: (v) {
-                                  if (v != null) setModalState(() => itemType = v);
+                                  if (v != null)
+                                    setModalState(() => itemType = v);
                                 },
                               ),
                             ],
@@ -2122,16 +2913,30 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('BASE QUANTITY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                              Text('BASE QUANTITY',
+                                  style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      color: Colors.grey)),
                               const SizedBox(height: 4),
                               DropdownButtonFormField<int>(
                                 initialValue: selectedQty,
                                 dropdownColor: const Color(0xFF0F172A),
-                                style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
-                                decoration: const InputDecoration(border: OutlineInputBorder()),
-                                items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q unit(s)', style: GoogleFonts.inter(color: Colors.white, fontSize: 13)))).toList(),
+                                style: GoogleFonts.inter(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: const InputDecoration(
+                                    border: OutlineInputBorder()),
+                                items: [1, 2, 3, 4, 5]
+                                    .map((q) => DropdownMenuItem(
+                                        value: q,
+                                        child: Text('$q unit(s)',
+                                            style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontSize: 13))))
+                                    .toList(),
                                 onChanged: (v) {
-                                  if (v != null) setModalState(() => selectedQty = v);
+                                  if (v != null)
+                                    setModalState(() => selectedQty = v);
                                 },
                               ),
                             ],
@@ -2144,7 +2949,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel')),
               ElevatedButton.icon(
                 onPressed: selectedProduct == null
                     ? null
@@ -2163,7 +2970,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       },
                 icon: const Icon(Icons.add_link_rounded, size: 16),
                 label: const Text('Attach Item to Form ✓'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white),
               ),
             ],
           );
@@ -2172,24 +2981,36 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  Widget _buildModalTextField(String label, TextEditingController controller, String hint) {
+  Widget _buildModalTextField(
+      String label, TextEditingController controller, String hint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+        Text(label,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
-          decoration: InputDecoration(hintText: hint, border: const OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+          decoration: InputDecoration(
+              hintText: hint,
+              border: const OutlineInputBorder(),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
         ),
       ],
     );
   }
 
-  Widget _buildSectionCard(String title, String subtitle, Color cardBg, bool isDark, {required Widget child, Widget? action}) {
+  Widget _buildSectionCard(
+      String title, String subtitle, Color cardBg, bool isDark,
+      {required Widget child, Widget? action}) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
+      decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2199,8 +3020,12 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
+                  Text(title,
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(subtitle,
+                      style:
+                          GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
                 ],
               ),
               if (action != null) action,
@@ -2213,16 +3038,24 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  Widget _buildInputGroup(String label, TextEditingController controller, String hint, {int maxLines = 1}) {
+  Widget _buildInputGroup(
+      String label, TextEditingController controller, String hint,
+      {int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+        Text(label,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           maxLines: maxLines,
-          decoration: InputDecoration(hintText: hint, border: const OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+          decoration: InputDecoration(
+              hintText: hint,
+              border: const OutlineInputBorder(),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
         ),
       ],
     );
@@ -2232,13 +3065,20 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+        Text(label,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 4),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
-          child: Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+          decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
+          child: Text(value,
+              style:
+                  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
         ),
       ],
     );
@@ -2258,7 +3098,8 @@ class _HsvSpectrumColorPicker extends StatefulWidget {
   });
 
   @override
-  State<_HsvSpectrumColorPicker> createState() => _HsvSpectrumColorPickerState();
+  State<_HsvSpectrumColorPicker> createState() =>
+      _HsvSpectrumColorPickerState();
 }
 
 class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
@@ -2287,22 +3128,26 @@ class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
   }
 
   void _notifyColor() {
-    final currentColor = HSVColor.fromAHSV(1.0, _hue, _saturation, _value).toColor();
+    final currentColor =
+        HSVColor.fromAHSV(1.0, _hue, _saturation, _value).toColor();
     widget.onColorChanged(currentColor);
   }
 
   @override
   Widget build(BuildContext context) {
     final activeHueColor = HSVColor.fromAHSV(1.0, _hue, 1.0, 1.0).toColor();
-    final currentColor = HSVColor.fromAHSV(1.0, _hue, _saturation, _value).toColor();
+    final currentColor =
+        HSVColor.fromAHSV(1.0, _hue, _saturation, _value).toColor();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. Rainbow Spectrum Hue Bar (Top horizontal gradient bar)
         GestureDetector(
-          onPanDown: (details) => _updateHueFromPos(details.localPosition, context),
-          onPanUpdate: (details) => _updateHueFromPos(details.localPosition, context),
+          onPanDown: (details) =>
+              _updateHueFromPos(details.localPosition, context),
+          onPanUpdate: (details) =>
+              _updateHueFromPos(details.localPosition, context),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final barWidth = constraints.maxWidth;
@@ -2338,7 +3183,9 @@ class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
                           shape: BoxShape.circle,
                           color: activeHueColor,
                           border: Border.all(color: Colors.white, width: 2.5),
-                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 4)],
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black38, blurRadius: 4)
+                          ],
                         ),
                       ),
                     ),
@@ -2352,8 +3199,10 @@ class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
 
         // 2. 2D Saturation-Value Canvas (Main gradient canvas box)
         GestureDetector(
-          onPanDown: (details) => _updateSvFromPos(details.localPosition, context),
-          onPanUpdate: (details) => _updateSvFromPos(details.localPosition, context),
+          onPanDown: (details) =>
+              _updateSvFromPos(details.localPosition, context),
+          onPanUpdate: (details) =>
+              _updateSvFromPos(details.localPosition, context),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final canvasWidth = constraints.maxWidth;
@@ -2403,7 +3252,9 @@ class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
                           shape: BoxShape.circle,
                           color: currentColor,
                           border: Border.all(color: Colors.white, width: 2.5),
-                          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 5)],
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black45, blurRadius: 5)
+                          ],
                         ),
                       ),
                     ),
@@ -2460,16 +3311,19 @@ class _AdditionalQuestionCardItem extends StatefulWidget {
   });
 
   @override
-  State<_AdditionalQuestionCardItem> createState() => _AdditionalQuestionCardItemState();
+  State<_AdditionalQuestionCardItem> createState() =>
+      _AdditionalQuestionCardItemState();
 }
 
-class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem> {
+class _AdditionalQuestionCardItemState
+    extends State<_AdditionalQuestionCardItem> {
   late final TextEditingController _labelController;
 
   @override
   void initState() {
     super.initState();
-    _labelController = TextEditingController(text: widget.question['label'] ?? '');
+    _labelController =
+        TextEditingController(text: widget.question['label'] ?? '');
   }
 
   @override
@@ -2484,9 +3338,11 @@ class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
+        color:
+            widget.isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: widget.isDark ? Colors.white10 : Colors.black12),
+        border:
+            Border.all(color: widget.isDark ? Colors.white10 : Colors.black12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2494,10 +3350,14 @@ class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Question ${widget.index + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text('Question ${widget.index + 1}',
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 13)),
               IconButton(
-                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                onPressed: () => widget.provider.removeAdditionalQuestion(widget.index),
+                icon: const Icon(Icons.delete_outline,
+                    size: 16, color: Colors.red),
+                onPressed: () =>
+                    widget.provider.removeAdditionalQuestion(widget.index),
               ),
             ],
           ),
@@ -2507,12 +3367,20 @@ class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('QUESTION LABEL', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('QUESTION LABEL',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 4),
                     TextField(
                       controller: _labelController,
-                      onChanged: (val) => widget.provider.updateAdditionalQuestion(widget.index, 'label', val),
-                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                      onChanged: (val) => widget.provider
+                          .updateAdditionalQuestion(widget.index, 'label', val),
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10)),
                     ),
                   ],
                 ),
@@ -2522,19 +3390,39 @@ class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('FIELD TYPE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('FIELD TYPE',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
                       initialValue: widget.question['type'] ?? 'Text',
-                      dropdownColor: widget.isDark ? const Color(0xFF09140E) : Colors.white,
-                      style: GoogleFonts.inter(color: widget.isDark ? Colors.white : const Color(0xFF0F172A), fontSize: 13),
-                      decoration: const InputDecoration(border: OutlineInputBorder()),
-                      items: ['Text', 'Phone', 'Dropdown'].map((t) => DropdownMenuItem(
-                        value: t,
-                        child: Text(t, style: GoogleFonts.inter(color: widget.isDark ? Colors.white : const Color(0xFF0F172A), fontSize: 13)),
-                      )).toList(),
+                      dropdownColor: widget.isDark
+                          ? const Color(0xFF09140E)
+                          : Colors.white,
+                      style: GoogleFonts.inter(
+                          color: widget.isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                          fontSize: 13),
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
+                      items: ['Text', 'Phone', 'Dropdown']
+                          .map((t) => DropdownMenuItem(
+                                value: t,
+                                child: Text(t,
+                                    style: GoogleFonts.inter(
+                                        color: widget.isDark
+                                            ? Colors.white
+                                            : const Color(0xFF0F172A),
+                                        fontSize: 13)),
+                              ))
+                          .toList(),
                       onChanged: (v) {
-                        if (v != null) widget.provider.updateAdditionalQuestion(widget.index, 'type', v);
+                        if (v != null)
+                          widget.provider.updateAdditionalQuestion(
+                              widget.index, 'type', v);
                       },
                     ),
                   ],

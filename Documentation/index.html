@@ -116,7 +116,7 @@
         </form>
     </div>
 
-    <!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & DYNAMIC LOCATION ENGINE SCRIPT -->
+    <!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & HYBRID LOCATION API ENGINE SCRIPT -->
     <script>
         const locationCascadeData = {
             "Nigeria": {
@@ -170,11 +170,36 @@
         const stateSel = document.getElementById('novasuite-state');
         const citySel = document.getElementById('novasuite-city');
 
-        function populateStates() {
+        // HYBRID LOCATION API ENGINE (API-First + Instant Local Fallback)
+        async function fetchLiveStates(country) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 800); // 800ms fallback threshold
+                const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ country: country }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const data = await res.json();
+                if (data && data.data && data.data.states && data.data.states.length > 0) {
+                    return data.data.states.map(s => s.name);
+                }
+            } catch (e) {
+                // Fallback silently to preloaded local location dictionary
+            }
+            const fallbackObj = locationCascadeData[country] || locationCascadeData['Nigeria'];
+            return Object.keys(fallbackObj);
+        }
+
+        async function populateStates() {
             const selectedCountry = countrySel.value;
-            const statesObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
+            stateSel.disabled = true;
+            const states = await fetchLiveStates(selectedCountry);
+            stateSel.disabled = false;
             stateSel.innerHTML = '';
-            Object.keys(statesObj).forEach(function (state) {
+            states.forEach(function (state) {
                 const opt = document.createElement('option');
                 opt.value = state;
                 opt.innerText = state;
