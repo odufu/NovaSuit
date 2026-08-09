@@ -112,7 +112,7 @@ class SalesCallCenterProvider extends ChangeNotifier {
     ];
   }
 
-  Future<void> fetchOrders({String companyId = 'comp-101'}) async {
+  Future<void> fetchOrders({String companyId = 'c0000000-0000-0000-0000-000000000001'}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -121,12 +121,23 @@ class SalesCallCenterProvider extends ChangeNotifier {
       if (fetched.isNotEmpty) {
         _orders = fetched;
       }
+      subscribeToRealtimeOrders(companyId: companyId);
     } catch (e) {
       // Retain seed data on error
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void subscribeToRealtimeOrders({String companyId = 'c0000000-0000-0000-0000-000000000001'}) {
+    try {
+      _repository.streamRealtimeOrders(companyId: companyId).listen((newOrder) {
+        _orders.removeWhere((o) => o.id == newOrder.id);
+        _orders.insert(0, newOrder);
+        notifyListeners();
+      });
+    } catch (_) {}
   }
 
   void updateOrder(OrderModel updatedOrder) {

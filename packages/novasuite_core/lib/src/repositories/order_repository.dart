@@ -37,6 +37,19 @@ class OrderRepository {
     return generateHistoricalMockOrders(companyId: companyId, salesRepId: salesRepId, status: status);
   }
 
+  /// Realtime Stream listener for instantaneous order list updates upon form submission
+  Stream<OrderModel> streamRealtimeOrders({required String companyId}) {
+    try {
+      return _client
+          .from('orders')
+          .stream(primaryKey: ['id'])
+          .eq('company_id', companyId)
+          .map((list) => list.map((json) => OrderModel.fromMap(json)).first);
+    } catch (_) {
+      return const Stream.empty();
+    }
+  }
+
   /// Find optimal sales rep for an order based on product specialization & least active pending workload
   Future<String?> findOptimalSalesRep({
     required String companyId,
