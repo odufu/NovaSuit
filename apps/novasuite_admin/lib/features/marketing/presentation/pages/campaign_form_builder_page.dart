@@ -361,6 +361,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 DataColumn(label: Text('PACKAGE LABEL')),
                                 DataColumn(label: Text('BUY QTY')),
                                 DataColumn(label: Text('FREE QTY')),
+                                DataColumn(label: Text('TOTAL DEDUCTED STOCK')),
                                 DataColumn(label: Text('AMOUNT (₦)')),
                                 DataColumn(label: Text('SAVINGS')),
                                 DataColumn(label: Text('DEFAULT CHOICE')),
@@ -370,6 +371,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 final idx = entry.key;
                                 final pkg = entry.value;
                                 final isDefault = pkg['isDefault'] == true;
+                                final buyQty = (pkg['buyQty'] ?? 1) as int;
+                                final freeQty = (pkg['freeQty'] ?? 0) as int;
+                                final totalStock = buyQty + freeQty;
                                 final discountVal = (pkg['discount'] ?? 0.0) as double;
 
                                 return DataRow(
@@ -388,8 +392,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                         ],
                                       ],
                                     )),
-                                    DataCell(Text('${pkg['buyQty'] ?? 1}', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
-                                    DataCell(Text('${pkg['freeQty'] ?? 0}', style: GoogleFonts.inter(color: textMuted))),
+                                    DataCell(Text('$buyQty', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
+                                    DataCell(Text('$freeQty', style: GoogleFonts.inter(color: textMuted))),
+                                    DataCell(Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                                      child: Text('$totalStock units ($buyQty + $freeQty free)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
+                                    )),
                                     DataCell(Text('₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
                                     DataCell(
                                       discountVal > 0
