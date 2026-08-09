@@ -1760,9 +1760,12 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
 
     final nameController = TextEditingController(text: 'Chief Customer Tester');
+    final emailController = TextEditingController(text: 'customer@example.com');
     final phoneController = TextEditingController(text: '08099887766');
     final addressController =
         TextEditingController(text: '12 Victoria Island Expressway');
+    final address2Controller = TextEditingController(text: 'Suite 4B, Blue Tower');
+    final postalController = TextEditingController(text: '100242');
 
     String selectedCountry = 'Nigeria';
     List<String> availableStates = AddressLocationService.getStates('Nigeria');
@@ -1851,193 +1854,265 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       const SizedBox(height: 16),
                     ],
 
-                    // 1. SECTION 1: FORM INPUTS FIRST
+                    // 1. SECTION 1: DYNAMIC CORE FORM INPUTS (REACTS INSTANTLY TO FEATURE TOGGLES)
                     Text('CUSTOMER & DELIVERY DETAILS',
                         style: GoogleFonts.getFont(_fontFamily,
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
                             color: placeholderColor)),
                     const SizedBox(height: 8),
-                    _buildCustomStyledTextField(
-                        'FULL NAME *',
-                        nameController,
-                        'Chief Customer Tester',
-                        inputBgColor,
-                        inputTextColor,
-                        placeholderColor),
-                    const SizedBox(height: 10),
-                    _buildCustomStyledTextField(
-                        'PHONE NUMBER (FOR RIDER) *',
-                        phoneController,
-                        '08099887766',
-                        inputBgColor,
-                        inputTextColor,
-                        placeholderColor),
-                    const SizedBox(height: 10),
 
-                    // Address API Cascade: Country -> State -> City/LGA
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('COUNTRY *',
-                                  style: GoogleFonts.getFont(_fontFamily,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10,
-                                      color: placeholderColor)),
-                                                           DropdownButtonFormField<String>(
-                                initialValue: selectedCountry,
-                                dropdownColor: dropdownMenuBg,
-                                decoration: InputDecoration(
-                                  fillColor: inputBgColor,
-                                  filled: true,
-                                  border: const OutlineInputBorder(),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 8),
-                                ),
-                                style: GoogleFonts.getFont(_fontFamily,
-                                    color: dropdownItemTextColor, fontSize: 12),
-                                items: AddressLocationService.countries
-                                    .map((c) => DropdownMenuItem(
-                                          value: c,
-                                          child: Text(c,
-                                              style: GoogleFonts.getFont(
-                                                  _fontFamily,
-                                                  color: dropdownItemTextColor,
-                                                  fontSize: 12)),
-                                        ))
-                                    .toList(),
-                                onChanged: (v) {
-                                  if (v != null) {
-                                    setModalState(() {
-                                      selectedCountry = v;
-                                      availableStates =
-                                          AddressLocationService.getStates(v);
-                                      selectedState = availableStates.first;
-                                      availableCitiesLgas =
-                                          AddressLocationService.getCitiesLgas(
-                                              selectedState);
-                                      selectedCityLga =
-                                          availableCitiesLgas.first;
-                                    });
-                                  }
-                                },
-                              ),
+                    Consumer<CampaignFormBuilderProvider>(
+                      builder: (context, liveProvider, _) {
+                        final getCoreField = (String key) => liveProvider.coreFields.firstWhere(
+                              (f) => f['key'] == key,
+                              orElse: () => {'key': key, 'label': key, 'visible': true, 'required': false},
+                            );
+
+                        final fName = getCoreField('full_name');
+                        final fEmail = getCoreField('email');
+                        final fPhone = getCoreField('phone');
+                        final fAddr1 = getCoreField('address1');
+                        final fAddr2 = getCoreField('address2');
+                        final fCountry = getCoreField('country');
+                        final fState = getCoreField('state');
+                        final fCity = getCoreField('city');
+                        final fPostal = getCoreField('postal_code');
+
+                        final showCountry = fCountry['visible'] == true;
+                        final showState = fState['visible'] == true;
+                        final showCity = fCity['visible'] == true;
+                        final showAddr1 = fAddr1['visible'] == true;
+                        final showAddr2 = fAddr2['visible'] == true;
+                        final showEmail = fEmail['visible'] == true;
+                        final showName = fName['visible'] == true;
+                        final showPhone = fPhone['visible'] == true;
+                        final showPostal = fPostal['visible'] == true;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showName) ...[
+                              _buildCustomStyledTextField(
+                                  '${(fName['label'] ?? 'FULL NAME').toString().toUpperCase()} ${fName['required'] == true ? '*' : ''}',
+                                  nameController,
+                                  'Chief Customer Tester',
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor),
+                              const SizedBox(height: 10),
                             ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('STATE *',
+
+                            if (showPhone) ...[
+                              _buildCustomStyledTextField(
+                                  '${(fPhone['label'] ?? 'PHONE NUMBER').toString().toUpperCase()} ${fPhone['required'] == true ? '*' : ''}',
+                                  phoneController,
+                                  '08099887766',
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor),
+                              const SizedBox(height: 10),
+                            ],
+
+                            if (showEmail) ...[
+                              _buildCustomStyledTextField(
+                                  '${(fEmail['label'] ?? 'EMAIL ADDRESS').toString().toUpperCase()} ${fEmail['required'] == true ? '*' : ''}',
+                                  emailController,
+                                  'customer@example.com',
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor),
+                              const SizedBox(height: 10),
+                            ],
+
+                            if (showCountry || showState) ...[
+                              Row(
+                                children: [
+                                  if (showCountry)
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('${(fCountry['label'] ?? 'COUNTRY').toString().toUpperCase()} ${fCountry['required'] == true ? '*' : ''}',
+                                              style: GoogleFonts.getFont(_fontFamily,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 10,
+                                                  color: placeholderColor)),
+                                          const SizedBox(height: 4),
+                                          DropdownButtonFormField<String>(
+                                            initialValue: selectedCountry,
+                                            dropdownColor: dropdownMenuBg,
+                                            decoration: InputDecoration(
+                                              fillColor: inputBgColor,
+                                              filled: true,
+                                              border: const OutlineInputBorder(),
+                                              contentPadding: const EdgeInsets.symmetric(
+                                                  horizontal: 10, vertical: 8),
+                                            ),
+                                            style: GoogleFonts.getFont(_fontFamily,
+                                                color: dropdownItemTextColor, fontSize: 12),
+                                            items: AddressLocationService.countries
+                                                .map((c) => DropdownMenuItem(
+                                                      value: c,
+                                                      child: Text(c,
+                                                          style: GoogleFonts.getFont(_fontFamily,
+                                                              color: dropdownItemTextColor, fontSize: 12)),
+                                                    ))
+                                                .toList(),
+                                            onChanged: (v) {
+                                              if (v != null) {
+                                                setModalState(() {
+                                                  selectedCountry = v;
+                                                  availableStates = AddressLocationService.getStates(v);
+                                                  selectedState = availableStates.first;
+                                                  availableCitiesLgas = AddressLocationService.getCitiesLgas(selectedState);
+                                                  selectedCityLga = availableCitiesLgas.first;
+                                                });
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  if (showCountry && showState) const SizedBox(width: 10),
+                                  if (showState)
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('${(fState['label'] ?? 'STATE').toString().toUpperCase()} ${fState['required'] == true ? '*' : ''}',
+                                              style: GoogleFonts.getFont(_fontFamily,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 10,
+                                                  color: placeholderColor)),
+                                          const SizedBox(height: 4),
+                                          DropdownButtonFormField<String>(
+                                            initialValue: selectedState,
+                                            dropdownColor: dropdownMenuBg,
+                                            decoration: InputDecoration(
+                                              fillColor: inputBgColor,
+                                              filled: true,
+                                              border: const OutlineInputBorder(),
+                                              contentPadding: const EdgeInsets.symmetric(
+                                                  horizontal: 10, vertical: 8),
+                                            ),
+                                            style: GoogleFonts.getFont(_fontFamily,
+                                                color: dropdownItemTextColor, fontSize: 12),
+                                            items: availableStates
+                                                .map((s) => DropdownMenuItem(
+                                                      value: s,
+                                                      child: Text(s,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: GoogleFonts.getFont(_fontFamily,
+                                                              color: dropdownItemTextColor, fontSize: 12)),
+                                                    ))
+                                                .toList(),
+                                            onChanged: (v) {
+                                              if (v != null) {
+                                                setModalState(() {
+                                                  selectedState = v;
+                                                  availableCitiesLgas = AddressLocationService.getCitiesLgas(v);
+                                                  selectedCityLga = availableCitiesLgas.first;
+                                                });
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+
+                            if (showCity) ...[
+                              Text('${(fCity['label'] ?? 'CITY / LOCAL GOVERNMENT AREA (LGA)').toString().toUpperCase()} ${fCity['required'] == true ? '*' : ''}',
                                   style: GoogleFonts.getFont(_fontFamily,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
                                       color: placeholderColor)),
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
-                                initialValue: selectedState,
+                                initialValue: availableCitiesLgas.contains(selectedCityLga)
+                                    ? selectedCityLga
+                                    : availableCitiesLgas.first,
                                 dropdownColor: dropdownMenuBg,
                                 decoration: InputDecoration(
                                   fillColor: inputBgColor,
                                   filled: true,
                                   border: const OutlineInputBorder(),
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 8),
+                                      horizontal: 12, vertical: 10),
                                 ),
                                 style: GoogleFonts.getFont(_fontFamily,
-                                    color: dropdownItemTextColor, fontSize: 12),
-                                items: availableStates
-                                    .map((s) => DropdownMenuItem(
-                                          value: s,
-                                          child: Text(s,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.getFont(
-                                                  _fontFamily,
-                                                  color: dropdownItemTextColor,
-                                                  fontSize: 12)),
+                                    color: dropdownItemTextColor, fontSize: 13),
+                                items: availableCitiesLgas
+                                    .map((c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(c,
+                                              style: GoogleFonts.getFont(_fontFamily,
+                                                  color: dropdownItemTextColor, fontSize: 13)),
                                         ))
                                     .toList(),
                                 onChanged: (v) {
-                                  if (v != null) {
-                                    setModalState(() {
-                                      selectedState = v;
-                                      availableCitiesLgas =
-                                          AddressLocationService.getCitiesLgas(
-                                              v);
-                                      selectedCityLga =
-                                          availableCitiesLgas.first;
-                                    });
-                                  }
+                                  if (v != null) setModalState(() => selectedCityLga = v);
                                 },
                               ),
+                              const SizedBox(height: 10),
                             ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
 
-                    Text('CITY / LOCAL GOVERNMENT AREA (LGA) *',
-                        style: GoogleFonts.getFont(_fontFamily,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                            color: placeholderColor)),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      initialValue:
-                          availableCitiesLgas.contains(selectedCityLga)
-                              ? selectedCityLga
-                              : availableCitiesLgas.first,
-                      dropdownColor: dropdownMenuBg,
-                      decoration: InputDecoration(
-                        fillColor: inputBgColor,
-                        filled: true,
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                      ),
-                      style: GoogleFonts.getFont(_fontFamily,
-                          color: dropdownItemTextColor, fontSize: 13),
-                      items: availableCitiesLgas
-                          .map((c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c,
-                                    style: GoogleFonts.getFont(_fontFamily,
-                                        color: dropdownItemTextColor, fontSize: 13)),
-                              ))
-                          .toList(),
-                      onChanged: (v) {
-                        if (v != null) setModalState(() => selectedCityLga = v);
+                            if (showAddr1) ...[
+                              _buildCustomStyledTextField(
+                                  '${(fAddr1['label'] ?? 'DELIVERY ADDRESS').toString().toUpperCase()} ${fAddr1['required'] == true ? '*' : ''}',
+                                  addressController,
+                                  '12 Victoria Island Expressway',
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor),
+                              const SizedBox(height: 10),
+                            ],
+
+                            if (showAddr2) ...[
+                              _buildCustomStyledTextField(
+                                  '${(fAddr2['label'] ?? 'ADDRESS LINE 2').toString().toUpperCase()} ${fAddr2['required'] == true ? '*' : ''}',
+                                  address2Controller,
+                                  'Suite 4B, Blue Tower',
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor),
+                              const SizedBox(height: 10),
+                            ],
+
+                            if (showPostal) ...[
+                              _buildCustomStyledTextField(
+                                  '${(fPostal['label'] ?? 'POSTAL CODE').toString().toUpperCase()} ${fPostal['required'] == true ? '*' : ''}',
+                                  postalController,
+                                  '100242',
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor),
+                              const SizedBox(height: 10),
+                            ],
+
+                            if (liveProvider.additionalQuestions.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              ...liveProvider.additionalQuestions.map((q) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _buildCustomQuestionField(
+                                  q,
+                                  inputBgColor,
+                                  inputTextColor,
+                                  placeholderColor,
+                                  dropdownMenuBg,
+                                  dropdownItemTextColor,
+                                  setModalState,
+                                ),
+                              )),
+                            ],
+                          ],
+                        );
                       },
                     ),
-                    const SizedBox(height: 10),
-                    _buildCustomStyledTextField(
-                        'DELIVERY ADDRESS *',
-                        addressController,
-                        '12 Victoria Island Expressway',
-                        inputBgColor,
-                        inputTextColor,
-                        placeholderColor),
-                    if (provider.additionalQuestions.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      ...provider.additionalQuestions.map((q) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildCustomQuestionField(
-                          q,
-                          inputBgColor,
-                          inputTextColor,
-                          placeholderColor,
-                          dropdownMenuBg,
-                          dropdownItemTextColor,
-                          setModalState,
-                        ),
-                      )),
-                    ],
                     const SizedBox(height: 20),
 
                     // 2. SECTION 2: OFFER PACKAGES CHOICE CARDS (UNDER FORM INPUTS)
