@@ -65,13 +65,17 @@ serve(async (req: Request) => {
       );
     }
 
+    // Safely check if form_id is valid UUID to avoid Postgres 22P02 type mismatch errors
+    const isUuid = (str?: string) => str ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str) : false;
+    let validatedFormId: string | null = isUuid(payload.form_id) ? payload.form_id! : null;
+
     // 1. Resolve Thank-You Redirect URL from lead_forms table or payload
     let targetRedirectUrl = payload.redirect_url || "https://detoxwithnova.xyz/thank-you";
-    if (payload.form_id) {
+    if (validatedFormId) {
       const { data: formData } = await supabaseClient
         .from("lead_forms")
         .select("redirect_url")
-        .eq("id", payload.form_id)
+        .eq("id", validatedFormId)
         .single();
       if (formData?.redirect_url) {
         targetRedirectUrl = formData.redirect_url;
@@ -103,7 +107,7 @@ serve(async (req: Request) => {
         product_id: payload.product_id || "p0000000-0000-0000-0000-000000000001",
         marketer_id: payload.marketer_id || null,
         campaign_id: payload.campaign_id || null,
-        form_id: payload.form_id || null,
+        form_id: validatedFormId,
         customer_name: payload.customer_name,
         customer_phone: payload.customer_phone,
         customer_alt_phone: payload.customer_alt_phone || null,
@@ -159,7 +163,7 @@ serve(async (req: Request) => {
       .insert({
         submission_code: submissionCode,
         company_id: payload.company_id,
-        form_id: payload.form_id || null,
+        form_id: validatedFormId,
         customer_name: payload.customer_name,
         contact_email: payload.customer_email || null,
         contact_phone: payload.customer_phone,

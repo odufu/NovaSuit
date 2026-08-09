@@ -84,43 +84,864 @@ class AddressLocationService {
   };
 
   static const Map<String, List<String>> citiesLgasByState = {
-    'Abia': ['Aba North', 'Aba South', 'Umuahia North', 'Umuahia South', 'Ohafia', 'Arochukwu', 'Osisioma', 'Bende', 'Ikwuano', 'Isiala Ngwa North', 'Isiala Ngwa South', 'Isuikwuato', 'Obi Ngwa', 'Ugwunagbo', 'Ukwa East', 'Ukwa West', 'Umu Nneochi'],
-    'Abuja (FCT)': ['Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Kubwa', 'Lugbe', 'Bwari', 'Kuje', 'Abaji', 'Utako', 'Jabi', 'Gwagwalada', 'Kwali'],
-    'Adamawa': ['Yola North', 'Yola South', 'Jimeta', 'Mubi North', 'Mubi South', 'Numan', 'Demsa', 'Fufore', 'Ganye', 'Girei', 'Gombi', 'Guyuk', 'Hong', 'Jada', 'Lamurde', 'Madagali', 'Maiha', 'Mayo Belwa', 'Michika', 'Shelleng', 'Song', 'Toungo'],
-    'Akwa Ibom': ['Uyo', 'Eket', 'Ikot Ekpene', 'Oron', 'Ibeno', 'Abak', 'Etinan', 'Eastern Obolo', 'Essien Udim', 'Etim Ekpo', 'Ibesikpo Asutan', 'Ibiono Ibom', 'Ika', 'Ikono', 'Ikot Abasi', 'Ini', 'Itu', 'Mbo', 'Mkpat Enin', 'Nsit Atai', 'Nsit Ibom', 'Nsit Ubium', 'Obot Akara', 'Okobo', 'Onna', 'Oruk Anam', 'Udung Uko', 'Ukanafun', 'Uruan', 'Urue Offong/Oruko'],
-    'Anambra': ['Awka South', 'Awka North', 'Onitsha North', 'Onitsha South', 'Nnewi North', 'Nnewi South', 'Ekwulobia (Aguata)', 'Ihiala', 'Ogbaru', 'Otuocha (Anambra East)', 'Anambra West', 'Anaocha', 'Ayamelum', 'Dunukofia', 'Ekwusigo', 'Idemili North', 'Idemili South', 'Njikoka', 'Orumba North', 'Orumba South', 'Oyi'],
-    'Bauchi': ['Bauchi Central', 'Azare (Katagum)', 'Misau', 'Jama\'are', 'Toro', 'Alkaleri', 'Bogoro', 'Damban', 'Darazo', 'Dass', 'Gamawa', 'Ganjuwa', 'Giade', 'Itas/Gadau', 'Kirfi', 'Ningi', 'Shira', 'Tafawa Balewa', 'Warji', 'Zaki'],
-    'Bayelsa': ['Yenagoa', 'Sagbama', 'Brass', 'Ogbia', 'Ekeremor', 'Southern Ijaw', 'Kolokuma/Opokuma', 'Nembe'],
-    'Benue': ['Makurdi', 'Otukpo', 'Gboko', 'Ogobia', 'Ugboju', 'Oju', 'Katsina-Ala', 'Vandeikya', 'Okpoga (Okpokwu)', 'Adoka', 'Utonkon (Ado)', 'Obagaji (Agatu)', 'Gwer East (Aliade)', 'Gwer West (Naka)', 'Ukum (Sankera)', 'Buruku', 'Tarka (Wannune)', 'Ushongo', 'Apa', 'Guma', 'Konshisha', 'Kwande', 'Logo', 'Obi', 'Ogbadibo', 'Ohimini'],
-    'Borno': ['Maiduguri Municipal', 'Jere', 'Biu', 'Bama', 'Abadam', 'Askira/Uba', 'Bayo', 'Chibok', 'Damboa', 'Dikwa', 'Gubio', 'Guzamala', 'Gwoza', 'Hawul', 'Kaga', 'Kala/Balge', 'Konduga', 'Kukawa', 'Kwaya Kusar', 'Mafa', 'Magumeri', 'Marte', 'Mobbar', 'Monguno', 'Ngala', 'Nganzai', 'Shani'],
-    'Cross River': ['Calabar Municipal', 'Calabar South', 'Ikom', 'Ogoja', 'Ugep (Yakurr)', 'Obudu', 'Akamkpa', 'Abi', 'Akpabuyo', 'Bakassi', 'Bekwarra', 'Biase', 'Boki', 'Etung', 'Obanliku', 'Obubra', 'Odukpani', 'Yala'],
-    'Delta': ['Warri South', 'Warri North', 'Warri Southwest', 'Asaba / Oshimili South', 'Uvwie / Effurun', 'Ughelli North', 'Ughelli South', 'Sapele', 'Agbor (Ika South)', 'Oghara (Ethiope West)', 'Aniocha North', 'Aniocha South', 'Bomadi', 'Burutu', 'Ethiope East', 'Ika North East', 'Isoko North', 'Isoko South', 'Ndokwa East', 'Ndokwa West', 'Okpe', 'Oshimili North', 'Patani', 'Udu', 'Ukwuani'],
-    'Ebonyi': ['Abakaliki', 'Afikpo North', 'Afikpo South (Edda)', 'Onueke (Ezza South)', 'Ishiagu (Ivo)', 'Ebonyi', 'Ezza North', 'Ikwo', 'Ishielu', 'Izzi', 'Ohaozara', 'Ohaukwu', 'Onicha'],
-    'Edo': ['Benin City (Oredo)', 'Ikpoba-Okha', 'Egor', 'Uromi (Esan Northeast)', 'Ekpoma (Esan West)', 'Auchi (Etsako West)', 'Okada (Ovia Northeast)', 'Abudu (Orhionmwon)', 'Akoko-Edo', 'Esan Central', 'Esan South-East', 'Etsako Central', 'Etsako East', 'Igueben', 'Ovia South-West', 'Owan East', 'Owan West', 'Uhunmwonde'],
-    'Ekiti': ['Ado-Ekiti', 'Ikere-Ekiti', 'Ijero-Ekiti', 'Ikole-Ekiti', 'Oye-Ekiti', 'Efon', 'Ekiti East', 'Ekiti South-West', 'Ekiti West', 'Emure', 'Gbonyin', 'Ido-Osi', 'Ise/Orun', 'Moba'],
-    'Enugu': ['Enugu North', 'Enugu South', 'Enugu East', 'Nsukka', 'Udi', 'Oji River', 'Awgu', 'Nkanu West', 'Aninri', 'Ezeagu', 'Igbo Etiti', 'Igbo Eze North', 'Igbo Eze South', 'Isi Uzo', 'Nkanu East', 'Udenu', 'Uzo Uwani'],
-    'Gombe': ['Gombe Town', 'Dukku', 'Kaltungo', 'Yamaltu/Deba', 'Akko', 'Balanga', 'Billiri', 'Funakaye', 'Kwami', 'Nafada', 'Shongom'],
-    'Imo': ['Owerri Municipal', 'Owerri North', 'Owerri West', 'Orlu', 'Okigwe', 'Mbaise (Aboh/Ahiazu)', 'Oguta', 'Mbaitoli', 'Ehime Mbano', 'Ezinihitte Mbaise', 'Ideato North', 'Ideato South', 'Ihitte/Uboma', 'Ikeduru', 'Isiala Mbano', 'Isu', 'Ngor Okpala', 'Njaba', 'Nkwerre', 'Nwangele', 'Obowo', 'Ohaji/Egbema', 'Onuimo', 'Orsu', 'Oru East', 'Oru West'],
-    'Jigawa': ['Dutse', 'Hadejia', 'Birnin Kudu', 'Gumel', 'Kazaure', 'Auyo', 'Babura', 'Biriniwa', 'Buji', 'Gagarawa', 'Garki', 'Guri', 'Gwaram', 'Gwiwa', 'Jahun', 'Kafir Hausa', 'Kaugama', 'Kiri Kasama', 'Kiyawa', 'Maigatari', 'Malam Madori', 'Miga', 'Ringim', 'Roni', 'Sule Tankarkar', 'Taura', 'Yankwashi'],
-    'Kaduna': ['Kaduna North', 'Kaduna South', 'Zaria', 'Kafanchan (Jema\'a)', 'Chikun', 'Igabi', 'Sabon Gari', 'Saminaka (Lere)', 'Kachia', 'Giwa', 'Birnin Gwari', 'Ikara', 'Jaba', 'Kagarko', 'Kajuru', 'Kaura', 'Kauru', 'Kubau', 'Kudan', 'Makarfi', 'Sanga', 'Soba', 'Zangon Kataf'],
-    'Kano': ['Kano Municipal', 'Fagge', 'Dala', 'Gwale', 'Tarauni', 'Nassarawa', 'Ajingi', 'Albasu', 'Bagwai', 'Bebeji', 'Bichi', 'Bunkure', 'Dambatta', 'Dawakin Kudu', 'Dawakin Tofa', 'Doguwa', 'Gabasawa', 'Garko', 'Garun Mallam', 'Gaya', 'Gezawa', 'Gwarzo', 'Kabo', 'Karaye', 'Kibiya', 'Kiru', 'Kumbotso', 'Kunchi', 'Kura', 'Madobi', 'Makoda', 'Minjibir', 'Rano', 'Rimin Gado', 'Rogo', 'Shanono', 'Sumaila', 'Takai', 'Tofa', 'Tsanyawa', 'Tudun Wada', 'Ungogo', 'Warawa', 'Wudil'],
-    'Katsina': ['Katsina Town', 'Daura', 'Funtua', 'Malumfashi', 'Kankia', 'Bakori', 'Batagarawa', 'Batsari', 'Baure', 'Bindawa', 'Charanchi', 'Dandume', 'Danja', 'Dan Musa', 'Dutsi', 'Dutsin Ma', 'Faskari', 'Ingawa', 'Jibia', 'Kafur', 'Kaita', 'Kankara', 'Kurfi', 'Kusada', 'Mai\'Adua', 'Mani', 'Mashi', 'Matazu', 'Musawa', 'Rimi', 'Sabuwa', 'Safana', 'Sandamu', 'Zango'],
-    'Kebbi': ['Birnin Kebbi', 'Argungu', 'Yauri', 'Zuru', 'Aleiro', 'Arewa Dandi', 'Augie', 'Bagudo', 'Bunza', 'Dandi', 'Fakai', 'Gwandu', 'Jega', 'Kalgo', 'Koko/Besse', 'Maiyama', 'Ngaski', 'Sakaba', 'Shanga', 'Suru', 'Danko/Wasagu'],
-    'Kogi': ['Lokoja', 'Okene', 'Kabba (Kabba/Bunu)', 'Idah', 'Anyigba (Dekina)', 'Ajaokuta', 'Koton Karfe (Kogi LGA)', 'Adavi', 'Ankpa', 'Bassa', 'Ibaji', 'Igalamela Odolu', 'Ijumu', 'Mopa Muro', 'Ofu', 'Ogori/Magongo', 'Okehi', 'Olamaboro', 'Omala', 'Yagba East', 'Yagba West'],
-    'Kwara': ['Ilorin West', 'Ilorin East', 'Ilorin South', 'Offa', 'Omu-Aran (Irepodun)', 'Lafiagi (Edu)', 'Kaiama', 'Asa', 'Baruten', 'Ekiti', 'Ifelodun', 'Isin', 'Moro', 'Oke Ero', 'Oyun', 'Pategi'],
-    'Lagos': ['Ikeja', 'Victoria Island / Eti-Osa', 'Lekki / Ajah', 'Surulere', 'Alimosho', 'Kosofe / Ojota', 'Apapa', 'Ikorodu', 'Epe', 'Badagry', 'Mushin', 'Agege', 'Oshodi-Isolo', 'Yaba / Lagos Mainland', 'Amuwo-Odofin', 'Ajeromi-Ifelodun', 'Ibeju-Lekki', 'Ifako-Ijaiye', 'Lagos Island', 'Ojo', 'Shomolu'],
-    'Nasarawa': ['Lafia', 'Karu (Mararaba / Nyanya axis)', 'Keffi', 'Akwanga', 'Nasarawa Town', 'Toto', 'Awe', 'Doma', 'Keana', 'Kokona', 'Nasarawa Egon', 'Obi', 'Wamba'],
-    'Niger': ['Minna (Chanchaga)', 'Bida', 'Suleja', 'Kontagora', 'Lapai', 'Mokwa', 'Agaie', 'Agwara', 'Borgu', 'Bosso', 'Edati', 'Gbako', 'Gurara', 'Katcha', 'Lavun', 'Magama', 'Mariga', 'Mashegu', 'Moya', 'Paikoro', 'Rafi', 'Rijau', 'Shiroro', 'Tafa', 'Wushishi'],
-    'Ogun': ['Abeokuta South', 'Abeokuta North', 'Ifo', 'Ota / Ado-Odo', 'Ijebu Ode', 'Sagamu', 'Ilaro (Yewa South)', 'Mowe / Ibafo', 'Ijebu Igbo (Ijebu North)', 'Egbado North (Yewa North)', 'Ewekoro', 'Ijebu East', 'Ijebu North East', 'Ikenne', 'Remo North', 'Imeko Afon', 'Ipokia', 'Odogbolu', 'Odeda', 'Ogun Waterside'],
-    'Ondo': ['Akure South', 'Akure North', 'Ondo West (Ondo Town)', 'Ondo East', 'Owo', 'Ikare (Akoko Northwest)', 'Okitipupa', 'Igbokoda (Ilaje)', 'Akoko North-East', 'Akoko South-East', 'Akoko South-West', 'Ese Odo', 'Idanre', 'Ifedore', 'Ile Oluji/Okeigbo', 'Irele', 'Ose'],
-    'Osun': ['Osogbo', 'Ede North', 'Ede South', 'Ife Central (Ile-Ife)', 'Ife East', 'Ilesa East', 'Ilesa West', 'Ikirun (Ifelodun)', 'Iwo', 'Ejigbo', 'Atakunmosa East', 'Atakunmosa West', 'Ayedaade', 'Ayedire', 'Boluwaduro', 'Boripe', 'Egbedore', 'Ife North', 'Ife South', 'Ifedayo', 'Ila', 'Irepodun', 'Irewole', 'Isokan', 'Obokun', 'Odo Otin', 'Ola Oluwa', 'Olorunda', 'Oriade', 'Orolu'],
-    'Oyo (Ibadan)': ['Ibadan North', 'Ibadan Southwest', 'Ibadan Southeast', 'Ibadan Northwest', 'Oyo East', 'Ogbomoso', 'Afijio', 'Akinyele', 'Atiba', 'Atisbo', 'Egbeda', 'Ibadan North-East', 'Ibarapa Central', 'Ibarapa East', 'Ibarapa North', 'Iddo', 'Irepo', 'Iseyin', 'Itesiwaju', 'Iwajowa', 'Kajola', 'Lagelu', 'Ogbomoso North', 'Ogbomoso South', 'Ogo Oluwa', 'Olorunsogo', 'Oluyole', 'Ona Ara', 'Oorelope', 'Ori Ire', 'Oyo West', 'Saki East', 'Saki West', 'Surulere'],
-    'Plateau': ['Jos North', 'Jos South', 'Jos East', 'Bukuru', 'Pankshin', 'Shendam', 'Mangu', 'Langtang North', 'Barkin Ladi', 'Bassa', 'Bokkos', 'Kanam', 'Kanke', 'Langtang South', 'Mikang', 'Qua\'an Pan', 'Riyom', 'Wase'],
-    'Rivers (Port Harcourt)': ['Port Harcourt City', 'Obio-Akpor', 'Eleme', 'Ikwerre', 'Bonny Island', 'Oyigbo', 'Degema', 'Abua/Odual', 'Ahoada East', 'Ahoada West', 'Akuku-Toru', 'Andoni', 'Asari-Toru', 'Emuoha', 'Etche', 'Gokana', 'Khana', 'Ogba/Egbema/Ndoni', 'Ogu/Bolo', 'Okrika', 'Omuma', 'Opobo/Nkoro', 'Tai'],
-    'Sokoto': ['Sokoto North', 'Sokoto South', 'Wamako', 'Tambuwal', 'Goronyo', 'Binji', 'Bodinga', 'Dange Shuni', 'Gada', 'Gudu', 'Gwadabawa', 'Illela', 'Isa', 'Kware', 'Kebbe', 'Rabah', 'Sabon Birni', 'Shagari', 'Silame', 'Tangaza', 'Tureta', 'Wurno', 'Yabo'],
-    'Taraba': ['Jalingo', 'Wukari', 'Bali', 'Sardauna (Gembu)', 'Takum', 'Ardo Kola', 'Donga', 'Gashaka', 'Gassol', 'Ibi', 'Karim Lamido', 'Kurmi', 'Lau', 'Ussa', 'Yorro', 'Zing'],
-    'Yobe': ['Damaturu', 'Potiskum', 'Gashua (Bade)', 'Nguru', 'Bursari', 'Fika', 'Fune', 'Geidam', 'Gujba', 'Gulani', 'Jakusko', 'Karasuwa', 'Machina', 'Nangere', 'Tarmuwa', 'Yunusari', 'Yusufari'],
-    'Zamfara': ['Gusau', 'Kaura Namoda', 'Talata Mafara', 'Tsafe', 'Anka', 'Bakura', 'Birnin Magaji/Kiyaw', 'Bukkuyum', 'Bungudu', 'Gummi', 'Maradun', 'Maru', 'Shinkafi', 'Zurmi'],
+    'Abia': [
+      'Aba North',
+      'Aba South',
+      'Umuahia North',
+      'Umuahia South',
+      'Ohafia',
+      'Arochukwu',
+      'Osisioma',
+      'Bende',
+      'Ikwuano',
+      'Isiala Ngwa North',
+      'Isiala Ngwa South',
+      'Isuikwuato',
+      'Obi Ngwa',
+      'Ugwunagbo',
+      'Ukwa East',
+      'Ukwa West',
+      'Umu Nneochi'
+    ],
+    'Abuja (FCT)': [
+      'Garki',
+      'Wuse',
+      'Maitama',
+      'Asokoro',
+      'Gwarinpa',
+      'Kubwa',
+      'Lugbe',
+      'Bwari',
+      'Kuje',
+      'Abaji',
+      'Utako',
+      'Jabi',
+      'Gwagwalada',
+      'Kwali'
+    ],
+    'Adamawa': [
+      'Yola North',
+      'Yola South',
+      'Jimeta',
+      'Mubi North',
+      'Mubi South',
+      'Numan',
+      'Demsa',
+      'Fufore',
+      'Ganye',
+      'Girei',
+      'Gombi',
+      'Guyuk',
+      'Hong',
+      'Jada',
+      'Lamurde',
+      'Madagali',
+      'Maiha',
+      'Mayo Belwa',
+      'Michika',
+      'Shelleng',
+      'Song',
+      'Toungo'
+    ],
+    'Akwa Ibom': [
+      'Uyo',
+      'Eket',
+      'Ikot Ekpene',
+      'Oron',
+      'Ibeno',
+      'Abak',
+      'Etinan',
+      'Eastern Obolo',
+      'Essien Udim',
+      'Etim Ekpo',
+      'Ibesikpo Asutan',
+      'Ibiono Ibom',
+      'Ika',
+      'Ikono',
+      'Ikot Abasi',
+      'Ini',
+      'Itu',
+      'Mbo',
+      'Mkpat Enin',
+      'Nsit Atai',
+      'Nsit Ibom',
+      'Nsit Ubium',
+      'Obot Akara',
+      'Okobo',
+      'Onna',
+      'Oruk Anam',
+      'Udung Uko',
+      'Ukanafun',
+      'Uruan',
+      'Urue Offong/Oruko'
+    ],
+    'Anambra': [
+      'Awka South',
+      'Awka North',
+      'Onitsha North',
+      'Onitsha South',
+      'Nnewi North',
+      'Nnewi South',
+      'Ekwulobia (Aguata)',
+      'Ihiala',
+      'Ogbaru',
+      'Otuocha (Anambra East)',
+      'Anambra West',
+      'Anaocha',
+      'Ayamelum',
+      'Dunukofia',
+      'Ekwusigo',
+      'Idemili North',
+      'Idemili South',
+      'Njikoka',
+      'Orumba North',
+      'Orumba South',
+      'Oyi'
+    ],
+    'Bauchi': [
+      'Bauchi Central',
+      'Azare (Katagum)',
+      'Misau',
+      'Jama\'are',
+      'Toro',
+      'Alkaleri',
+      'Bogoro',
+      'Damban',
+      'Darazo',
+      'Dass',
+      'Gamawa',
+      'Ganjuwa',
+      'Giade',
+      'Itas/Gadau',
+      'Kirfi',
+      'Ningi',
+      'Shira',
+      'Tafawa Balewa',
+      'Warji',
+      'Zaki'
+    ],
+    'Bayelsa': [
+      'Yenagoa',
+      'Sagbama',
+      'Brass',
+      'Ogbia',
+      'Ekeremor',
+      'Southern Ijaw',
+      'Kolokuma/Opokuma',
+      'Nembe'
+    ],
+    'Benue': [
+      'Makurdi',
+      'Otukpo',
+      'Gboko',
+      'Ogobia',
+      'Ugboju',
+      'Oju',
+      'Katsina-Ala',
+      'Vandeikya',
+      'Okpoga (Okpokwu)',
+      'Adoka',
+      'Utonkon (Ado)',
+      'Obagaji (Agatu)',
+      'Gwer East (Aliade)',
+      'Gwer West (Naka)',
+      'Ukum (Sankera)',
+      'Buruku',
+      'Tarka (Wannune)',
+      'Ushongo',
+      'Apa',
+      'Guma',
+      'Konshisha',
+      'Kwande',
+      'Logo',
+      'Obi',
+      'Ogbadibo',
+      'Ohimini'
+    ],
+    'Borno': [
+      'Maiduguri Municipal',
+      'Jere',
+      'Biu',
+      'Bama',
+      'Abadam',
+      'Askira/Uba',
+      'Bayo',
+      'Chibok',
+      'Damboa',
+      'Dikwa',
+      'Gubio',
+      'Guzamala',
+      'Gwoza',
+      'Hawul',
+      'Kaga',
+      'Kala/Balge',
+      'Konduga',
+      'Kukawa',
+      'Kwaya Kusar',
+      'Mafa',
+      'Magumeri',
+      'Marte',
+      'Mobbar',
+      'Monguno',
+      'Ngala',
+      'Nganzai',
+      'Shani'
+    ],
+    'Cross River': [
+      'Calabar Municipal',
+      'Calabar South',
+      'Ikom',
+      'Ogoja',
+      'Ugep (Yakurr)',
+      'Obudu',
+      'Akamkpa',
+      'Abi',
+      'Akpabuyo',
+      'Bakassi',
+      'Bekwarra',
+      'Biase',
+      'Boki',
+      'Etung',
+      'Obanliku',
+      'Obubra',
+      'Odukpani',
+      'Yala'
+    ],
+    'Delta': [
+      'Warri South',
+      'Warri North',
+      'Warri Southwest',
+      'Asaba / Oshimili South',
+      'Uvwie / Effurun',
+      'Ughelli North',
+      'Ughelli South',
+      'Sapele',
+      'Agbor (Ika South)',
+      'Oghara (Ethiope West)',
+      'Aniocha North',
+      'Aniocha South',
+      'Bomadi',
+      'Burutu',
+      'Ethiope East',
+      'Ika North East',
+      'Isoko North',
+      'Isoko South',
+      'Ndokwa East',
+      'Ndokwa West',
+      'Okpe',
+      'Oshimili North',
+      'Patani',
+      'Udu',
+      'Ukwuani'
+    ],
+    'Ebonyi': [
+      'Abakaliki',
+      'Afikpo North',
+      'Afikpo South (Edda)',
+      'Onueke (Ezza South)',
+      'Ishiagu (Ivo)',
+      'Ebonyi',
+      'Ezza North',
+      'Ikwo',
+      'Ishielu',
+      'Izzi',
+      'Ohaozara',
+      'Ohaukwu',
+      'Onicha'
+    ],
+    'Edo': [
+      'Benin City (Oredo)',
+      'Ikpoba-Okha',
+      'Egor',
+      'Uromi (Esan Northeast)',
+      'Ekpoma (Esan West)',
+      'Auchi (Etsako West)',
+      'Okada (Ovia Northeast)',
+      'Abudu (Orhionmwon)',
+      'Akoko-Edo',
+      'Esan Central',
+      'Esan South-East',
+      'Etsako Central',
+      'Etsako East',
+      'Igueben',
+      'Ovia South-West',
+      'Owan East',
+      'Owan West',
+      'Uhunmwonde'
+    ],
+    'Ekiti': [
+      'Ado-Ekiti',
+      'Ikere-Ekiti',
+      'Ijero-Ekiti',
+      'Ikole-Ekiti',
+      'Oye-Ekiti',
+      'Efon',
+      'Ekiti East',
+      'Ekiti South-West',
+      'Ekiti West',
+      'Emure',
+      'Gbonyin',
+      'Ido-Osi',
+      'Ise/Orun',
+      'Moba'
+    ],
+    'Enugu': [
+      'Enugu North',
+      'Enugu South',
+      'Enugu East',
+      'Nsukka',
+      'Udi',
+      'Oji River',
+      'Awgu',
+      'Nkanu West',
+      'Aninri',
+      'Ezeagu',
+      'Igbo Etiti',
+      'Igbo Eze North',
+      'Igbo Eze South',
+      'Isi Uzo',
+      'Nkanu East',
+      'Udenu',
+      'Uzo Uwani'
+    ],
+    'Gombe': [
+      'Gombe Town',
+      'Dukku',
+      'Kaltungo',
+      'Yamaltu/Deba',
+      'Akko',
+      'Balanga',
+      'Billiri',
+      'Funakaye',
+      'Kwami',
+      'Nafada',
+      'Shongom'
+    ],
+    'Imo': [
+      'Owerri Municipal',
+      'Owerri North',
+      'Owerri West',
+      'Orlu',
+      'Okigwe',
+      'Mbaise (Aboh/Ahiazu)',
+      'Oguta',
+      'Mbaitoli',
+      'Ehime Mbano',
+      'Ezinihitte Mbaise',
+      'Ideato North',
+      'Ideato South',
+      'Ihitte/Uboma',
+      'Ikeduru',
+      'Isiala Mbano',
+      'Isu',
+      'Ngor Okpala',
+      'Njaba',
+      'Nkwerre',
+      'Nwangele',
+      'Obowo',
+      'Ohaji/Egbema',
+      'Onuimo',
+      'Orsu',
+      'Oru East',
+      'Oru West'
+    ],
+    'Jigawa': [
+      'Dutse',
+      'Hadejia',
+      'Birnin Kudu',
+      'Gumel',
+      'Kazaure',
+      'Auyo',
+      'Babura',
+      'Biriniwa',
+      'Buji',
+      'Gagarawa',
+      'Garki',
+      'Guri',
+      'Gwaram',
+      'Gwiwa',
+      'Jahun',
+      'Kafir Hausa',
+      'Kaugama',
+      'Kiri Kasama',
+      'Kiyawa',
+      'Maigatari',
+      'Malam Madori',
+      'Miga',
+      'Ringim',
+      'Roni',
+      'Sule Tankarkar',
+      'Taura',
+      'Yankwashi'
+    ],
+    'Kaduna': [
+      'Kaduna North',
+      'Kaduna South',
+      'Zaria',
+      'Kafanchan (Jema\'a)',
+      'Chikun',
+      'Igabi',
+      'Sabon Gari',
+      'Saminaka (Lere)',
+      'Kachia',
+      'Giwa',
+      'Birnin Gwari',
+      'Ikara',
+      'Jaba',
+      'Kagarko',
+      'Kajuru',
+      'Kaura',
+      'Kauru',
+      'Kubau',
+      'Kudan',
+      'Makarfi',
+      'Sanga',
+      'Soba',
+      'Zangon Kataf'
+    ],
+    'Kano': [
+      'Kano Municipal',
+      'Fagge',
+      'Dala',
+      'Gwale',
+      'Tarauni',
+      'Nassarawa',
+      'Ajingi',
+      'Albasu',
+      'Bagwai',
+      'Bebeji',
+      'Bichi',
+      'Bunkure',
+      'Dambatta',
+      'Dawakin Kudu',
+      'Dawakin Tofa',
+      'Doguwa',
+      'Gabasawa',
+      'Garko',
+      'Garun Mallam',
+      'Gaya',
+      'Gezawa',
+      'Gwarzo',
+      'Kabo',
+      'Karaye',
+      'Kibiya',
+      'Kiru',
+      'Kumbotso',
+      'Kunchi',
+      'Kura',
+      'Madobi',
+      'Makoda',
+      'Minjibir',
+      'Rano',
+      'Rimin Gado',
+      'Rogo',
+      'Shanono',
+      'Sumaila',
+      'Takai',
+      'Tofa',
+      'Tsanyawa',
+      'Tudun Wada',
+      'Ungogo',
+      'Warawa',
+      'Wudil'
+    ],
+    'Katsina': [
+      'Katsina Town',
+      'Daura',
+      'Funtua',
+      'Malumfashi',
+      'Kankia',
+      'Bakori',
+      'Batagarawa',
+      'Batsari',
+      'Baure',
+      'Bindawa',
+      'Charanchi',
+      'Dandume',
+      'Danja',
+      'Dan Musa',
+      'Dutsi',
+      'Dutsin Ma',
+      'Faskari',
+      'Ingawa',
+      'Jibia',
+      'Kafur',
+      'Kaita',
+      'Kankara',
+      'Kurfi',
+      'Kusada',
+      'Mai\'Adua',
+      'Mani',
+      'Mashi',
+      'Matazu',
+      'Musawa',
+      'Rimi',
+      'Sabuwa',
+      'Safana',
+      'Sandamu',
+      'Zango'
+    ],
+    'Kebbi': [
+      'Birnin Kebbi',
+      'Argungu',
+      'Yauri',
+      'Zuru',
+      'Aleiro',
+      'Arewa Dandi',
+      'Augie',
+      'Bagudo',
+      'Bunza',
+      'Dandi',
+      'Fakai',
+      'Gwandu',
+      'Jega',
+      'Kalgo',
+      'Koko/Besse',
+      'Maiyama',
+      'Ngaski',
+      'Sakaba',
+      'Shanga',
+      'Suru',
+      'Danko/Wasagu'
+    ],
+    'Kogi': [
+      'Lokoja',
+      'Okene',
+      'Kabba (Kabba/Bunu)',
+      'Idah',
+      'Anyigba (Dekina)',
+      'Ajaokuta',
+      'Koton Karfe (Kogi LGA)',
+      'Adavi',
+      'Ankpa',
+      'Bassa',
+      'Ibaji',
+      'Igalamela Odolu',
+      'Ijumu',
+      'Mopa Muro',
+      'Ofu',
+      'Ogori/Magongo',
+      'Okehi',
+      'Olamaboro',
+      'Omala',
+      'Yagba East',
+      'Yagba West'
+    ],
+    'Kwara': [
+      'Ilorin West',
+      'Ilorin East',
+      'Ilorin South',
+      'Offa',
+      'Omu-Aran (Irepodun)',
+      'Lafiagi (Edu)',
+      'Kaiama',
+      'Asa',
+      'Baruten',
+      'Ekiti',
+      'Ifelodun',
+      'Isin',
+      'Moro',
+      'Oke Ero',
+      'Oyun',
+      'Pategi'
+    ],
+    'Lagos': [
+      'Ikeja',
+      'Victoria Island / Eti-Osa',
+      'Lekki / Ajah',
+      'Surulere',
+      'Alimosho',
+      'Kosofe / Ojota',
+      'Apapa',
+      'Ikorodu',
+      'Epe',
+      'Badagry',
+      'Mushin',
+      'Agege',
+      'Oshodi-Isolo',
+      'Yaba / Lagos Mainland',
+      'Amuwo-Odofin',
+      'Ajeromi-Ifelodun',
+      'Ibeju-Lekki',
+      'Ifako-Ijaiye',
+      'Lagos Island',
+      'Ojo',
+      'Shomolu'
+    ],
+    'Nasarawa': [
+      'Lafia',
+      'Karu (Mararaba / Nyanya axis)',
+      'Keffi',
+      'Akwanga',
+      'Nasarawa Town',
+      'Toto',
+      'Awe',
+      'Doma',
+      'Keana',
+      'Kokona',
+      'Nasarawa Egon',
+      'Obi',
+      'Wamba'
+    ],
+    'Niger': [
+      'Minna (Chanchaga)',
+      'Bida',
+      'Suleja',
+      'Kontagora',
+      'Lapai',
+      'Mokwa',
+      'Agaie',
+      'Agwara',
+      'Borgu',
+      'Bosso',
+      'Edati',
+      'Gbako',
+      'Gurara',
+      'Katcha',
+      'Lavun',
+      'Magama',
+      'Mariga',
+      'Mashegu',
+      'Moya',
+      'Paikoro',
+      'Rafi',
+      'Rijau',
+      'Shiroro',
+      'Tafa',
+      'Wushishi'
+    ],
+    'Ogun': [
+      'Abeokuta South',
+      'Abeokuta North',
+      'Ifo',
+      'Ota / Ado-Odo',
+      'Ijebu Ode',
+      'Sagamu',
+      'Ilaro (Yewa South)',
+      'Mowe / Ibafo',
+      'Ijebu Igbo (Ijebu North)',
+      'Egbado North (Yewa North)',
+      'Ewekoro',
+      'Ijebu East',
+      'Ijebu North East',
+      'Ikenne',
+      'Remo North',
+      'Imeko Afon',
+      'Ipokia',
+      'Odogbolu',
+      'Odeda',
+      'Ogun Waterside'
+    ],
+    'Ondo': [
+      'Akure South',
+      'Akure North',
+      'Ondo West (Ondo Town)',
+      'Ondo East',
+      'Owo',
+      'Ikare (Akoko Northwest)',
+      'Okitipupa',
+      'Igbokoda (Ilaje)',
+      'Akoko North-East',
+      'Akoko South-East',
+      'Akoko South-West',
+      'Ese Odo',
+      'Idanre',
+      'Ifedore',
+      'Ile Oluji/Okeigbo',
+      'Irele',
+      'Ose'
+    ],
+    'Osun': [
+      'Osogbo',
+      'Ede North',
+      'Ede South',
+      'Ife Central (Ile-Ife)',
+      'Ife East',
+      'Ilesa East',
+      'Ilesa West',
+      'Ikirun (Ifelodun)',
+      'Iwo',
+      'Ejigbo',
+      'Atakunmosa East',
+      'Atakunmosa West',
+      'Ayedaade',
+      'Ayedire',
+      'Boluwaduro',
+      'Boripe',
+      'Egbedore',
+      'Ife North',
+      'Ife South',
+      'Ifedayo',
+      'Ila',
+      'Irepodun',
+      'Irewole',
+      'Isokan',
+      'Obokun',
+      'Odo Otin',
+      'Ola Oluwa',
+      'Olorunda',
+      'Oriade',
+      'Orolu'
+    ],
+    'Oyo (Ibadan)': [
+      'Ibadan North',
+      'Ibadan Southwest',
+      'Ibadan Southeast',
+      'Ibadan Northwest',
+      'Oyo East',
+      'Ogbomoso',
+      'Afijio',
+      'Akinyele',
+      'Atiba',
+      'Atisbo',
+      'Egbeda',
+      'Ibadan North-East',
+      'Ibarapa Central',
+      'Ibarapa East',
+      'Ibarapa North',
+      'Iddo',
+      'Irepo',
+      'Iseyin',
+      'Itesiwaju',
+      'Iwajowa',
+      'Kajola',
+      'Lagelu',
+      'Ogbomoso North',
+      'Ogbomoso South',
+      'Ogo Oluwa',
+      'Olorunsogo',
+      'Oluyole',
+      'Ona Ara',
+      'Oorelope',
+      'Ori Ire',
+      'Oyo West',
+      'Saki East',
+      'Saki West',
+      'Surulere'
+    ],
+    'Plateau': [
+      'Jos North',
+      'Jos South',
+      'Jos East',
+      'Bukuru',
+      'Pankshin',
+      'Shendam',
+      'Mangu',
+      'Langtang North',
+      'Barkin Ladi',
+      'Bassa',
+      'Bokkos',
+      'Kanam',
+      'Kanke',
+      'Langtang South',
+      'Mikang',
+      'Qua\'an Pan',
+      'Riyom',
+      'Wase'
+    ],
+    'Rivers (Port Harcourt)': [
+      'Port Harcourt City',
+      'Obio-Akpor',
+      'Eleme',
+      'Ikwerre',
+      'Bonny Island',
+      'Oyigbo',
+      'Degema',
+      'Abua/Odual',
+      'Ahoada East',
+      'Ahoada West',
+      'Akuku-Toru',
+      'Andoni',
+      'Asari-Toru',
+      'Emuoha',
+      'Etche',
+      'Gokana',
+      'Khana',
+      'Ogba/Egbema/Ndoni',
+      'Ogu/Bolo',
+      'Okrika',
+      'Omuma',
+      'Opobo/Nkoro',
+      'Tai'
+    ],
+    'Sokoto': [
+      'Sokoto North',
+      'Sokoto South',
+      'Wamako',
+      'Tambuwal',
+      'Goronyo',
+      'Binji',
+      'Bodinga',
+      'Dange Shuni',
+      'Gada',
+      'Gudu',
+      'Gwadabawa',
+      'Illela',
+      'Isa',
+      'Kware',
+      'Kebbe',
+      'Rabah',
+      'Sabon Birni',
+      'Shagari',
+      'Silame',
+      'Tangaza',
+      'Tureta',
+      'Wurno',
+      'Yabo'
+    ],
+    'Taraba': [
+      'Jalingo',
+      'Wukari',
+      'Bali',
+      'Sardauna (Gembu)',
+      'Takum',
+      'Ardo Kola',
+      'Donga',
+      'Gashaka',
+      'Gassol',
+      'Ibi',
+      'Karim Lamido',
+      'Kurmi',
+      'Lau',
+      'Ussa',
+      'Yorro',
+      'Zing'
+    ],
+    'Yobe': [
+      'Damaturu',
+      'Potiskum',
+      'Gashua (Bade)',
+      'Nguru',
+      'Bursari',
+      'Fika',
+      'Fune',
+      'Geidam',
+      'Gujba',
+      'Gulani',
+      'Jakusko',
+      'Karasuwa',
+      'Machina',
+      'Nangere',
+      'Tarmuwa',
+      'Yunusari',
+      'Yusufari'
+    ],
+    'Zamfara': [
+      'Gusau',
+      'Kaura Namoda',
+      'Talata Mafara',
+      'Tsafe',
+      'Anka',
+      'Bakura',
+      'Birnin Magaji/Kiyaw',
+      'Bukkuyum',
+      'Bungudu',
+      'Gummi',
+      'Maradun',
+      'Maru',
+      'Shinkafi',
+      'Zurmi'
+    ],
   };
 
   static List<String> getStates(String country) {
@@ -257,7 +1078,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final textMuted =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final primaryColor = const Color(0xFF10B981);
+    const primaryColor = Color(0xFF10B981);
 
     return Scaffold(
       backgroundColor:
@@ -541,33 +1362,41 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               Row(
                 children: [
                   OutlinedButton(
-                    onPressed: () {
-                      provider.addOrUpdateLeadForm(
+                    onPressed: () async {
+                      await provider.saveLeadFormToSupabase(
+                        companyId: 'c0000000-0000-0000-0000-000000000001',
                         title: _formTitleController.text,
                         marketerEmail: _digitalMarketerController.text,
-                        productCategory: provider.selectedProductCategory,
-                        status: 'Draft',
                         redirectUrl: _redirectUrlController.text,
+                        successMessage: _successMessageController.text,
+                        submitButtonText: _submitButtonTextController.text,
+                        description: _descriptionController.text,
+                        status: 'Draft',
                       );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          backgroundColor: Color(0xFF3B82F6),
-                          content: Text(
-                              'Form draft saved! Listed in Campaign Lead Forms. ✓'),
-                        ),
-                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Color(0xFF3B82F6),
+                            content: Text(
+                                'Form draft saved to database! Listed in Campaign Lead Forms. ✓'),
+                          ),
+                        );
+                      }
                     },
                     child: const Text('Save draft'),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: () {
-                      provider.addOrUpdateLeadForm(
+                    onPressed: () async {
+                      await provider.saveLeadFormToSupabase(
+                        companyId: 'c0000000-0000-0000-0000-000000000001',
                         title: _formTitleController.text,
                         marketerEmail: _digitalMarketerController.text,
-                        productCategory: provider.selectedProductCategory,
-                        status: 'Draft',
                         redirectUrl: _redirectUrlController.text,
+                        successMessage: _successMessageController.text,
+                        submitButtonText: _submitButtonTextController.text,
+                        description: _descriptionController.text,
+                        status: 'Draft',
                       );
                       provider.setStep(1);
                     },
@@ -757,15 +1586,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   DataCell(
                     Switch(
                       value: isVis,
-                      activeColor: const Color(0xFF10B981),
-                      onChanged: (val) =>
-                          provider.toggleCoreFieldVisible(idx),
+                      activeTrackColor: const Color(0xFF10B981),
+                      onChanged: (val) => provider.toggleCoreFieldVisible(idx),
                     ),
                   ),
                   DataCell(
                     Switch(
                       value: isReq,
-                      activeColor: const Color(0xFF10B981),
+                      activeTrackColor: const Color(0xFF10B981),
                       onChanged: isVis
                           ? (val) => provider.toggleCoreFieldRequired(idx)
                           : null,
@@ -1067,7 +1895,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           cardBg,
           isDark,
           action: ElevatedButton.icon(
-            onPressed: () => _showCustomQuestionModalDialog(context, provider: provider),
+            onPressed: () =>
+                _showCustomQuestionModalDialog(context, provider: provider),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('+ Add question'),
           ),
@@ -1109,7 +1938,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   fontSize: 11,
                                   color: textMuted))),
                     ],
-                    rows: provider.additionalQuestions.asMap().entries.map((entry) {
+                    rows: provider.additionalQuestions
+                        .asMap()
+                        .entries
+                        .map((entry) {
                       final idx = entry.key;
                       final q = entry.value;
                       final isReq = q['required'] == true;
@@ -1152,9 +1984,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         DataCell(
                           Switch(
                             value: isReq,
-                            activeColor: const Color(0xFF10B981),
+                            activeTrackColor: const Color(0xFF10B981),
                             onChanged: (val) {
-                              provider.updateAdditionalQuestion(idx, 'required', val);
+                              provider.updateAdditionalQuestion(
+                                  idx, 'required', val);
                             },
                           ),
                         ),
@@ -1414,6 +2247,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       'layout_style': _selectedLayoutTemplate,
                       'border_radius': _borderRadiusController.text,
                     },
+                    status: 'Published',
                   );
                   if (mounted) {
                     _showEmbedCodeModalDialog(context, provider: provider);
@@ -1477,7 +2311,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final phoneController = TextEditingController(text: '08099887766');
     final addressController =
         TextEditingController(text: '12 Victoria Island Expressway');
-    final address2Controller = TextEditingController(text: 'Suite 4B, Blue Tower');
+    final address2Controller =
+        TextEditingController(text: 'Suite 4B, Blue Tower');
     final postalController = TextEditingController(text: '100242');
 
     String selectedCountry = 'Nigeria';
@@ -1577,10 +2412,17 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
                     Consumer<CampaignFormBuilderProvider>(
                       builder: (context, liveProvider, _) {
-                        final getCoreField = (String key) => liveProvider.coreFields.firstWhere(
-                              (f) => f['key'] == key,
-                              orElse: () => {'key': key, 'label': key, 'visible': true, 'required': false},
-                            );
+                        Map<String, dynamic> getCoreField(String key) {
+                          return liveProvider.coreFields.firstWhere(
+                            (f) => f['key'] == key,
+                            orElse: () => {
+                              'key': key,
+                              'label': key,
+                              'visible': true,
+                              'required': false
+                            },
+                          );
+                        }
 
                         final fName = getCoreField('full_name');
                         final fEmail = getCoreField('email');
@@ -1615,7 +2457,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   placeholderColor),
                               const SizedBox(height: 10),
                             ],
-
                             if (showPhone) ...[
                               _buildCustomStyledTextField(
                                   '${(fPhone['label'] ?? 'PHONE NUMBER').toString().toUpperCase()} ${fPhone['required'] == true ? '*' : ''}',
@@ -1626,7 +2467,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   placeholderColor),
                               const SizedBox(height: 10),
                             ],
-
                             if (showEmail) ...[
                               _buildCustomStyledTextField(
                                   '${(fEmail['label'] ?? 'EMAIL ADDRESS').toString().toUpperCase()} ${fEmail['required'] == true ? '*' : ''}',
@@ -1637,17 +2477,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   placeholderColor),
                               const SizedBox(height: 10),
                             ],
-
                             if (showCountry || showState) ...[
                               Row(
                                 children: [
                                   if (showCountry)
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Text('${(fCountry['label'] ?? 'COUNTRY').toString().toUpperCase()} ${fCountry['required'] == true ? '*' : ''}',
-                                              style: GoogleFonts.getFont(_fontFamily,
+                                          Text(
+                                              '${(fCountry['label'] ?? 'COUNTRY').toString().toUpperCase()} ${fCountry['required'] == true ? '*' : ''}',
+                                              style: GoogleFonts.getFont(
+                                                  _fontFamily,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 10,
                                                   color: placeholderColor)),
@@ -1658,28 +2500,46 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                             decoration: InputDecoration(
                                               fillColor: inputBgColor,
                                               filled: true,
-                                              border: const OutlineInputBorder(),
-                                              contentPadding: const EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 8),
+                                              border:
+                                                  const OutlineInputBorder(),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8),
                                             ),
-                                            style: GoogleFonts.getFont(_fontFamily,
-                                                color: dropdownItemTextColor, fontSize: 12),
-                                            items: AddressLocationService.countries
-                                                .map((c) => DropdownMenuItem(
-                                                      value: c,
-                                                      child: Text(c,
-                                                          style: GoogleFonts.getFont(_fontFamily,
-                                                              color: dropdownItemTextColor, fontSize: 12)),
-                                                    ))
-                                                .toList(),
+                                            style: GoogleFonts.getFont(
+                                                _fontFamily,
+                                                color: dropdownItemTextColor,
+                                                fontSize: 12),
+                                            items:
+                                                AddressLocationService.countries
+                                                    .map(
+                                                        (c) => DropdownMenuItem(
+                                                              value: c,
+                                                              child: Text(c,
+                                                                  style: GoogleFonts.getFont(
+                                                                      _fontFamily,
+                                                                      color:
+                                                                          dropdownItemTextColor,
+                                                                      fontSize:
+                                                                          12)),
+                                                            ))
+                                                    .toList(),
                                             onChanged: (v) {
                                               if (v != null) {
                                                 setModalState(() {
                                                   selectedCountry = v;
-                                                  availableStates = AddressLocationService.getStates(v);
-                                                  selectedState = availableStates.first;
-                                                  availableCitiesLgas = AddressLocationService.getCitiesLgas(selectedState);
-                                                  selectedCityLga = availableCitiesLgas.first;
+                                                  availableStates =
+                                                      AddressLocationService
+                                                          .getStates(v);
+                                                  selectedState =
+                                                      availableStates.first;
+                                                  availableCitiesLgas =
+                                                      AddressLocationService
+                                                          .getCitiesLgas(
+                                                              selectedState);
+                                                  selectedCityLga =
+                                                      availableCitiesLgas.first;
                                                 });
                                               }
                                             },
@@ -1687,14 +2547,18 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                         ],
                                       ),
                                     ),
-                                  if (showCountry && showState) const SizedBox(width: 10),
+                                  if (showCountry && showState)
+                                    const SizedBox(width: 10),
                                   if (showState)
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Text('${(fState['label'] ?? 'STATE').toString().toUpperCase()} ${fState['required'] == true ? '*' : ''}',
-                                              style: GoogleFonts.getFont(_fontFamily,
+                                          Text(
+                                              '${(fState['label'] ?? 'STATE').toString().toUpperCase()} ${fState['required'] == true ? '*' : ''}',
+                                              style: GoogleFonts.getFont(
+                                                  _fontFamily,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 10,
                                                   color: placeholderColor)),
@@ -1705,27 +2569,41 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                             decoration: InputDecoration(
                                               fillColor: inputBgColor,
                                               filled: true,
-                                              border: const OutlineInputBorder(),
-                                              contentPadding: const EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 8),
+                                              border:
+                                                  const OutlineInputBorder(),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8),
                                             ),
-                                            style: GoogleFonts.getFont(_fontFamily,
-                                                color: dropdownItemTextColor, fontSize: 12),
+                                            style: GoogleFonts.getFont(
+                                                _fontFamily,
+                                                color: dropdownItemTextColor,
+                                                fontSize: 12),
                                             items: availableStates
                                                 .map((s) => DropdownMenuItem(
                                                       value: s,
                                                       child: Text(s,
-                                                          overflow: TextOverflow.ellipsis,
-                                                          style: GoogleFonts.getFont(_fontFamily,
-                                                              color: dropdownItemTextColor, fontSize: 12)),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: GoogleFonts
+                                                              .getFont(
+                                                                  _fontFamily,
+                                                                  color:
+                                                                      dropdownItemTextColor,
+                                                                  fontSize:
+                                                                      12)),
                                                     ))
                                                 .toList(),
                                             onChanged: (v) {
                                               if (v != null) {
                                                 setModalState(() {
                                                   selectedState = v;
-                                                  availableCitiesLgas = AddressLocationService.getCitiesLgas(v);
-                                                  selectedCityLga = availableCitiesLgas.first;
+                                                  availableCitiesLgas =
+                                                      AddressLocationService
+                                                          .getCitiesLgas(v);
+                                                  selectedCityLga =
+                                                      availableCitiesLgas.first;
                                                 });
                                               }
                                             },
@@ -1737,16 +2615,17 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               ),
                               const SizedBox(height: 10),
                             ],
-
                             if (showCity) ...[
-                              Text('${(fCity['label'] ?? 'CITY / LOCAL GOVERNMENT AREA (LGA)').toString().toUpperCase()} ${fCity['required'] == true ? '*' : ''}',
+                              Text(
+                                  '${(fCity['label'] ?? 'CITY / LOCAL GOVERNMENT AREA (LGA)').toString().toUpperCase()} ${fCity['required'] == true ? '*' : ''}',
                                   style: GoogleFonts.getFont(_fontFamily,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
                                       color: placeholderColor)),
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
-                                initialValue: availableCitiesLgas.contains(selectedCityLga)
+                                initialValue: availableCitiesLgas
+                                        .contains(selectedCityLga)
                                     ? selectedCityLga
                                     : availableCitiesLgas.first,
                                 dropdownColor: dropdownMenuBg,
@@ -1763,17 +2642,20 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                     .map((c) => DropdownMenuItem(
                                           value: c,
                                           child: Text(c,
-                                              style: GoogleFonts.getFont(_fontFamily,
-                                                  color: dropdownItemTextColor, fontSize: 13)),
+                                              style: GoogleFonts.getFont(
+                                                  _fontFamily,
+                                                  color: dropdownItemTextColor,
+                                                  fontSize: 13)),
                                         ))
                                     .toList(),
                                 onChanged: (v) {
-                                  if (v != null) setModalState(() => selectedCityLga = v);
+                                  if (v != null) {
+                                    setModalState(() => selectedCityLga = v);
+                                  }
                                 },
                               ),
                               const SizedBox(height: 10),
                             ],
-
                             if (showAddr1) ...[
                               _buildCustomStyledTextField(
                                   '${(fAddr1['label'] ?? 'DELIVERY ADDRESS').toString().toUpperCase()} ${fAddr1['required'] == true ? '*' : ''}',
@@ -1784,7 +2666,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   placeholderColor),
                               const SizedBox(height: 10),
                             ],
-
                             if (showAddr2) ...[
                               _buildCustomStyledTextField(
                                   '${(fAddr2['label'] ?? 'ADDRESS LINE 2').toString().toUpperCase()} ${fAddr2['required'] == true ? '*' : ''}',
@@ -1795,7 +2676,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   placeholderColor),
                               const SizedBox(height: 10),
                             ],
-
                             if (showPostal) ...[
                               _buildCustomStyledTextField(
                                   '${(fPostal['label'] ?? 'POSTAL CODE').toString().toUpperCase()} ${fPostal['required'] == true ? '*' : ''}',
@@ -1806,21 +2686,23 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   placeholderColor),
                               const SizedBox(height: 10),
                             ],
-
-                            if (liveProvider.additionalQuestions.isNotEmpty) ...[
+                            if (liveProvider
+                                .additionalQuestions.isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              ...liveProvider.additionalQuestions.map((q) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: _buildCustomQuestionField(
-                                  q,
-                                  inputBgColor,
-                                  inputTextColor,
-                                  placeholderColor,
-                                  dropdownMenuBg,
-                                  dropdownItemTextColor,
-                                  setModalState,
-                                ),
-                              )),
+                              ...liveProvider.additionalQuestions
+                                  .map((q) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 10),
+                                        child: _buildCustomQuestionField(
+                                          q,
+                                          inputBgColor,
+                                          inputTextColor,
+                                          placeholderColor,
+                                          dropdownMenuBg,
+                                          dropdownItemTextColor,
+                                          setModalState,
+                                        ),
+                                      )),
                             ],
                           ],
                         );
@@ -2000,10 +2882,50 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final btnText = _buttonTextController.text;
     final btnLabel = _submitButtonTextController.text;
 
-    final getCoreField = (String key) => provider.coreFields.firstWhere(
-          (f) => f['key'] == key,
-          orElse: () => {'key': key, 'label': key, 'visible': true, 'required': false},
-        );
+    final activeFormTitle = _formTitleController.text.isNotEmpty
+        ? _formTitleController.text
+        : 'Alpha Man';
+
+    final existingForm = provider.leadForms.firstWhere(
+      (f) => f['title'].toString().toLowerCase() == activeFormTitle.toLowerCase(),
+      orElse: () => {'id': 'f0000000-0000-0000-0000-000000000003'},
+    );
+    final formId = existingForm['id'] ?? 'f0000000-0000-0000-0000-000000000003';
+
+    // Auto-save form to DB to guarantee persistence
+    provider.saveLeadFormToSupabase(
+      companyId: 'c0000000-0000-0000-0000-000000000001',
+      title: activeFormTitle,
+      marketerEmail: _digitalMarketerController.text.isNotEmpty
+          ? _digitalMarketerController.text
+          : 'joelodufu@gmail.com',
+      redirectUrl: redirectUrl,
+      successMessage: _successMessageController.text,
+      submitButtonText: _submitButtonTextController.text,
+      description: _descriptionController.text,
+      appearance: {
+        'button_bg': _buttonBgController.text,
+        'button_text': _buttonTextController.text,
+        'page_bg': _pageBgController.text,
+        'card_bg': _cardBgController.text,
+        'heading_color': _headingColorController.text,
+        'input_bg': _inputBgController.text,
+        'input_text': _inputTextColorController.text,
+        'placeholder_color': _placeholderColorController.text,
+        'font_family': _fontFamily,
+        'layout_style': _selectedLayoutTemplate,
+        'border_radius': _borderRadiusController.text,
+      },
+      status: 'Published',
+    );
+
+    Map<String, dynamic> getCoreField(String key) {
+      return provider.coreFields.firstWhere(
+        (f) => f['key'] == key,
+        orElse: () =>
+            {'key': key, 'label': key, 'visible': true, 'required': false},
+      );
+    }
 
     final fName = getCoreField('full_name');
     final fEmail = getCoreField('email');
@@ -2015,6 +2937,65 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final fCity = getCoreField('city');
     final fPostal = getCoreField('postal_code');
 
+    final offerPackagesHtmlSnippet = provider.offerPackages.map((pkg) {
+      final isDef = pkg['isDefault'] == true;
+      final pkgId = pkg['id'] ?? 'pkg-${DateTime.now().millisecondsSinceEpoch}';
+      final label = pkg['label'] ?? 'Offer Package';
+      final amountVal = (pkg['amount'] as num?)?.toDouble() ?? 0.0;
+      final discountVal = (pkg['discount'] as num?)?.toDouble() ?? 0.0;
+      final addonName = pkg['freeAddonProductName']?.toString() ?? '';
+      final addonQty = pkg['freeAddonQty'] ?? 0;
+
+      String priceStr =
+          '₦${amountVal.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+      if (discountVal > 0) {
+        final discFormatted = discountVal.toStringAsFixed(0).replaceAllMapped(
+            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+        priceStr += ' (Save ₦$discFormatted)';
+      }
+      if (addonName.isNotEmpty && addonQty > 0) {
+        priceStr += ' 🎁 Free ${addonQty}x $addonName';
+      }
+
+      final borderStyle = isDef ? '2px solid #10b981' : '1px solid #cbd5e1';
+
+      return '''
+      <div style="padding: 12px; background: ${_inputBgController.text}; border: $borderStyle; border-radius: 8px; margin-bottom: 8px;">
+        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text}; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <input type="radio" name="offer_package_id" value="$pkgId" ${isDef ? 'checked' : ''} /> $label — $priceStr
+        </label>
+      </div>''';
+    }).join('\n');
+
+    final additionalQuestionsHtmlSnippet =
+        provider.additionalQuestions.map((q) {
+      final qId = q['id'] ?? 'q-${DateTime.now().millisecondsSinceEpoch}';
+      final qLabel = (q['label'] ?? 'CUSTOM QUESTION').toString().toUpperCase();
+      final qType = q['type'] ?? 'Text';
+      final isReq = q['required'] == true;
+      final qPlaceholder = q['placeholder'] ?? '';
+
+      if (qType == 'Dropdown') {
+        final options = (q['options'] as List?)
+                ?.map((o) => '<option value="$o">$o</option>')
+                .join('\n') ??
+            '';
+        return '''
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">$qLabel ${isReq ? '*' : ''}</label>
+      <select name="custom_$qId" ${isReq ? 'required' : ''} style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+        $options
+      </select>
+    </div>''';
+      }
+
+      return '''
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">$qLabel ${isReq ? '*' : ''}</label>
+      <input type="text" name="custom_$qId" ${isReq ? 'required' : ''} placeholder="$qPlaceholder" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+    </div>''';
+    }).join('\n');
+
     final embedCodeSnippet = '''
 <!-- NOVASUITE EMBEDDABLE CHECKOUT FORM -->
 <div id="novasuite-form-container" style="max-width: 540px; margin: 0 auto; padding: 24px; background: ${_cardBgController.text}; border-radius: ${_borderRadiusController.text}; font-family: '$_fontFamily', sans-serif;">
@@ -2022,6 +3003,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   
   <form id="novasuite-checkout-form">
     <input type="hidden" name="company_id" value="c0000000-0000-0000-0000-000000000001" />
+    <input type="hidden" name="form_id" value="$formId" />
     <input type="hidden" name="redirect_url" value="$redirectUrl" />
 
     <!-- SECTION 1: CORE DYNAMIC FORM INPUTS -->
@@ -2102,22 +3084,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     </div>
     ''' : ''}
 
-    <!-- SECTION 2: OFFER PACKAGES UNDER FORM INPUTS -->
+    $additionalQuestionsHtmlSnippet
+
+    <!-- SECTION 2: DYNAMIC OFFER PACKAGES UNDER FORM INPUTS -->
     <div style="margin-bottom: 20px;">
       <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 8px;">SELECT YOUR OFFER PACKAGE *</label>
-      <div style="padding: 12px; background: ${_inputBgController.text}; border: 2px solid #10b981; border-radius: 8px; margin-bottom: 8px;">
-        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
-          <input type="radio" name="offer_package_id" value="pkg-1" checked /> 1 Grazer Detox Tea — ₦23,500
-        </label>
-      </div>
-      <div style="padding: 12px; background: ${_inputBgController.text}; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
-        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
-          <input type="radio" name="offer_package_id" value="pkg-2" /> 2 Grazer Detox Tea — ₦37,000 (Save ₦10,000)
-        </label>
-      </div>
+      $offerPackagesHtmlSnippet
     </div>
 
-    <!-- SECTION 3: SUBMIT BUTTON FOLLOWED BY OFFER PACKAGES -->
+    <!-- SECTION 3: SUBMIT BUTTON -->
     <button type="submit" id="novasuite-submit-btn" style="width: 100%; padding: 14px; background-color: $btnBg; color: $btnText; font-size: 15px; font-weight: bold; border: none; border-radius: ${_borderRadiusController.text}; cursor: pointer;">
       $btnLabel
     </button>
@@ -2304,6 +3279,20 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     btn.innerText = 'Processing Order...';
 
     const formData = new FormData(this);
+    const payload = {
+      company_id: formData.get('company_id') || 'c0000000-0000-0000-0000-000000000001',
+      form_id: formData.get('form_id') || '',
+      product_id: formData.get('product_id') || 'p0000000-0000-0000-0000-000000000001',
+      redirect_url: formData.get('redirect_url') || '$redirectUrl',
+      customer_name: formData.get('customer_name') || '',
+      customer_phone: formData.get('customer_phone') || '',
+      customer_email: formData.get('customer_email') || '',
+      delivery_state: formData.get('delivery_state') || 'Lagos',
+      delivery_city: formData.get('delivery_city') || '',
+      delivery_address: formData.get('address1') || '',
+      offer_package_id: formData.get('offer_package_id') || 'pkg-1',
+    };
+
     try {
       const response = await fetch('https://eywkyijghfzhzfgffmsr.supabase.co/functions/v1/submit-order', {
         method: 'POST',
@@ -2740,11 +3729,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   Color _getDropdownMenuBgColor(Color inputBg) {
-    return inputBg.computeLuminance() > 0.5 ? Colors.white : const Color(0xFF0F172A);
+    return inputBg.computeLuminance() > 0.5
+        ? Colors.white
+        : const Color(0xFF0F172A);
   }
 
   Color _getHighContrastTextColor(Color popupBg) {
-    return popupBg.computeLuminance() > 0.5 ? const Color(0xFF0F172A) : Colors.white;
+    return popupBg.computeLuminance() > 0.5
+        ? const Color(0xFF0F172A)
+        : Colors.white;
   }
 
   // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL
@@ -3030,12 +4023,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         editIndex, 'amount', pkgData['amount']);
                     provider.updateOfferPackage(
                         editIndex, 'discount', pkgData['discount']);
-                    if (isDefaultPkg) provider.setDefaultPackage(editIndex);
+                    if (isDefaultPkg) {
+                      provider.setDefaultPackage(editIndex);
+                    }
                   } else {
                     provider.addOfferPackage(pkgData);
-                    if (isDefaultPkg)
+                    if (isDefaultPkg) {
                       provider
                           .setDefaultPackage(provider.offerPackages.length - 1);
+                    }
                   }
 
                   Navigator.pop(ctx);
@@ -3061,9 +4057,12 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     Map<String, dynamic>? existingQuestion,
   }) {
     final isEditing = editIndex != null && existingQuestion != null;
-    final labelCtrl = TextEditingController(text: existingQuestion?['label'] ?? '');
-    final placeholderCtrl = TextEditingController(text: existingQuestion?['placeholder'] ?? '');
-    final optionsCtrl = TextEditingController(text: existingQuestion?['options'] ?? '');
+    final labelCtrl =
+        TextEditingController(text: existingQuestion?['label'] ?? '');
+    final placeholderCtrl =
+        TextEditingController(text: existingQuestion?['placeholder'] ?? '');
+    final optionsCtrl =
+        TextEditingController(text: existingQuestion?['options'] ?? '');
     String selectedType = existingQuestion?['type'] ?? 'Text';
     bool isRequired = existingQuestion?['required'] == true;
 
@@ -3071,16 +4070,23 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
-          final showOptionsField = ['Dropdown', 'Checkbox Group', 'Radio Group'].contains(selectedType);
+          final showOptionsField = ['Dropdown', 'Checkbox Group', 'Radio Group']
+              .contains(selectedType);
 
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                const Icon(Icons.quiz_rounded, color: Color(0xFF10B981), size: 22),
+                const Icon(Icons.quiz_rounded,
+                    color: Color(0xFF10B981), size: 22),
                 const SizedBox(width: 8),
-                Text(isEditing ? 'Edit Custom Question Field' : 'Add New Custom Question Field',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text(
+                    isEditing
+                        ? 'Edit Custom Question Field'
+                        : 'Add New Custom Question Field',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
             content: SizedBox(
@@ -3090,14 +4096,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildModalTextField('QUESTION LABEL *', labelCtrl, 'e.g. Preferred Delivery Time Slot'),
+                    _buildModalTextField('QUESTION LABEL *', labelCtrl,
+                        'e.g. Preferred Delivery Time Slot'),
                     const SizedBox(height: 14),
-
-                    Text('FIELD TYPE *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('FIELD TYPE *',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
                       initialValue: selectedType,
-                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
                       items: [
                         'Text',
                         'Paragraph',
@@ -3109,26 +4120,39 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         'Time',
                         'Number',
                         'File Upload',
-                      ].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                      ]
+                          .map(
+                              (t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
                       onChanged: (val) {
-                        if (val != null) setModalState(() => selectedType = val);
+                        if (val != null) {
+                          setModalState(() => selectedType = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 14),
-
-                    _buildModalTextField('PLACEHOLDER / HINT TEXT', placeholderCtrl, 'e.g. Select your preferred delivery window'),
+                    _buildModalTextField(
+                        'PLACEHOLDER / HINT TEXT',
+                        placeholderCtrl,
+                        'e.g. Select your preferred delivery window'),
                     const SizedBox(height: 14),
-
                     if (showOptionsField) ...[
-                      _buildModalTextField('CHOICE OPTIONS (COMMA SEPARATED) *', optionsCtrl, 'e.g. Morning (9am-12pm), Afternoon (12pm-4pm), Evening (4pm-7pm)'),
+                      _buildModalTextField(
+                          'CHOICE OPTIONS (COMMA SEPARATED) *',
+                          optionsCtrl,
+                          'e.g. Morning (9am-12pm), Afternoon (12pm-4pm), Evening (4pm-7pm)'),
                       const SizedBox(height: 14),
                     ],
-
                     SwitchListTile(
-                      title: Text('Mandatory Required Field', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
-                      subtitle: Text('Prevent checkout submission until customer completes this field.', style: GoogleFonts.inter(fontSize: 11, color: Colors.grey)),
+                      title: Text('Mandatory Required Field',
+                          style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      subtitle: Text(
+                          'Prevent checkout submission until customer completes this field.',
+                          style: GoogleFonts.inter(
+                              fontSize: 11, color: Colors.grey)),
                       value: isRequired,
-                      activeColor: const Color(0xFF10B981),
+                      activeTrackColor: const Color(0xFF10B981),
                       contentPadding: EdgeInsets.zero,
                       onChanged: (val) => setModalState(() => isRequired = val),
                     ),
@@ -3137,12 +4161,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel')),
               ElevatedButton.icon(
                 onPressed: () {
                   if (labelCtrl.text.trim().isEmpty) return;
                   final qData = {
-                    'id': existingQuestion?['id'] ?? 'q-${DateTime.now().millisecondsSinceEpoch}',
+                    'id': existingQuestion?['id'] ??
+                        'q-${DateTime.now().millisecondsSinceEpoch}',
                     'label': labelCtrl.text.trim(),
                     'type': selectedType,
                     'placeholder': placeholderCtrl.text.trim(),
@@ -3151,11 +4178,16 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   };
 
                   if (isEditing) {
-                    provider.updateAdditionalQuestion(editIndex, 'label', qData['label']);
-                    provider.updateAdditionalQuestion(editIndex, 'type', qData['type']);
-                    provider.updateAdditionalQuestion(editIndex, 'placeholder', qData['placeholder']);
-                    provider.updateAdditionalQuestion(editIndex, 'options', qData['options']);
-                    provider.updateAdditionalQuestion(editIndex, 'required', qData['required']);
+                    provider.updateAdditionalQuestion(
+                        editIndex, 'label', qData['label']);
+                    provider.updateAdditionalQuestion(
+                        editIndex, 'type', qData['type']);
+                    provider.updateAdditionalQuestion(
+                        editIndex, 'placeholder', qData['placeholder']);
+                    provider.updateAdditionalQuestion(
+                        editIndex, 'options', qData['options']);
+                    provider.updateAdditionalQuestion(
+                        editIndex, 'required', qData['required']);
                   } else {
                     provider.addAdditionalQuestion(qData);
                   }
@@ -3324,8 +4356,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                               fontSize: 13))),
                                 ],
                                 onChanged: (v) {
-                                  if (v != null)
+                                  if (v != null) {
                                     setModalState(() => itemType = v);
+                                  }
                                 },
                               ),
                             ],
@@ -3358,8 +4391,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                                 fontSize: 13))))
                                     .toList(),
                                 onChanged: (v) {
-                                  if (v != null)
+                                  if (v != null) {
                                     setModalState(() => selectedQty = v);
+                                  }
                                 },
                               ),
                             ],
@@ -3629,7 +4663,7 @@ class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final canvasWidth = constraints.maxWidth;
-              final canvasHeight = 160.0;
+              const canvasHeight = 160.0;
               final thumbX = _saturation * canvasWidth;
               final thumbY = (1.0 - _value) * canvasHeight;
 
@@ -3704,7 +4738,7 @@ class _HsvSpectrumColorPickerState extends State<_HsvSpectrumColorPicker> {
 
   void _updateSvFromPos(Offset localPos, BuildContext context) {
     final canvasWidth = context.size?.width ?? 300.0;
-    final canvasHeight = 160.0;
+    const canvasHeight = 160.0;
     final clampedX = localPos.dx.clamp(0.0, canvasWidth);
     final clampedY = localPos.dy.clamp(0.0, canvasHeight);
 
@@ -3726,7 +4760,6 @@ class _AdditionalQuestionCardItem extends StatefulWidget {
   final CampaignFormBuilderProvider provider;
 
   const _AdditionalQuestionCardItem({
-    super.key,
     required this.index,
     required this.question,
     required this.isDark,
@@ -3889,7 +4922,11 @@ Widget _buildCustomQuestionField(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         TextField(
           maxLines: 3,
@@ -3911,7 +4948,11 @@ Widget _buildCustomQuestionField(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         TextField(
           keyboardType: TextInputType.phone,
@@ -3923,7 +4964,8 @@ Widget _buildCustomQuestionField(
             fillColor: inputBgColor,
             filled: true,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
       ],
@@ -3932,11 +4974,19 @@ Widget _buildCustomQuestionField(
 
   if (type == 'Dropdown') {
     final rawOpts = (q['options'] ?? 'Option 1, Option 2, Option 3').toString();
-    final opts = rawOpts.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final opts = rawOpts
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           initialValue: opts.isNotEmpty ? opts.first : null,
@@ -3946,12 +4996,17 @@ Widget _buildCustomQuestionField(
             fillColor: inputBgColor,
             filled: true,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
-          items: opts.map((opt) => DropdownMenuItem(
-            value: opt,
-            child: Text(opt, style: GoogleFonts.inter(color: dropdownItemTextColor, fontSize: 13)),
-          )).toList(),
+          items: opts
+              .map((opt) => DropdownMenuItem(
+                    value: opt,
+                    child: Text(opt,
+                        style: GoogleFonts.inter(
+                            color: dropdownItemTextColor, fontSize: 13)),
+                  ))
+              .toList(),
           onChanged: (v) {},
         ),
       ],
@@ -3960,22 +5015,37 @@ Widget _buildCustomQuestionField(
 
   if (type == 'Checkbox Group') {
     final rawOpts = (q['options'] ?? 'Option A, Option B, Option C').toString();
-    final opts = rawOpts.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final opts = rawOpts
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 6),
         Wrap(
           spacing: 12,
           runSpacing: 6,
-          children: opts.map((opt) => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Checkbox(value: true, onChanged: (_) {}, activeColor: const Color(0xFF10B981)),
-              Text(opt, style: GoogleFonts.inter(color: inputTextColor, fontSize: 12)),
-            ],
-          )).toList(),
+          children: opts
+              .map((opt) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                          value: true,
+                          onChanged: (_) {},
+                          activeColor: const Color(0xFF10B981)),
+                      Text(opt,
+                          style: GoogleFonts.inter(
+                              color: inputTextColor, fontSize: 12)),
+                    ],
+                  ))
+              .toList(),
         ),
       ],
     );
@@ -3983,22 +5053,38 @@ Widget _buildCustomQuestionField(
 
   if (type == 'Radio Group') {
     final rawOpts = (q['options'] ?? 'Option 1, Option 2').toString();
-    final opts = rawOpts.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final opts = rawOpts
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 6),
         Wrap(
           spacing: 12,
           runSpacing: 6,
-          children: opts.map((opt) => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Radio(value: opt, groupValue: opts.first, onChanged: (_) {}, activeColor: const Color(0xFF10B981)),
-              Text(opt, style: GoogleFonts.inter(color: inputTextColor, fontSize: 12)),
-            ],
-          )).toList(),
+          children: opts
+              .map((opt) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Radio(
+                          value: opt,
+                          groupValue: opts.first,
+                          onChanged: (_) {},
+                          activeColor: const Color(0xFF10B981)),
+                      Text(opt,
+                          style: GoogleFonts.inter(
+                              color: inputTextColor, fontSize: 12)),
+                    ],
+                  ))
+              .toList(),
         ),
       ],
     );
@@ -4008,7 +5094,11 @@ Widget _buildCustomQuestionField(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         TextField(
           readOnly: true,
@@ -4020,7 +5110,8 @@ Widget _buildCustomQuestionField(
             fillColor: inputBgColor,
             filled: true,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
       ],
@@ -4031,7 +5122,11 @@ Widget _buildCustomQuestionField(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           initialValue: 'Morning Slot (09:00 AM - 12:00 PM)',
@@ -4042,16 +5137,21 @@ Widget _buildCustomQuestionField(
             fillColor: inputBgColor,
             filled: true,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           items: [
             'Morning Slot (09:00 AM - 12:00 PM)',
             'Afternoon Slot (12:00 PM - 04:00 PM)',
             'Evening Slot (04:00 PM - 07:00 PM)',
-          ].map((t) => DropdownMenuItem(
-            value: t,
-            child: Text(t, style: GoogleFonts.inter(color: dropdownItemTextColor, fontSize: 12)),
-          )).toList(),
+          ]
+              .map((t) => DropdownMenuItem(
+                    value: t,
+                    child: Text(t,
+                        style: GoogleFonts.inter(
+                            color: dropdownItemTextColor, fontSize: 12)),
+                  ))
+              .toList(),
           onChanged: (v) {},
         ),
       ],
@@ -4062,18 +5162,24 @@ Widget _buildCustomQuestionField(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         TextField(
           keyboardType: TextInputType.number,
           style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
           decoration: InputDecoration(
-            hintText: q['placeholder'] ?? 'Enter numeric value (e.g. 1, 2, 3...)',
+            hintText:
+                q['placeholder'] ?? 'Enter numeric value (e.g. 1, 2, 3...)',
             hintStyle: GoogleFonts.inter(color: placeholderColor, fontSize: 12),
             fillColor: inputBgColor,
             filled: true,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
       ],
@@ -4084,7 +5190,11 @@ Widget _buildCustomQuestionField(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+        Text(labelText,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: placeholderColor)),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.all(12),
@@ -4095,14 +5205,19 @@ Widget _buildCustomQuestionField(
           ),
           child: Row(
             children: [
-              const Icon(Icons.cloud_upload_rounded, color: Color(0xFF10B981), size: 20),
+              const Icon(Icons.cloud_upload_rounded,
+                  color: Color(0xFF10B981), size: 20),
               const SizedBox(width: 10),
               Expanded(
-                child: Text('Click or drop file (Prescription / Receipt image)', style: GoogleFonts.inter(color: placeholderColor, fontSize: 12)),
+                child: Text('Click or drop file (Prescription / Receipt image)',
+                    style: GoogleFonts.inter(
+                        color: placeholderColor, fontSize: 12)),
               ),
               OutlinedButton(
                 onPressed: () {},
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
+                style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6)),
                 child: Text('Browse', style: GoogleFonts.inter(fontSize: 11)),
               ),
             ],
@@ -4116,7 +5231,11 @@ Widget _buildCustomQuestionField(
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(labelText, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
+      Text(labelText,
+          style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              color: placeholderColor)),
       const SizedBox(height: 4),
       TextField(
         style: GoogleFonts.inter(color: inputTextColor, fontSize: 13),
@@ -4126,7 +5245,8 @@ Widget _buildCustomQuestionField(
           fillColor: inputBgColor,
           filled: true,
           border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
       ),
     ],

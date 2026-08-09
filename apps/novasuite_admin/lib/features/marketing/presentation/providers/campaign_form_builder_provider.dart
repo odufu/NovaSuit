@@ -10,75 +10,11 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  // Dynamic List of Lead Forms (Contains both Drafts & Published Forms)
-  List<Map<String, dynamic>> _leadForms = [
-    {
-      'id': 'form-001',
-      'title': 'Grazer Tea Joel',
-      'code': 'CRMF-00223',
-      'marketerEmail': 'joelodufu@gmail.com',
-      'productCategory': 'Grazer Herbal Tea',
-      'submissionsCount': 142,
-      'status': 'Published',
-      'updatedAt': '2026-08-09 11:30',
-      'redirectUrl': 'https://detoxwithnova.xyz/ura-clear-detox-tea',
-    },
-    {
-      'id': 'form-002',
-      'title': 'Vitality Detox Booster Special Promo',
-      'code': 'CRMF-00224',
-      'marketerEmail': 'joelodufu@gmail.com',
-      'productCategory': 'Vitality Booster',
-      'submissionsCount': 0,
-      'status': 'Draft',
-      'updatedAt': '2026-08-09 12:15',
-      'redirectUrl': 'https://detoxwithnova.xyz/vitality-thank-you',
-    },
-  ];
+  // Dynamic List of Lead Forms (Contains both Drafts & Published Forms from Supabase DB)
+  List<Map<String, dynamic>> _leadForms = [];
 
-  // Onboarded Available Products Catalog (Fetched from Supabase or Fallback Seed)
-  List<Map<String, dynamic>> _availableProducts = [
-    {
-      'id': 'p0000000-0000-0000-0000-000000000001',
-      'name': 'Grazer Herbal Tea',
-      'sku': 'GHT-001',
-      'category': 'Grazer Herbal Tea',
-      'price': 23500.0,
-      'stock': 500,
-    },
-    {
-      'id': 'p0000000-0000-0000-0000-000000000002',
-      'name': 'Vitality Detox Booster',
-      'sku': 'VDB-002',
-      'category': 'Vitality Booster',
-      'price': 35000.0,
-      'stock': 350,
-    },
-    {
-      'id': 'p0000000-0000-0000-0000-000000000003',
-      'name': 'SkinCare Glow Capsule',
-      'sku': 'SGC-003',
-      'category': 'SkinCare Glow',
-      'price': 18000.0,
-      'stock': 420,
-    },
-    {
-      'id': 'p0000000-0000-0000-0000-000000000004',
-      'name': 'Flat Belly Tea Cleanse',
-      'sku': 'FBT-004',
-      'category': 'Grazer Herbal Tea',
-      'price': 28000.0,
-      'stock': 300,
-    },
-    {
-      'id': 'p0000000-0000-0000-0000-000000000005',
-      'name': 'Respira Clear Detox',
-      'sku': 'RCD-005',
-      'category': 'Respiratory Health',
-      'price': 15000.0,
-      'stock': 400,
-    },
-  ];
+  // Onboarded Available Products Catalog (Fetched from Supabase DB)
+  List<Map<String, dynamic>> _availableProducts = [];
 
   // Core Field Options
   final List<Map<String, dynamic>> _coreFields = [
@@ -93,11 +29,11 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     {'key': 'postal_code', 'label': 'Postal Code', 'required': false, 'visible': false},
   ];
 
-  // Offer Packages
+  // Offer Packages (Dynamic for active form being edited)
   final List<Map<String, dynamic>> _offerPackages = [
     {
       'id': 'pkg-1',
-      'label': '1 Grazer Detox Tea',
+      'label': '1 Alpha Man',
       'buyQty': 1,
       'freeQty': 0,
       'freeAddonProductId': null,
@@ -109,7 +45,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     },
     {
       'id': 'pkg-2',
-      'label': '2 Grazer Detox Tea',
+      'label': '2 Alpha Man',
       'buyQty': 2,
       'freeQty': 0,
       'freeAddonProductId': null,
@@ -121,7 +57,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     },
     {
       'id': 'pkg-3',
-      'label': '3 Grazer Detox Tea',
+      'label': '3 Alpha Man',
       'buyQty': 3,
       'freeQty': 0,
       'freeAddonProductId': null,
@@ -133,7 +69,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     },
     {
       'id': 'pkg-4',
-      'label': '4 Grazer Detox Tea + 1 Free',
+      'label': '4 Alpha Man + 1 Free',
       'buyQty': 4,
       'freeQty': 1,
       'freeAddonProductId': null,
@@ -145,7 +81,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     },
     {
       'id': 'pkg-5',
-      'label': 'Buy 5 Grazer Tea + 1 Respira Detox Free',
+      'label': '5 Alpha Man + 1 Respira Detox Free',
       'buyQty': 5,
       'freeQty': 0,
       'freeAddonProductId': 'p0000000-0000-0000-0000-000000000005',
@@ -158,18 +94,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   ];
 
   // Linked Items
-  final List<Map<String, dynamic>> _linkedItems = [
-    {
-      'id': 'item-1',
-      'productId': 'p0000000-0000-0000-0000-000000000001',
-      'name': 'Grazer Herbal Tea',
-      'sku': 'GHT-001',
-      'type': 'Main',
-      'qty': 1,
-      'price': 23500.0,
-      'isDefault': true,
-    },
-  ];
+  final List<Map<String, dynamic>> _linkedItems = [];
 
   // Additional Questions / Custom Fields
   final List<Map<String, dynamic>> _additionalQuestions = [
@@ -183,43 +108,23 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   ];
 
   // Broadcast Storage
-  final List<Map<String, dynamic>> _broadcasts = [
-    {
-      'id': 'bcast-1',
-      'name': 'August Flash Promo Blast',
-      'channel': 'Email & SMS',
-      'template': 'Herbal Detox Offer Template',
-      'recipientsCount': 1240,
-      'status': 'Sent',
-      'sentAt': '2026-08-08 14:00',
-    },
-  ];
+  final List<Map<String, dynamic>> _broadcasts = [];
+  final List<Map<String, dynamic>> _emailTemplates = [];
+  final List<Map<String, dynamic>> _smsTemplates = [];
 
-  final List<Map<String, dynamic>> _emailTemplates = [
-    {
-      'id': 'tpl-email-1',
-      'title': 'Grazer Tea Order Confirmation',
-      'subject': 'Your Order is Confirmed! (Pay on Delivery)',
-      'body': 'Dear {customer_name}, thank you for ordering {product_name}. Our rider will deliver to {delivery_state} shortly.',
-      'createdAt': '2026-08-01',
-    },
-  ];
+  // Realtime Broadcast Channel
+  RealtimeChannel? _realtimeChannel;
+  bool _isRealtimeSubscribed = false;
 
-  final List<Map<String, dynamic>> _smsTemplates = [
-    {
-      'id': 'tpl-sms-1',
-      'title': 'SMS Order Alert',
-      'senderId': 'NOVACARE',
-      'message': 'Hello {customer_name}, your order for {product_name} has been processed. Total: ₦{amount}. Support: 07003100077',
-      'createdAt': '2026-08-01',
-    },
-  ];
+  // Realtime Submissions List (Fetched dynamically from Supabase DB)
+  List<Map<String, dynamic>> _submissions = [];
 
   // Getters
   int get currentStep => _currentStep;
   String get quantityDisplayMode => _quantityDisplayMode;
   String get selectedProductCategory => _selectedProductCategory;
   List<Map<String, dynamic>> get leadForms => List.unmodifiable(_leadForms);
+  List<Map<String, dynamic>> get submissions => List.unmodifiable(_submissions);
   List<Map<String, dynamic>> get availableProducts => List.unmodifiable(_availableProducts);
   List<Map<String, dynamic>> get coreFields => List.unmodifiable(_coreFields);
   List<Map<String, dynamic>> get offerPackages => List.unmodifiable(_offerPackages);
@@ -417,10 +322,11 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
           'updatedAt': item['updated_at'] != null ? item['updated_at'].toString().split('T').first : 'Just now',
           'redirectUrl': item['redirect_url'] ?? '',
         }).toList();
+        _updateFormSubmissionCounts();
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Supabase Lead Forms Fetch Exception (Using local state): $e');
+      debugPrint('Supabase Lead Forms Fetch Exception: $e');
     }
   }
 
@@ -444,7 +350,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Supabase Product Search Sync Warning (Using local catalog): $e');
+      debugPrint('Supabase Product Search Sync Warning: $e');
     }
   }
 
@@ -463,9 +369,11 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    final cleanTitle = title.trim().isNotEmpty ? title.trim() : 'Untitled Lead Form';
+
     // Register in Local Lead Forms List immediately so it appears on the Forms tab!
     addOrUpdateLeadForm(
-      title: title,
+      title: cleanTitle,
       marketerEmail: marketerEmail,
       productCategory: _selectedProductCategory,
       status: status,
@@ -474,9 +382,20 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
 
     try {
       final client = Supabase.instance.client;
-      await client.from('lead_forms').insert({
+
+      // Check if existing lead form with title exists to acquire primary key UUID
+      final existingRes = await client
+          .from('lead_forms')
+          .select('id')
+          .eq('title', cleanTitle)
+          .maybeSingle();
+
+      final existingId = existingRes != null ? existingRes['id'] : null;
+
+      final formPayload = {
+        if (existingId != null) 'id': existingId,
         'company_id': companyId.isNotEmpty ? companyId : 'c0000000-0000-0000-0000-000000000001',
-        'title': title,
+        'title': cleanTitle,
         'digital_marketer_email': marketerEmail,
         'redirect_url': redirectUrl,
         'success_message': successMessage,
@@ -489,7 +408,8 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
         'offer_packages': _offerPackages,
         'linked_items': _linkedItems,
         'additional_questions': _additionalQuestions,
-        'status': status.toLowerCase(),
+        'status': status.toLowerCase() == 'published' ? 'published' : 'draft',
+        'updated_at': DateTime.now().toIso8601String(),
         'appearance': appearance ?? {
           'button_bg': '#568500',
           'button_text': '#ffffff',
@@ -503,16 +423,162 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
           'layout_style': 'High-Converting E-Commerce',
           'border_radius': '10px',
         },
-      });
+      };
 
+      final savedRecord = await client
+          .from('lead_forms')
+          .upsert(formPayload)
+          .select()
+          .single();
+
+      if (savedRecord['id'] != null) {
+        final formId = savedRecord['id'];
+        final idx = _leadForms.indexWhere((f) => f['title'].toString().toLowerCase() == cleanTitle.toLowerCase());
+        if (idx >= 0) {
+          _leadForms[idx]['id'] = formId;
+          _leadForms[idx]['code'] = 'CRMF-${formId.toString().substring(0, 5).toUpperCase()}';
+          _leadForms[idx]['status'] = status;
+        }
+      }
+
+      await fetchLeadFormsFromSupabase();
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      debugPrint('Supabase Lead Form Save Exception (Fallback to local state): $e');
+      debugPrint('Supabase Lead Form Save Exception: $e');
       _isLoading = false;
       notifyListeners();
       return true;
     }
+  }
+
+  /// 🛢️ Fetch All Lead Submissions from Supabase Database (`form_submissions` table)
+  Future<void> fetchSubmissionsFromSupabase() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('form_submissions')
+          .select('*, lead_forms(title, product_category)')
+          .order('created_at', ascending: false);
+
+      if (response.isNotEmpty) {
+        _submissions = response.map((item) {
+          final formInfo = item['lead_forms'] as Map<String, dynamic>?;
+          return {
+            'id': item['submission_code'] ?? item['id'].toString(),
+            'customerName': item['customer_name'] ?? 'Anonymous Lead',
+            'contactEmail': item['contact_email'] ?? 'no-email@novasuite.com',
+            'contactPhone': item['contact_phone'] ?? 'N/A',
+            'formCode': item['form_id'] != null 
+                ? 'CRMF-${item['form_id'].toString().substring(0, 5).toUpperCase()}' 
+                : 'CRMF-00223',
+            'formId': item['form_id'],
+            'productCategory': formInfo?['product_category'] ?? _selectedProductCategory,
+            'status': (item['status'] ?? 'Converted').toString(),
+            'submittedAt': item['created_at'] != null 
+                ? item['created_at'].toString().replaceAll('T', ' ').split('.').first 
+                : 'Just now',
+            'orderRef': item['order_id'] != null 
+                ? 'Novacare Ltd-CRM-ORD-${item['order_id'].toString().substring(0, 5).toUpperCase()}' 
+                : 'Pending Order',
+            'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+          };
+        }).toList();
+        _updateFormSubmissionCounts();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Supabase Submissions Fetch Exception (Using local state): $e');
+    }
+  }
+
+  void _updateFormSubmissionCounts() {
+    for (int i = 0; i < _leadForms.length; i++) {
+      final fId = _leadForms[i]['id'];
+      final fCode = _leadForms[i]['code'];
+      final count = _submissions.where((s) => 
+        (fId != null && s['formId'] == fId) || 
+        (fCode != null && s['formCode'] == fCode)
+      ).length;
+      if (count > 0) {
+        _leadForms[i]['submissionsCount'] = count;
+      }
+    }
+  }
+
+  /// 📡 Subscribe to Supabase Realtime Channels for Instant Forms & Lead Submissions Exchange
+  void subscribeToRealtimeSubmissionsAndForms() {
+    if (_isRealtimeSubscribed) return;
+    _isRealtimeSubscribed = true;
+
+    try {
+      final client = Supabase.instance.client;
+      _realtimeChannel = client.channel('public:lead_suite_realtime');
+
+      // 1. Realtime Listener on lead_forms table
+      _realtimeChannel!.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'lead_forms',
+        callback: (payload) {
+          debugPrint('📡 Realtime lead_forms broadcast event: ${payload.eventType}');
+          fetchLeadFormsFromSupabase();
+        },
+      );
+
+      // 2. Realtime Listener on form_submissions table (Instant Lead Exchange)
+      _realtimeChannel!.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'form_submissions',
+        callback: (payload) {
+          debugPrint('📡 Realtime form_submissions broadcast event: ${payload.eventType}');
+          if (payload.eventType == PostgresChangeEvent.insert && payload.newRecord.isNotEmpty) {
+            final item = payload.newRecord;
+            String resolvedCategory = _selectedProductCategory;
+            if (item['form_id'] != null) {
+              final matchingForm = _leadForms.firstWhere(
+                (f) => f['id'] == item['form_id'],
+                orElse: () => {},
+              );
+              if (matchingForm.isNotEmpty && matchingForm['productCategory'] != null) {
+                resolvedCategory = matchingForm['productCategory'].toString();
+              }
+            }
+
+            final newSub = {
+              'id': item['submission_code'] ?? item['id'] ?? 'CRM-SUB-${DateTime.now().millisecondsSinceEpoch}',
+              'customerName': item['customer_name'] ?? 'New Customer Lead',
+              'contactEmail': item['contact_email'] ?? 'lead@novasuite.com',
+              'contactPhone': item['contact_phone'] ?? 'N/A',
+              'formCode': item['form_id'] != null ? 'CRMF-${item['form_id'].toString().substring(0, 5).toUpperCase()}' : 'CRMF-00223',
+              'formId': item['form_id'],
+              'productCategory': resolvedCategory,
+              'status': item['status'] ?? 'Converted',
+              'submittedAt': 'Just now',
+              'orderRef': item['order_id'] != null ? 'Novacare Ltd-CRM-ORD-${item['order_id'].toString().substring(0, 5).toUpperCase()}' : 'Live Conversion',
+              'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+            };
+            _submissions.insert(0, newSub);
+            _updateFormSubmissionCounts();
+            notifyListeners();
+          } else {
+            fetchSubmissionsFromSupabase();
+          }
+        },
+      );
+
+      _realtimeChannel!.subscribe();
+    } catch (e) {
+      debugPrint('Supabase Realtime Channel Subscription Warning: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_realtimeChannel != null) {
+      Supabase.instance.client.removeChannel(_realtimeChannel!);
+    }
+    super.dispose();
   }
 }

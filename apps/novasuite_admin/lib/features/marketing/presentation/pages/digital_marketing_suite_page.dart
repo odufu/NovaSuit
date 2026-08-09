@@ -29,66 +29,17 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
   String _selectedTimespan = 'Monthly';
   String _selectedStatus = 'All statuses';
   String _selectedFormFilter = 'All forms';
-
-  // Sample Submissions Data (Screenshot 1)
-  final List<Map<String, dynamic>> _submissions = [
-    {
-      'id': 'CRM-SUB-224496',
-      'customerName': 'Aduniyi Oluwatoyin',
-      'contactEmail': 'ftomtoyin@gmail.com',
-      'contactPhone': '08030407373',
-      'formCode': 'CRMF-00223',
-      'status': 'Converted',
-      'submittedAt': '08/08/2026, 22:14:39',
-      'orderRef': 'Novacare Ltd-CRM-ORD-08-015863',
-    },
-    {
-      'id': 'CRM-SUB-224489',
-      'customerName': 'Oyewale',
-      'contactEmail': 'oyewalephebe996@gmail.com',
-      'contactPhone': '+2349134898980',
-      'formCode': 'CRMF-00223',
-      'status': 'Converted',
-      'submittedAt': '08/08/2026, 22:08:19',
-      'orderRef': 'Novacare Ltd-CRM-ORD-08-015856',
-    },
-    {
-      'id': 'CRM-SUB-223609',
-      'customerName': 'Halifa',
-      'contactEmail': 'halifamohdaliko@gmail.com',
-      'contactPhone': '08035954478',
-      'formCode': 'CRMF-00223',
-      'status': 'Converted',
-      'submittedAt': '08/08/2026, 13:01:57',
-      'orderRef': 'Novacare Ltd-CRM-ORD-08-014950',
-    },
-    {
-      'id': 'CRM-SUB-223440',
-      'customerName': 'Meze favour',
-      'contactEmail': 'mezefavour3@gmail.com',
-      'contactPhone': '07050729319',
-      'formCode': 'CRMF-00223',
-      'status': 'Converted',
-      'submittedAt': '08/08/2026, 11:26:19',
-      'orderRef': 'Novacare Ltd-CRM-ORD-08-014789',
-    },
-    {
-      'id': 'CRM-SUB-222931',
-      'customerName': 'Lanre Dickson',
-      'contactEmail': 'dixksonjamiu@gmail.com',
-      'contactPhone': '08023523196',
-      'formCode': 'CRMF-00216',
-      'status': 'Converted',
-      'submittedAt': '08/08/2026, 06:29:22',
-      'orderRef': 'Novacare Ltd-CRM-ORD-08-014244',
-    },
-  ];
+  String _selectedCategoryFilter = 'All categories';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CampaignFormBuilderProvider>().fetchLeadFormsFromSupabase();
+      final p = context.read<CampaignFormBuilderProvider>();
+      p.fetchLeadFormsFromSupabase();
+      p.fetchSubmissionsFromSupabase();
+      p.fetchAvailableProductsFromSupabase();
+      p.subscribeToRealtimeSubmissionsAndForms();
     });
   }
 
@@ -205,158 +156,231 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
   }
 
   // ===========================================================================
-  // SUBTAB 1: SUBMISSIONS (Screenshot 1 Exact replica!)
+  // SUBTAB 1: SUBMISSIONS & REALTIME LEADS EXCHANGE
   // ===========================================================================
   Widget _buildSubmissionsTab(BuildContext context) {
+    final builderProvider = Provider.of<CampaignFormBuilderProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF0C1F17) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
+    final rawSubmissions = builderProvider.submissions;
+    final forms = builderProvider.leadForms;
+
+    final availableCategories = ['All categories', ...forms.map((f) => f['productCategory'].toString()).toSet()];
+    final availableForms = ['All forms', ...forms.map((f) => f['title'].toString())];
+
+    final filteredSubmissions = rawSubmissions.where((sub) {
+      if (_selectedStatus != 'All statuses' && sub['status'].toString().toLowerCase() != _selectedStatus.toLowerCase()) {
+        return false;
+      }
+      if (_selectedCategoryFilter != 'All categories' && sub['productCategory'].toString().toLowerCase() != _selectedCategoryFilter.toLowerCase()) {
+        return false;
+      }
+      if (_selectedFormFilter != 'All forms') {
+        final matchingForm = forms.firstWhere(
+          (f) => f['title'].toString().toLowerCase() == _selectedFormFilter.toLowerCase(),
+          orElse: () => {},
+        );
+        if (matchingForm.isNotEmpty) {
+          final fCode = matchingForm['code'];
+          final fId = matchingForm['id'];
+          if (sub['formCode'] != fCode && sub['formId'] != fId && sub['formTitle'] != _selectedFormFilter) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }).toList();
+
+    final totalSubmissions = filteredSubmissions.length;
+    final conversions = filteredSubmissions.where((s) => s['status'].toString().toLowerCase() == 'converted').length;
+    final conversionRate = totalSubmissions > 0 ? '${((conversions / totalSubmissions) * 100).toStringAsFixed(0)}%' : '0%';
+    final topFormTitle = forms.isNotEmpty ? forms.first['title'] : 'Grazer Tea Joel';
+
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Campaigns', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: textColor)),
-        Text('Build lead forms and review submission performance across campaigns.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+        Text('Campaigns & Live Leads', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: textColor)),
+        Text('Realtime lead exchange between landing page checkout forms and your dashboard.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
         const SizedBox(height: 24),
 
-        // KPI Summary Cards Header (Screenshot 1 Top Cards)
+        // KPI Summary Cards Header
         Row(
           children: [
-            Expanded(child: _buildKpiCard('Total Submissions (Last 30 days)', '13', cardBg, textColor, textMuted)),
+            Expanded(child: _buildKpiCard('Total Submissions', '$totalSubmissions', cardBg, textColor, textMuted)),
             const SizedBox(width: 16),
-            Expanded(child: _buildKpiCard('Conversions', '13', cardBg, const Color(0xFF10B981), textMuted)),
+            Expanded(child: _buildKpiCard('Conversions', '$conversions', cardBg, const Color(0xFF10B981), textMuted)),
             const SizedBox(width: 16),
-            Expanded(child: _buildKpiCard('Conversion Rate', '100%', cardBg, textColor, textMuted)),
+            Expanded(child: _buildKpiCard('Conversion Rate', conversionRate, cardBg, textColor, textMuted)),
             const SizedBox(width: 16),
-            Expanded(child: _buildKpiCard('Top Form', 'Grazer Tea Joel', cardBg, textColor, textMuted)),
+            Expanded(child: _buildKpiCard('Top Form', topFormTitle.toString(), cardBg, textColor, textMuted)),
           ],
         ),
         const SizedBox(height: 24),
 
-        // Filter Controls Bar (Timespan, Status, Lead Form, Refresh - Screenshot 1)
+        // Filter Controls Bar (Timespan, Status, Product Category, Lead Form, Refresh)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
-          child: Row(
-            children: [
-              // Timespan Segmented Switch
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('TIMESPAN', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: ['Daily', 'Weekly', 'Monthly', 'Custom'].map((t) {
-                      final isSel = _selectedTimespan == t;
-                      return Container(
-                        margin: const EdgeInsets.only(right: 4),
-                        child: ChoiceChip(
-                          label: Text(t, style: TextStyle(fontSize: 11, color: isSel ? Colors.white : textColor)),
-                          selected: isSel,
-                          selectedColor: const Color(0xFF0F172A),
-                          onSelected: (val) => setState(() => _selectedTimespan = t),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                // Timespan Segmented Switch
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('TIMESPAN', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: ['Daily', 'Weekly', 'Monthly', 'Custom'].map((t) {
+                        final isSel = _selectedTimespan == t;
+                        return Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          child: ChoiceChip(
+                            label: Text(t, style: TextStyle(fontSize: 11, color: isSel ? Colors.white : textColor)),
+                            selected: isSel,
+                            selectedColor: const Color(0xFF0F172A),
+                            onSelected: (val) => setState(() => _selectedTimespan = t),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
 
-              // Status Dropdown
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('STATUS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
-                  const SizedBox(height: 4),
-                  DropdownButton<String>(
-                    value: _selectedStatus,
-                    dropdownColor: cardBg,
-                    style: GoogleFonts.inter(color: textColor, fontSize: 13),
-                    items: ['All statuses', 'Converted', 'Pending'].map((s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(s, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-                    )).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedStatus = val);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
+                // Status Dropdown
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('STATUS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
+                    const SizedBox(height: 4),
+                    DropdownButton<String>(
+                      value: _selectedStatus,
+                      dropdownColor: cardBg,
+                      style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                      items: ['All statuses', 'Converted', 'Pending', 'Cancelled'].map((s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(s, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                      )).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedStatus = val);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
 
-              // Lead Form Dropdown
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('LEAD FORM', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
-                  const SizedBox(height: 4),
-                  DropdownButton<String>(
-                    value: _selectedFormFilter,
-                    dropdownColor: cardBg,
-                    style: GoogleFonts.inter(color: textColor, fontSize: 13),
-                    items: ['All forms', 'Grazer Tea Joel'].map((f) => DropdownMenuItem(
-                      value: f,
-                      child: Text(f, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
-                    )).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedFormFilter = val);
-                    },
-                  ),
-                ],
-              ),
-              const Spacer(),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Refresh'),
-              ),
-            ],
+                // Product Category Dropdown
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('PRODUCT CATEGORY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
+                    const SizedBox(height: 4),
+                    DropdownButton<String>(
+                      value: availableCategories.contains(_selectedCategoryFilter) ? _selectedCategoryFilter : availableCategories.first,
+                      dropdownColor: cardBg,
+                      style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                      items: availableCategories.map((c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(c, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                      )).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedCategoryFilter = val);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+
+                // Lead Form Dropdown
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('LEAD FORM', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: textMuted)),
+                    const SizedBox(height: 4),
+                    DropdownButton<String>(
+                      value: availableForms.contains(_selectedFormFilter) ? _selectedFormFilter : availableForms.first,
+                      dropdownColor: cardBg,
+                      style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                      items: availableForms.map((f) => DropdownMenuItem(
+                        value: f,
+                        child: Text(f, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                      )).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedFormFilter = val);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    builderProvider.fetchLeadFormsFromSupabase();
+                    builderProvider.fetchSubmissionsFromSupabase();
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: const Text('Refresh'),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
 
-        // Submissions Data Table (Screenshot 1 Table)
+        // Submissions Data Table
         Container(
           decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: isDark ? Colors.white10 : Colors.black12)),
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('CUSTOMER')),
-              DataColumn(label: Text('CONTACT')),
-              DataColumn(label: Text('FORM')),
-              DataColumn(label: Text('STATUS')),
-              DataColumn(label: Text('SUBMITTED')),
-              DataColumn(label: Text('ORDER')),
-              DataColumn(label: Text('ACTION')),
-            ],
-            rows: _submissions.map((sub) => DataRow(cells: [
-              DataCell(Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(sub['customerName'], style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
-                  Text(sub['id'], style: GoogleFonts.inter(fontSize: 10, color: textMuted)),
-                ],
-              )),
-              DataCell(Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(sub['contactEmail'], style: GoogleFonts.inter(fontSize: 11, color: textColor)),
-                  Text(sub['contactPhone'], style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
-                ],
-              )),
-              DataCell(Text(sub['formCode'], style: GoogleFonts.inter(fontSize: 12, color: textColor))),
-              DataCell(Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                child: Text(sub['status'], style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
-              )),
-              DataCell(Text(sub['submittedAt'], style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
-              DataCell(Text(sub['orderRef'], style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF10B981)))),
-              DataCell(IconButton(icon: const Icon(Icons.more_vert_rounded, size: 18), onPressed: () {})),
-            ])).toList(),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: const [
+                DataColumn(label: Text('CUSTOMER')),
+                DataColumn(label: Text('CONTACT')),
+                DataColumn(label: Text('FORM / CATEGORY')),
+                DataColumn(label: Text('STATUS')),
+                DataColumn(label: Text('SUBMITTED')),
+                DataColumn(label: Text('ORDER REF')),
+                DataColumn(label: Text('ACTION')),
+              ],
+              rows: filteredSubmissions.map((sub) => DataRow(cells: [
+                DataCell(Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(sub['customerName']?.toString() ?? 'Anonymous Lead', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
+                    Text(sub['id']?.toString() ?? '', style: GoogleFonts.inter(fontSize: 10, color: textMuted)),
+                  ],
+                )),
+                DataCell(Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(sub['contactEmail']?.toString() ?? 'N/A', style: GoogleFonts.inter(fontSize: 11, color: textColor)),
+                    Text(sub['contactPhone']?.toString() ?? 'N/A', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+                  ],
+                )),
+                DataCell(Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(sub['formCode']?.toString() ?? 'CRMF-001', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
+                    Text(sub['productCategory']?.toString() ?? 'General', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF10B981))),
+                  ],
+                )),
+                DataCell(Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+                  child: Text(sub['status']?.toString() ?? 'Converted', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
+                )),
+                DataCell(Text(sub['submittedAt']?.toString() ?? 'Just now', style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
+                DataCell(Text(sub['orderRef']?.toString() ?? 'Pending Order', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF10B981)))),
+                DataCell(IconButton(icon: const Icon(Icons.more_vert_rounded, size: 18), onPressed: () {})),
+              ])).toList(),
+            ),
           ),
         ),
       ],
