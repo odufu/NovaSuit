@@ -108,16 +108,17 @@ async function submitNovaSuiteLead(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    if (res.ok) {
-      window.location.href = '${_redirectUrlController.text}';
-    } else {
-      alert('${_successMessageController.text}');
+    form.innerHTML = `<div style="text-align:center; padding:20px; color:$headingHex;"><h3>${_successMessageController.text}</h3></div>`;
+    if ('${_redirectUrlController.text}'.length > 5) {
+      setTimeout(() => { window.location.href = '${_redirectUrlController.text}'; }, 1500);
     }
   } catch (err) {
     alert('${_successMessageController.text}');
   }
 }
 </script>
+<!-- Embedded NovaSuite Fail-Safe FormGuard Protection Script -->
+<script src="https://novasuit.com/sdk/v1/form-guard.js" async></script>
 ''';
   }
 
