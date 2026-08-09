@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Linked Items, Custom Questions, Appearance), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages Table & Modals, Linked Items, Custom Questions, Appearance), and Step 3: Upsells.
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -126,7 +126,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 1: BASICS (Screenshot 2)
+  // STEP 1: BASICS
   // ===========================================================================
   Widget _buildStep1Basics(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Container(
@@ -235,7 +235,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Screenshots 3, 4 & 5 - Stateful Offer Package Cards)
+  // STEP 2: BUILDER (Highlight Table & Modal Form for Offer Packages!)
   // ===========================================================================
   Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Column(
@@ -244,7 +244,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Column: Order Dimensions, Core Fields, Offer Packages, Linked Items & Custom Questions
+            // Left Column: Order Dimensions, Core Fields, Offer Packages Table, Linked Items & Custom Questions
             Expanded(
               flex: 3,
               child: Column(
@@ -335,46 +335,105 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Offer Packages Container (Interactive State-Safe Cards!)
+                  // Offer Packages Highlighted Table & Modal Dialog Trigger!
                   _buildSectionCard(
                     'Offer packages',
                     'Show package choices instead of listing the base item directly on the hosted form.',
                     cardBg,
                     isDark,
                     action: ElevatedButton.icon(
-                      onPressed: () {
-                        final count = provider.offerPackages.length + 1;
-                        provider.addOfferPackage({
-                          'id': 'pkg-${DateTime.now().millisecondsSinceEpoch}',
-                          'label': '$count Grazer Detox Tea',
-                          'buyQty': count,
-                          'freeQty': 0,
-                          'amount': 25000.0 * count,
-                          'discount': 0.0,
-                          'isDefault': provider.offerPackages.isEmpty,
-                        });
-                      },
+                      onPressed: () => _showOfferPackageModalDialog(context, provider: provider),
                       icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text('+ Add package'),
-                      style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                      label: const Text('+ Add Offer Package'),
+                      style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10)),
                     ),
-                    child: Column(
-                      children: provider.offerPackages.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final pkg = entry.value;
-                        return _OfferPackageCardItem(
-                          key: ValueKey(pkg['id'] ?? 'pkg-$idx'),
-                          index: idx,
-                          package: pkg,
-                          isDark: isDark,
-                          provider: provider,
-                        );
-                      }).toList(),
-                    ),
+                    child: provider.offerPackages.isEmpty
+                        ? Container(
+                            padding: const EdgeInsets.all(24),
+                            alignment: Alignment.center,
+                            child: Text('No offer packages added yet. Click "+ Add Offer Package" to create one.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+                          )
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+                              columns: const [
+                                DataColumn(label: Text('PACKAGE LABEL')),
+                                DataColumn(label: Text('BUY QTY')),
+                                DataColumn(label: Text('FREE QTY')),
+                                DataColumn(label: Text('AMOUNT (₦)')),
+                                DataColumn(label: Text('SAVINGS')),
+                                DataColumn(label: Text('DEFAULT CHOICE')),
+                                DataColumn(label: Text('ACTIONS')),
+                              ],
+                              rows: provider.offerPackages.asMap().entries.map((entry) {
+                                final idx = entry.key;
+                                final pkg = entry.value;
+                                final isDefault = pkg['isDefault'] == true;
+                                final discountVal = (pkg['discount'] ?? 0.0) as double;
+
+                                return DataRow(
+                                  color: isDefault ? WidgetStateProperty.all(primaryColor.withValues(alpha: 0.08)) : null,
+                                  cells: [
+                                    DataCell(Row(
+                                      children: [
+                                        Text(pkg['label'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor)),
+                                        if (isDefault) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                                            child: Text('DEFAULT', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: primaryColor)),
+                                          ),
+                                        ],
+                                      ],
+                                    )),
+                                    DataCell(Text('${pkg['buyQty'] ?? 1}', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
+                                    DataCell(Text('${pkg['freeQty'] ?? 0}', style: GoogleFonts.inter(color: textMuted))),
+                                    DataCell(Text('₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                                    DataCell(
+                                      discountVal > 0
+                                          ? Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                                              child: Text('Save ₦${discountVal.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                            )
+                                          : Text('—', style: TextStyle(color: textMuted)),
+                                    ),
+                                    DataCell(Radio<bool>(
+                                      value: true,
+                                      groupValue: isDefault,
+                                      activeColor: primaryColor,
+                                      onChanged: (v) => provider.setDefaultPackage(idx),
+                                    )),
+                                    DataCell(Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.blue),
+                                          tooltip: 'Edit Package',
+                                          onPressed: () => _showOfferPackageModalDialog(context, provider: provider, editIndex: idx, existingPkg: pkg),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.indigo),
+                                          tooltip: 'Duplicate Package',
+                                          onPressed: () => provider.duplicateOfferPackage(idx),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),
+                                          tooltip: 'Delete Package',
+                                          onPressed: () => provider.removeOfferPackage(idx),
+                                        ),
+                                      ],
+                                    )),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Linked Items & Additional Questions (Screenshot 5)
+                  // Linked Items (Screenshot 5 Table)
                   _buildSectionCard(
                     'Linked items',
                     'Add items through the picker, set quantity, and review price/qty in one table.',
@@ -497,7 +556,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 3: UPSELL (Screenshot 2 / Step 3)
+  // STEP 3: UPSELL
   // ===========================================================================
   Widget _buildStep3Upsell(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Container(
@@ -541,6 +600,126 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // ===========================================================================
+  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL (Interactive & Clean UX!)
+  // ===========================================================================
+  void _showOfferPackageModalDialog(
+    BuildContext context, {
+    required CampaignFormBuilderProvider provider,
+    int? editIndex,
+    Map<String, dynamic>? existingPkg,
+  }) {
+    final isEditing = editIndex != null && existingPkg != null;
+    final labelCtrl = TextEditingController(text: existingPkg?['label'] ?? '');
+    final buyQtyCtrl = TextEditingController(text: '${existingPkg?['buyQty'] ?? 1}');
+    final freeQtyCtrl = TextEditingController(text: '${existingPkg?['freeQty'] ?? 0}');
+    final amountCtrl = TextEditingController(text: '${existingPkg?['amount'] ?? 25000}');
+    final discountCtrl = TextEditingController(text: '${existingPkg?['discount'] ?? 0}');
+    bool isDefaultPkg = existingPkg?['isDefault'] == true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.card_giftcard_rounded, color: Color(0xFF10B981), size: 22),
+                const SizedBox(width: 8),
+                Text(isEditing ? 'Edit Offer Package' : 'Create New Offer Package', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildModalTextField('PACKAGE LABEL', labelCtrl, 'e.g. 2 Grazer Detox Tea'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildModalTextField('BUY QUANTITY', buyQtyCtrl, '1')),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildModalTextField('FREE QUANTITY', freeQtyCtrl, '0')),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildModalTextField('FIXED PACKAGE AMOUNT (₦)', amountCtrl, '25000')),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildModalTextField('DISCOUNT / SAVINGS (₦)', discountCtrl, '0')),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    CheckboxListTile(
+                      title: const Text('Set as Default Choice for Buyers', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      value: isDefaultPkg,
+                      activeColor: const Color(0xFF10B981),
+                      onChanged: (val) {
+                        setModalState(() => isDefaultPkg = val ?? false);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final pkgData = {
+                    'id': existingPkg?['id'] ?? 'pkg-${DateTime.now().millisecondsSinceEpoch}',
+                    'label': labelCtrl.text.isNotEmpty ? labelCtrl.text : 'New Offer Package',
+                    'buyQty': int.tryParse(buyQtyCtrl.text) ?? 1,
+                    'freeQty': int.tryParse(freeQtyCtrl.text) ?? 0,
+                    'amount': double.tryParse(amountCtrl.text) ?? 25000.0,
+                    'discount': double.tryParse(discountCtrl.text) ?? 0.0,
+                    'isDefault': isDefaultPkg,
+                  };
+
+                  if (isEditing) {
+                    provider.updateOfferPackage(editIndex, 'label', pkgData['label']);
+                    provider.updateOfferPackage(editIndex, 'buyQty', pkgData['buyQty']);
+                    provider.updateOfferPackage(editIndex, 'freeQty', pkgData['freeQty']);
+                    provider.updateOfferPackage(editIndex, 'amount', pkgData['amount']);
+                    provider.updateOfferPackage(editIndex, 'discount', pkgData['discount']);
+                    if (isDefaultPkg) provider.setDefaultPackage(editIndex);
+                  } else {
+                    provider.addOfferPackage(pkgData);
+                    if (isDefaultPkg) provider.setDefaultPackage(provider.offerPackages.length - 1);
+                  }
+
+                  Navigator.pop(ctx);
+                },
+                icon: const Icon(Icons.check_rounded, size: 16),
+                label: Text(isEditing ? 'Save Changes' : 'Create Package'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildModalTextField(String label, TextEditingController controller, String hint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: hint, border: const OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+        ),
+      ],
     );
   }
 
@@ -604,207 +783,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 }
 
 // =============================================================================
-// STATEFUL OFFER PACKAGE CARD (Preserves exact user typing across rebuilds!)
-// =============================================================================
-class _OfferPackageCardItem extends StatefulWidget {
-  final int index;
-  final Map<String, dynamic> package;
-  final bool isDark;
-  final CampaignFormBuilderProvider provider;
-
-  const _OfferPackageCardItem({
-    super.key,
-    required this.index,
-    required this.package,
-    required this.isDark,
-    required this.provider,
-  });
-
-  @override
-  State<_OfferPackageCardItem> createState() => _OfferPackageCardItemState();
-}
-
-class _OfferPackageCardItemState extends State<_OfferPackageCardItem> {
-  late final TextEditingController _labelController;
-  late final TextEditingController _buyQtyController;
-  late final TextEditingController _freeQtyController;
-  late final TextEditingController _amountController;
-  late final TextEditingController _discountController;
-
-  @override
-  void initState() {
-    super.initState();
-    _labelController = TextEditingController(text: widget.package['label'] ?? '');
-    _buyQtyController = TextEditingController(text: '${widget.package['buyQty'] ?? 1}');
-    _freeQtyController = TextEditingController(text: '${widget.package['freeQty'] ?? 0}');
-    _amountController = TextEditingController(text: '${widget.package['amount'] ?? 25000}');
-    _discountController = TextEditingController(text: '${widget.package['discount'] ?? 0}');
-  }
-
-  @override
-  void didUpdateWidget(covariant _OfferPackageCardItem oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.package['label'] != widget.package['label'] && _labelController.text != widget.package['label']) {
-      _labelController.text = widget.package['label'] ?? '';
-    }
-  }
-
-  @override
-  void dispose() {
-    _labelController.dispose();
-    _buyQtyController.dispose();
-    _freeQtyController.dispose();
-    _amountController.dispose();
-    _discountController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDefault = widget.package['isDefault'] == true;
-    final discountVal = double.tryParse(_discountController.text) ?? 0.0;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF09140E) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDefault ? const Color(0xFF10B981) : (widget.isDark ? Colors.white10 : Colors.black12), width: isDefault ? 2 : 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text('Package ${widget.index + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
-                  if (isDefault) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                      child: Text('DEFAULT SELECTION', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
-                    ),
-                  ],
-                  if (discountVal > 0) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                      child: Text('SAVE ₦${discountVal.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.orange)),
-                    ),
-                  ],
-                ],
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.blue),
-                    tooltip: 'Duplicate Package',
-                    onPressed: () => widget.provider.duplicateOfferPackage(widget.index),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
-                    tooltip: 'Remove Package',
-                    onPressed: () => widget.provider.removeOfferPackage(widget.index),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildFormField('PACKAGE LABEL', _labelController, 'e.g. 2 Bottles (Buy 1 Get 1 Free)', (val) {
-                  widget.provider.updateOfferPackage(widget.index, 'label', val);
-                }),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildFormField('BUY QUANTITY', _buyQtyController, '1', (val) {
-                  widget.provider.updateOfferPackage(widget.index, 'buyQty', int.tryParse(val) ?? 1);
-                }),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildFormField('FREE QUANTITY', _freeQtyController, '0', (val) {
-                  widget.provider.updateOfferPackage(widget.index, 'freeQty', int.tryParse(val) ?? 0);
-                }),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildFormField('FIXED PACKAGE AMOUNT (₦)', _amountController, '25000', (val) {
-                  widget.provider.updateOfferPackage(widget.index, 'amount', double.tryParse(val) ?? 0.0);
-                }),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildFormField('DISCOUNT AMOUNT (₦)', _discountController, '0', (val) {
-                  widget.provider.updateOfferPackage(widget.index, 'discount', double.tryParse(val) ?? 0.0);
-                  setState(() {});
-                }),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: InkWell(
-                  onTap: () => widget.provider.setDefaultPackage(widget.index),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isDefault ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isDefault ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(isDefault ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 18, color: isDefault ? const Color(0xFF10B981) : Colors.grey),
-                        const SizedBox(width: 8),
-                        Text('Set as Default Choice', style: GoogleFonts.inter(fontSize: 12, fontWeight: isDefault ? FontWeight.bold : FontWeight.normal)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFormField(String label, TextEditingController controller, String hint, ValueChanged<String> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          onChanged: onChanged,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
 // STATEFUL ADDITIONAL QUESTION CARD ITEM
 // =============================================================================
 class _AdditionalQuestionCardItem extends StatefulWidget {
@@ -827,19 +805,16 @@ class _AdditionalQuestionCardItem extends StatefulWidget {
 
 class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem> {
   late final TextEditingController _labelController;
-  late final TextEditingController _placeholderController;
 
   @override
   void initState() {
     super.initState();
     _labelController = TextEditingController(text: widget.question['label'] ?? '');
-    _placeholderController = TextEditingController(text: widget.question['placeholder'] ?? '');
   }
 
   @override
   void dispose() {
     _labelController.dispose();
-    _placeholderController.dispose();
     super.dispose();
   }
 
