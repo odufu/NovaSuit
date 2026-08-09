@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, Interactive Color Pickers, Embed Code Generator, Live Customer Form Preview Modal with Conversion Testing), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, Unrestricted Color Spectrum Pickers, Typography Fonts, Layout Templates, Embed Code Generator, Live Form Preview), and Step 3: Upsells.
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -29,13 +29,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   final _submitButtonTextController = TextEditingController(text: 'Get Yours Now');
   final _descriptionController = TextEditingController(text: 'Internal note or CTA shown above the form.');
 
-  // Step 2: Appearance Customization Controllers
+  // Step 2: Appearance & Styling Customization Controls
   final _buttonBgController = TextEditingController(text: '#568500');
   final _buttonTextController = TextEditingController(text: '#ffffff');
   final _pageBgController = TextEditingController(text: '#0f172a');
   final _cardBgController = TextEditingController(text: '#fafafc');
   final _headingColorController = TextEditingController(text: '#0f172a');
+  final _inputBgController = TextEditingController(text: '#ffffff');
+  final _inputTextColorController = TextEditingController(text: '#0f172a');
+  final _placeholderColorController = TextEditingController(text: '#94a3b8');
   final _borderRadiusController = TextEditingController(text: '10px');
+
+  String _fontFamily = 'Inter';
+  String _selectedLayoutTemplate = 'High-Converting E-Commerce';
 
   // Step 3: Upsell Controller
   final _upsellTitleController = TextEditingController(text: 'Add 1 Extra Bottle of Detox Tea for 50% Off!');
@@ -45,6 +51,63 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CampaignFormBuilderProvider>().fetchAvailableProductsFromSupabase();
+    });
+  }
+
+  void _applyLayoutTemplatePreset(String templateName) {
+    setState(() {
+      _selectedLayoutTemplate = templateName;
+      switch (templateName) {
+        case 'Minimalist Clean':
+          _buttonBgController.text = '#3B82F6';
+          _buttonTextController.text = '#FFFFFF';
+          _pageBgController.text = '#F8FAFC';
+          _cardBgController.text = '#FFFFFF';
+          _headingColorController.text = '#1E293B';
+          _inputBgController.text = '#F1F5F9';
+          _inputTextColorController.text = '#0F172A';
+          _placeholderColorController.text = '#64748B';
+          _borderRadiusController.text = '6px';
+          _fontFamily = 'Inter';
+          break;
+        case 'Luxury Glassmorphism':
+          _buttonBgController.text = '#D97706';
+          _buttonTextController.text = '#FFFFFF';
+          _pageBgController.text = '#09140E';
+          _cardBgController.text = '#0F172A';
+          _headingColorController.text = '#F59E0B';
+          _inputBgController.text = '#1E293B';
+          _inputTextColorController.text = '#F8FAFC';
+          _placeholderColorController.text = '#94A3B8';
+          _borderRadiusController.text = '16px';
+          _fontFamily = 'Playfair Display';
+          break;
+        case 'Compact Express Checkout':
+          _buttonBgController.text = '#EF4444';
+          _buttonTextController.text = '#FFFFFF';
+          _pageBgController.text = '#F1F5F9';
+          _cardBgController.text = '#FFFFFF';
+          _headingColorController.text = '#111827';
+          _inputBgController.text = '#FFFFFF';
+          _inputTextColorController.text = '#111827';
+          _placeholderColorController.text = '#9CA3AF';
+          _borderRadiusController.text = '4px';
+          _fontFamily = 'Poppins';
+          break;
+        case 'High-Converting E-Commerce':
+        default:
+          _buttonBgController.text = '#568500';
+          _buttonTextController.text = '#FFFFFF';
+          _pageBgController.text = '#0F172A';
+          _cardBgController.text = '#FAFAFC';
+          _headingColorController.text = '#0F172A';
+          _inputBgController.text = '#FFFFFF';
+          _inputTextColorController.text = '#0F172A';
+          _placeholderColorController.text = '#94A3B8';
+          _borderRadiusController.text = '10px';
+          _fontFamily = 'Outfit';
+          break;
+      }
     });
   }
 
@@ -258,7 +321,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Offer Packages, Linked Items, Color Pickers & Appearance)
+  // STEP 2: BUILDER (Offer Packages, Linked Items, Unrestricted Color Spectrum Pickers & Layout Templates)
   // ===========================================================================
   Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Column(
@@ -579,7 +642,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ),
             const SizedBox(width: 20),
 
-            // Right Column: Appearance Customization Drawer (Interactive Color Pickers!)
+            // Right Column: Advanced Appearance & Theme Controls Drawer
             Expanded(
               flex: 2,
               child: Container(
@@ -588,21 +651,69 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Appearance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
-                    Text('Customize form colors, typography, and input shape.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+                    Text('Appearance & Styling Controls', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+                    Text('Choose layout templates, typography fonts, input background/placeholder colors, and fine-tune RGB spectrum colors.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
                     const SizedBox(height: 16),
+
+                    // Prebuilt Form Layout Style / Template Selector
+                    Text('PREBUILT LAYOUT STYLE / TEMPLATE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedLayoutTemplate,
+                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                      items: const [
+                        DropdownMenuItem(value: 'High-Converting E-Commerce', child: Text('High-Converting E-Commerce')),
+                        DropdownMenuItem(value: 'Minimalist Clean', child: Text('Minimalist Clean')),
+                        DropdownMenuItem(value: 'Luxury Glassmorphism', child: Text('Luxury Dark Glassmorphism')),
+                        DropdownMenuItem(value: 'Compact Express Checkout', child: Text('Compact Express Checkout')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) _applyLayoutTemplatePreset(val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Typography Font Family Selector
+                    Text('TYPOGRAPHY FONT FAMILY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      initialValue: _fontFamily,
+                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                      items: const [
+                        DropdownMenuItem(value: 'Inter', child: Text('Inter (Clean Modern)')),
+                        DropdownMenuItem(value: 'Outfit', child: Text('Outfit (Sleek Geometric)')),
+                        DropdownMenuItem(value: 'Roboto', child: Text('Roboto (Standard Sans)')),
+                        DropdownMenuItem(value: 'Poppins', child: Text('Poppins (Bold Friendly)')),
+                        DropdownMenuItem(value: 'Montserrat', child: Text('Montserrat (Modern Display)')),
+                        DropdownMenuItem(value: 'Plus Jakarta Sans', child: Text('Plus Jakarta Sans (Corporate)')),
+                        DropdownMenuItem(value: 'Playfair Display', child: Text('Playfair Display (Luxury Serif)')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setState(() => _fontFamily = val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Unrestricted Color Palette Controls
                     _buildColorPickerGroup('BUTTON BACKGROUND', _buttonBgController, defaultHex: '#568500'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildColorPickerGroup('BUTTON TEXT COLOR', _buttonTextController, defaultHex: '#ffffff'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildColorPickerGroup('PAGE BACKGROUND', _pageBgController, defaultHex: '#0f172a'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildColorPickerGroup('CARD BACKGROUND', _cardBgController, defaultHex: '#fafafc'),
-                    const SizedBox(height: 12),
-                    _buildColorPickerGroup('HEADING COLOR', _headingColorController, defaultHex: '#0f172a'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
+                    _buildColorPickerGroup('HEADING TEXT COLOR', _headingColorController, defaultHex: '#0f172a'),
+                    const SizedBox(height: 10),
+                    _buildColorPickerGroup('FORM INPUT BACKGROUND', _inputBgController, defaultHex: '#ffffff'),
+                    const SizedBox(height: 10),
+                    _buildColorPickerGroup('FORM INPUT TEXT COLOR', _inputTextColorController, defaultHex: '#0f172a'),
+                    const SizedBox(height: 10),
+                    _buildColorPickerGroup('PLACEHOLDER TEXT COLOR', _placeholderColorController, defaultHex: '#94a3b8'),
+                    const SizedBox(height: 10),
                     _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
                     const SizedBox(height: 20),
+
                     OutlinedButton.icon(
                       onPressed: () => _showLiveFormPreviewModalDialog(context, provider: provider),
                       icon: const Icon(Icons.visibility_rounded, size: 16),
@@ -668,6 +779,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     successMessage: _successMessageController.text,
                     submitButtonText: _submitButtonTextController.text,
                     description: _descriptionController.text,
+                    appearance: {
+                      'button_bg': _buttonBgController.text,
+                      'button_text': _buttonTextController.text,
+                      'page_bg': _pageBgController.text,
+                      'card_bg': _cardBgController.text,
+                      'heading_color': _headingColorController.text,
+                      'input_bg': _inputBgController.text,
+                      'input_text': _inputTextColorController.text,
+                      'placeholder_color': _placeholderColorController.text,
+                      'font_family': _fontFamily,
+                      'layout_style': _selectedLayoutTemplate,
+                      'border_radius': _borderRadiusController.text,
+                    },
                   );
                   if (mounted) {
                     _showEmbedCodeModalDialog(context, provider: provider);
@@ -686,7 +810,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // MODAL DIALOG: LIVE CUSTOMER ACQUISITION CHECKOUT FORM PREVIEW & TEST CONVERSION
+  // MODAL DIALOG: LIVE CUSTOMER ACQUISITION CHECKOUT FORM PREVIEW
   // ===========================================================================
   void _showLiveFormPreviewModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
     final formTitle = _formTitleController.text;
@@ -697,6 +821,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final btnText = _parseColorFromHex(_buttonTextController.text, defaultHex: '#ffffff');
     final cardBgColor = _parseColorFromHex(_cardBgController.text, defaultHex: '#fafafc');
     final headingColor = _parseColorFromHex(_headingColorController.text, defaultHex: '#0f172a');
+    final inputBgColor = _parseColorFromHex(_inputBgController.text, defaultHex: '#ffffff');
+    final inputTextColor = _parseColorFromHex(_inputTextColorController.text, defaultHex: '#0f172a');
+    final placeholderColor = _parseColorFromHex(_placeholderColorController.text, defaultHex: '#94a3b8');
     final btnLabel = _submitButtonTextController.text;
 
     Map<String, dynamic>? selectedOfferPkg = provider.offerPackages.firstWhere(
@@ -724,13 +851,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   children: [
                     const Icon(Icons.visibility_rounded, color: Color(0xFF10B981), size: 22),
                     const SizedBox(width: 8),
-                    Text('Live Form Preview & Conversion Test', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: headingColor)),
+                    Text('Live Form Preview & Conversion Test', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 16, color: headingColor)),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                  child: Text('LIVE PREVIEW MODE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                  child: Text('LAYOUT: $_selectedLayoutTemplate', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
                 ),
               ],
             ),
@@ -741,13 +868,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(formTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: headingColor)),
+                    Text(formTitle, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 20, color: headingColor)),
                     const SizedBox(height: 4),
-                    Text(formDesc, style: GoogleFonts.inter(fontSize: 12.5, color: Colors.grey)),
+                    Text(formDesc, style: GoogleFonts.getFont(_fontFamily, fontSize: 12.5, color: placeholderColor)),
                     const SizedBox(height: 16),
 
                     // Offer Packages Choice Selection Cards
-                    Text('SELECT YOUR OFFER PACKAGE *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                    Text('SELECT YOUR OFFER PACKAGE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 11, color: placeholderColor)),
                     const SizedBox(height: 8),
                     Column(
                       children: provider.offerPackages.map((pkg) {
@@ -766,7 +893,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: isSelected ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.white,
+                              color: isSelected ? const Color(0xFF10B981).withValues(alpha: 0.1) : inputBgColor,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3), width: isSelected ? 2 : 1),
                             ),
@@ -778,18 +905,18 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+                                      Text(label, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: inputTextColor)),
                                       if (freeAddonName != null && freeAddonQty > 0)
-                                        Text('🎁 Includes FREE ${freeAddonQty}x $freeAddonName', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
+                                        Text('🎁 Includes FREE ${freeAddonQty}x $freeAddonName', style: GoogleFonts.getFont(_fontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
                                     ],
                                   ),
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text('₦${amount.toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF10B981))),
+                                    Text('₦${amount.toStringAsFixed(0)}', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF10B981))),
                                     if (discount > 0)
-                                      Text('Save ₦${discount.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                      Text('Save ₦${discount.toStringAsFixed(0)}', style: GoogleFonts.getFont(_fontFamily, fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
                                   ],
                                 ),
                               ],
@@ -800,33 +927,38 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Customer Contact Inputs
-                    _buildModalTextField('FULL NAME *', nameController, 'Chief Customer Tester'),
+                    // Styled Customer Contact Inputs
+                    _buildCustomStyledTextField('FULL NAME *', nameController, 'Chief Customer Tester', inputBgColor, inputTextColor, placeholderColor),
                     const SizedBox(height: 10),
-                    _buildModalTextField('PHONE NUMBER (FOR RIDER) *', phoneController, '08099887766'),
+                    _buildCustomStyledTextField('PHONE NUMBER (FOR RIDER) *', phoneController, '08099887766', inputBgColor, inputTextColor, placeholderColor),
                     const SizedBox(height: 10),
 
-                    Text('DELIVERY STATE *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    Text('DELIVERY STATE *', style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholderColor)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
                       initialValue: selectedState,
-                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                      decoration: InputDecoration(
+                        fillColor: inputBgColor,
+                        filled: true,
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13),
                       items: ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                       onChanged: (v) {
                         if (v != null) setModalState(() => selectedState = v);
                       },
                     ),
                     const SizedBox(height: 10),
-                    _buildModalTextField('DELIVERY ADDRESS *', addressController, '12 Victoria Island Expressway, Lagos'),
+                    _buildCustomStyledTextField('DELIVERY ADDRESS *', addressController, '12 Victoria Island Expressway, Lagos', inputBgColor, inputTextColor, placeholderColor),
                     const SizedBox(height: 20),
 
-                    // Styled Submit Button
+                    // Custom Styled Submit Action Button
                     ElevatedButton(
                       onPressed: isSubmittingOrder
                           ? null
                           : () async {
                               setModalState(() => isSubmittingOrder = true);
-                              // Trigger Real Lead Acquisition Save
                               await provider.saveLeadFormToSupabase(
                                 companyId: 'c0000000-0000-0000-0000-000000000001',
                                 title: formTitle,
@@ -835,6 +967,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 successMessage: _successMessageController.text,
                                 submitButtonText: btnLabel,
                                 description: formDesc,
+                                appearance: {
+                                  'button_bg': _buttonBgController.text,
+                                  'button_text': _buttonTextController.text,
+                                  'page_bg': _pageBgController.text,
+                                  'card_bg': _cardBgController.text,
+                                  'heading_color': _headingColorController.text,
+                                  'input_bg': _inputBgController.text,
+                                  'input_text': _inputTextColorController.text,
+                                  'placeholder_color': _placeholderColorController.text,
+                                  'font_family': _fontFamily,
+                                  'layout_style': _selectedLayoutTemplate,
+                                  'border_radius': _borderRadiusController.text,
+                                },
                               );
 
                               if (context.mounted) {
@@ -855,7 +1000,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ),
                       child: isSubmittingOrder
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text(btnLabel, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+                          : Text(btnLabel, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ],
                 ),
@@ -864,6 +1009,28 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildCustomStyledTextField(String label, TextEditingController controller, String hint, Color bg, Color text, Color placeholder) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.getFont(_fontFamily, fontWeight: FontWeight.bold, fontSize: 10, color: placeholder)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          style: GoogleFonts.getFont(_fontFamily, color: text, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.getFont(_fontFamily, color: placeholder, fontSize: 12),
+            fillColor: bg,
+            filled: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ],
     );
   }
 
@@ -877,27 +1044,27 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
     final embedCodeSnippet = '''
 <!-- NOVASUITE EMBEDDABLE CHECKOUT FORM FOR $formTitle -->
-<div id="novasuite-form-container" style="max-width: 540px; margin: 0 auto; padding: 24px; background: ${_cardBgController.text}; border-radius: ${_borderRadiusController.text}; font-family: sans-serif;">
+<div id="novasuite-form-container" style="max-width: 540px; margin: 0 auto; padding: 24px; background: ${_cardBgController.text}; border-radius: ${_borderRadiusController.text}; font-family: '$_fontFamily', sans-serif;">
   <h2 style="color: ${_headingColorController.text}; font-size: 20px; font-weight: bold; margin-bottom: 8px;">$formTitle</h2>
-  <p style="color: #64748b; font-size: 13px; margin-bottom: 20px;">${_descriptionController.text}</p>
+  <p style="color: ${_placeholderColorController.text}; font-size: 13px; margin-bottom: 20px;">${_descriptionController.text}</p>
   
   <form id="novasuite-checkout-form">
     <input type="hidden" name="company_id" value="c0000000-0000-0000-0000-000000000001" />
     <input type="hidden" name="redirect_url" value="$redirectUrl" />
 
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">FULL NAME *</label>
-      <input type="text" name="customer_name" required placeholder="Enter full name" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">FULL NAME *</label>
+      <input type="text" name="customer_name" required placeholder="Enter full name" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
     </div>
 
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">PHONE NUMBER (FOR DELIVERY RIDER) *</label>
-      <input type="tel" name="customer_phone" required placeholder="08012345678" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">PHONE NUMBER (FOR DELIVERY RIDER) *</label>
+      <input type="tel" name="customer_phone" required placeholder="08012345678" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
     </div>
 
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">DELIVERY STATE *</label>
-      <select name="delivery_state" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY STATE *</label>
+      <select name="delivery_state" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
         <option value="Lagos">Lagos</option>
         <option value="Abuja">Abuja (FCT)</option>
         <option value="Rivers">Port Harcourt (Rivers)</option>
@@ -907,8 +1074,8 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     </div>
 
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">DELIVERY ADDRESS *</label>
-      <textarea name="delivery_address" required rows="2" placeholder="House number, street name, landmark" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"></textarea>
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY ADDRESS *</label>
+      <textarea name="delivery_address" required rows="2" placeholder="House number, street name, landmark" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"></textarea>
     </div>
 
     <button type="submit" id="novasuite-submit-btn" style="width: 100%; padding: 14px; background-color: $btnBg; color: $btnText; font-size: 15px; font-weight: bold; border: none; border-radius: ${_borderRadiusController.text}; cursor: pointer;">
@@ -1073,6 +1240,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
+  // ===========================================================================
+  // UNRESTRICTED FULL-SPECTRUM RGB & SWATCH COLOR PICKER MODAL DIALOG
+  // ===========================================================================
   void _showColorPickerDialog(
     BuildContext context, {
     required TextEditingController controller,
@@ -1080,6 +1250,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     required String defaultHex,
   }) {
     Color selectedColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
+    double rVal = selectedColor.r * 255.0;
+    double gVal = selectedColor.g * 255.0;
+    double bVal = selectedColor.b * 255.0;
 
     final List<Map<String, dynamic>> paletteSwatches = [
       {'name': 'Emerald Green', 'hex': '#10B981', 'color': const Color(0xFF10B981)},
@@ -1092,94 +1265,190 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       {'name': 'Deep Dark', 'hex': '#09140E', 'color': const Color(0xFF09140E)},
       {'name': 'Pure White', 'hex': '#FFFFFF', 'color': const Color(0xFFFFFFFF)},
       {'name': 'Soft Card Gray', 'hex': '#FAFAFC', 'color': const Color(0xFFFAFAFC)},
+      {'name': 'Cyan Glow', 'hex': '#06B6D4', 'color': const Color(0xFF06B6D4)},
+      {'name': 'Amber Gold', 'hex': '#F59E0B', 'color': const Color(0xFFF59E0B)},
+      {'name': 'Rose Pink', 'hex': '#F43F5E', 'color': const Color(0xFFF43F5E)},
+      {'name': 'Teal Dark', 'hex': '#14B8A6', 'color': const Color(0xFF14B8A6)},
+      {'name': 'Indigo Luxury', 'hex': '#6366F1', 'color': const Color(0xFF6366F1)},
     ];
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
+          void updateColorFromSliders() {
+            selectedColor = Color.fromRGBO(rVal.round(), gVal.round(), bVal.round(), 1.0);
+            final hex = '#${rVal.round().toRadixString(16).padLeft(2, '0')}${gVal.round().toRadixString(16).padLeft(2, '0')}${bVal.round().toRadixString(16).padLeft(2, '0')}';
+            controller.text = hex;
+          }
+
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
                 const Icon(Icons.color_lens_rounded, color: Color(0xFF10B981), size: 22),
                 const SizedBox(width: 8),
-                Text('Color Picker: $title', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text('Unrestricted Color Picker: $title', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
             content: SizedBox(
-              width: 360,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: selectedColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-                    ),
-                    alignment: Alignment.center,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(6)),
-                      child: Text(
-                        '${controller.text.toUpperCase()} | RGB(${selectedColor.r.toInt()}, ${selectedColor.g.toInt()}, ${selectedColor.b.toInt()})',
-                        style: GoogleFonts.robotoMono(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+              width: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Active Color Live Preview Box
+                    Container(
+                      width: double.infinity,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: selectedColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        boxShadow: [
+                          BoxShadow(color: selectedColor.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3)),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(6)),
+                        child: Text(
+                          '${controller.text.toUpperCase()} | RGB(${rVal.round()}, ${gVal.round()}, ${bVal.round()})',
+                          style: GoogleFonts.robotoMono(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, crossAxisSpacing: 8, mainAxisSpacing: 8),
-                    itemCount: paletteSwatches.length,
-                    itemBuilder: (context, idx) {
-                      final item = paletteSwatches[idx];
-                      final swatchColor = item['color'] as Color;
-                      final hex = item['hex'] as String;
-                      final isSelected = controller.text.toLowerCase() == hex.toLowerCase();
+                    const SizedBox(height: 16),
 
-                      return GestureDetector(
-                        onTap: () {
-                          setModalState(() {
-                            selectedColor = swatchColor;
-                            controller.text = hex;
-                          });
-                        },
-                        child: Tooltip(
-                          message: item['name'] as String,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: swatchColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3), width: isSelected ? 3 : 1),
-                              boxShadow: isSelected ? [BoxShadow(color: swatchColor.withValues(alpha: 0.4), blurRadius: 6)] : null,
-                            ),
-                            child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                    // Unrestricted RGB Spectrum Sliders
+                    Text('FULL SPECTRUM RGB SLIDERS (16.7M COLORS)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 6),
+
+                    // Red Slider
+                    Row(
+                      children: [
+                        Text('R', style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.red)),
+                        Expanded(
+                          child: Slider(
+                            value: rVal,
+                            min: 0,
+                            max: 255,
+                            activeColor: Colors.red,
+                            onChanged: (val) {
+                              setModalState(() {
+                                rVal = val;
+                                updateColorFromSliders();
+                              });
+                            },
                           ),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text('CUSTOM HEX COLOR CODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
-                  const SizedBox(height: 4),
-                  TextField(
-                    controller: controller,
-                    onChanged: (val) {
-                      setModalState(() {
-                        selectedColor = _parseColorFromHex(val, defaultHex: defaultHex);
-                      });
-                    },
-                    decoration: const InputDecoration(hintText: '#10B981', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
-                  ),
-                ],
+                        Text('${rVal.round()}', style: GoogleFonts.robotoMono(fontSize: 11)),
+                      ],
+                    ),
+
+                    // Green Slider
+                    Row(
+                      children: [
+                        Text('G', style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.green)),
+                        Expanded(
+                          child: Slider(
+                            value: gVal,
+                            min: 0,
+                            max: 255,
+                            activeColor: Colors.green,
+                            onChanged: (val) {
+                              setModalState(() {
+                                gVal = val;
+                                updateColorFromSliders();
+                              });
+                            },
+                          ),
+                        ),
+                        Text('${gVal.round()}', style: GoogleFonts.robotoMono(fontSize: 11)),
+                      ],
+                    ),
+
+                    // Blue Slider
+                    Row(
+                      children: [
+                        Text('B', style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.blue)),
+                        Expanded(
+                          child: Slider(
+                            value: bVal,
+                            min: 0,
+                            max: 255,
+                            activeColor: Colors.blue,
+                            onChanged: (val) {
+                              setModalState(() {
+                                bVal = val;
+                                updateColorFromSliders();
+                              });
+                            },
+                          ),
+                        ),
+                        Text('${bVal.round()}', style: GoogleFonts.robotoMono(fontSize: 11)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 8),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, crossAxisSpacing: 8, mainAxisSpacing: 8),
+                      itemCount: paletteSwatches.length,
+                      itemBuilder: (context, idx) {
+                        final item = paletteSwatches[idx];
+                        final swatchColor = item['color'] as Color;
+                        final hex = item['hex'] as String;
+                        final isSelected = controller.text.toLowerCase() == hex.toLowerCase();
+
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              selectedColor = swatchColor;
+                              controller.text = hex;
+                              rVal = swatchColor.r * 255.0;
+                              gVal = swatchColor.g * 255.0;
+                              bVal = swatchColor.b * 255.0;
+                            });
+                          },
+                          child: Tooltip(
+                            message: item['name'] as String,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: swatchColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3), width: isSelected ? 3 : 1),
+                                boxShadow: isSelected ? [BoxShadow(color: swatchColor.withValues(alpha: 0.4), blurRadius: 6)] : null,
+                              ),
+                              child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text('CUSTOM HEX COLOR CODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: controller,
+                      onChanged: (val) {
+                        setModalState(() {
+                          selectedColor = _parseColorFromHex(val, defaultHex: defaultHex);
+                          rVal = selectedColor.r * 255.0;
+                          gVal = selectedColor.g * 255.0;
+                          bVal = selectedColor.b * 255.0;
+                        });
+                      },
+                      decoration: const InputDecoration(hintText: '#10B981', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [

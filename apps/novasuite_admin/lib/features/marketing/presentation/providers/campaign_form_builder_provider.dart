@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Provider managing state for Campaign Form Builder, Offer Packages (with Cross-Product Free Gift Addons), Linked Items, Product Catalog Search, Custom Questions, Marketing Broadcasts, Email/SMS Templates, and Supabase DB Sync.
+/// Provider managing state for Campaign Form Builder, Offer Packages (with Cross-Product Free Gift Addons), Linked Items, Product Catalog Search, Custom Questions, Marketing Broadcasts, Email/SMS Templates, Layout Styles, and Supabase DB Sync.
 class CampaignFormBuilderProvider extends ChangeNotifier {
   int _currentStep = 0;
   bool _isLoading = false;
@@ -365,6 +365,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     required String successMessage,
     required String submitButtonText,
     required String description,
+    Map<String, dynamic>? appearance,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -386,11 +387,17 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
         'offer_packages': _offerPackages,
         'linked_items': _linkedItems,
         'additional_questions': _additionalQuestions,
-        'appearance': {
+        'appearance': appearance ?? {
           'button_bg': '#568500',
           'button_text': '#ffffff',
           'page_bg': '#0f172a',
           'card_bg': '#fafafc',
+          'heading_color': '#0f172a',
+          'input_bg': '#ffffff',
+          'input_text': '#0f172a',
+          'placeholder_color': '#94a3b8',
+          'font_family': 'Inter',
+          'layout_style': 'High-Converting E-Commerce',
           'border_radius': '10px',
         },
       });
