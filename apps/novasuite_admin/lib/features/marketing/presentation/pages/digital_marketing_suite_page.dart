@@ -79,8 +79,11 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,6 +93,7 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
               ],
             ),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 OutlinedButton.icon(
                   onPressed: () => _showOnboardProductDialog(context, builderProvider),

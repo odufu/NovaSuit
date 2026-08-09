@@ -421,16 +421,30 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     // 2. Persist to Supabase products table asynchronously
     try {
       final client = Supabase.instance.client;
-      final newRecord = await client.from('products').insert({
-        'company_id': companyId,
-        'name': cleanName,
-        'sku': cleanSku,
-        'category': cleanCat,
-        'base_price': basePrice,
-        'stock_quantity': stockQuantity,
-        'description': description ?? 'Onboarded by Digital Marketer',
-        'is_active': true,
-      }).select().single();
+      Map<String, dynamic> newRecord;
+      try {
+        newRecord = await client.from('products').insert({
+          'company_id': companyId,
+          'name': cleanName,
+          'sku': cleanSku,
+          'category': cleanCat,
+          'base_price': basePrice,
+          'stock_quantity': stockQuantity,
+          'description': description ?? 'Onboarded by Digital Marketer',
+          'is_active': true,
+        }).select().single();
+      } catch (_) {
+        // Fallback without category column if schema cache lacks category
+        newRecord = await client.from('products').insert({
+          'company_id': companyId,
+          'name': cleanName,
+          'sku': cleanSku,
+          'base_price': basePrice,
+          'stock_quantity': stockQuantity,
+          'description': description ?? 'Onboarded by Digital Marketer',
+          'is_active': true,
+        }).select().single();
+      }
 
       if (newRecord['id'] != null) {
         final dbId = newRecord['id'].toString();
@@ -454,13 +468,21 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   /// 🛢️ Fetch Pre-Onboarded Products from Supabase `products` Table
   Future<void> fetchAvailableProductsFromSupabase() async {
     try {
-      final response = await Supabase.instance.client
-          .from('products')
-          .select('id, name, sku, category, base_price, stock_quantity')
-          .eq('is_active', true);
+      dynamic response;
+      try {
+        response = await Supabase.instance.client
+            .from('products')
+            .select('id, name, sku, category, base_price, stock_quantity')
+            .eq('is_active', true);
+      } catch (_) {
+        response = await Supabase.instance.client
+            .from('products')
+            .select('id, name, sku, base_price, stock_quantity')
+            .eq('is_active', true);
+      }
 
-      if (response.isNotEmpty) {
-        final fetchedProds = response.map((p) => {
+      if (response != null && (response as List).isNotEmpty) {
+        final fetchedProds = (response as List).map((p) => {
           'id': p['id'],
           'name': p['name'],
           'sku': p['sku'] ?? 'SKU-000',
