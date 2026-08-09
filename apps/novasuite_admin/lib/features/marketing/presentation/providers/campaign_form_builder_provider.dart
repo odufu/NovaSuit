@@ -11,7 +11,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   // Dynamic List of Lead Forms (Contains both Drafts & Published Forms)
-  final List<Map<String, dynamic>> _leadForms = [
+  List<Map<String, dynamic>> _leadForms = [
     {
       'id': 'form-001',
       'title': 'Grazer Tea Joel',
@@ -390,6 +390,33 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 🛢️ Fetch All Campaign Lead Forms from Supabase Database (`lead_forms` table)
+  Future<void> fetchLeadFormsFromSupabase() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('lead_forms')
+          .select()
+          .order('created_at', ascending: false);
+
+      if (response.isNotEmpty) {
+        _leadForms = response.map((item) => {
+          'id': item['id'],
+          'title': item['title'] ?? 'Untitled Form',
+          'code': 'CRMF-${item['id'].toString().substring(0, 5).toUpperCase()}',
+          'marketerEmail': item['digital_marketer_email'] ?? 'marketer@novasuite.com',
+          'productCategory': item['product_category'] ?? 'General',
+          'submissionsCount': 0,
+          'status': (item['status'] ?? 'Draft').toString().toLowerCase() == 'published' ? 'Published' : 'Draft',
+          'updatedAt': item['updated_at'] != null ? item['updated_at'].toString().split('T').first : 'Just now',
+          'redirectUrl': item['redirect_url'] ?? '',
+        }).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Supabase Lead Forms Fetch Exception (Using local state): $e');
+    }
+  }
+
   /// 🛢️ Fetch Pre-Onboarded Products from Supabase `products` Table
   Future<void> fetchAvailableProductsFromSupabase() async {
     try {
@@ -455,6 +482,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
         'offer_packages': _offerPackages,
         'linked_items': _linkedItems,
         'additional_questions': _additionalQuestions,
+        'status': status.toLowerCase(),
         'appearance': appearance ?? {
           'button_bg': '#568500',
           'button_text': '#ffffff',

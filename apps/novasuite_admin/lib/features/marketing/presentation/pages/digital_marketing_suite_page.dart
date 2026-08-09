@@ -85,6 +85,14 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CampaignFormBuilderProvider>().fetchLeadFormsFromSupabase();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final navProvider = context.watch<AppNavigationProvider>();
     final activeNavIndex = navProvider.marketingSubNavIndex;
