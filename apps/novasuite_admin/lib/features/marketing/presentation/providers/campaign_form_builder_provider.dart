@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Provider managing state for Campaign Form Builder, Offer Packages, Linked Items, Additional Questions, Broadcast Templates, and Supabase DB Sync.
+/// Provider managing state for Campaign Form Builder, Offer Packages, Linked Items, Product Catalog Search, Custom Questions, and Supabase DB Sync.
 class CampaignFormBuilderProvider extends ChangeNotifier {
   int _currentStep = 0;
   bool _isLoading = false;
@@ -9,6 +9,42 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   String _selectedProductCategory = 'Grazer Herbal Tea';
 
   bool get isLoading => _isLoading;
+
+  // Onboarded Available Products Catalog (Fetched from Supabase or Fallback Seed)
+  List<Map<String, dynamic>> _availableProducts = [
+    {
+      'id': 'p0000000-0000-0000-0000-000000000001',
+      'name': 'Grazer Herbal Tea',
+      'sku': 'GHT-001',
+      'category': 'Grazer Herbal Tea',
+      'price': 23500.0,
+      'stock': 500,
+    },
+    {
+      'id': 'p0000000-0000-0000-0000-000000000002',
+      'name': 'Vitality Detox Booster',
+      'sku': 'VDB-002',
+      'category': 'Vitality Booster',
+      'price': 35000.0,
+      'stock': 350,
+    },
+    {
+      'id': 'p0000000-0000-0000-0000-000000000003',
+      'name': 'SkinCare Glow Capsule',
+      'sku': 'SGC-003',
+      'category': 'SkinCare Glow',
+      'price': 18000.0,
+      'stock': 420,
+    },
+    {
+      'id': 'p0000000-0000-0000-0000-000000000004',
+      'name': 'Flat Belly Tea Cleanse',
+      'sku': 'FBT-004',
+      'category': 'Grazer Herbal Tea',
+      'price': 28000.0,
+      'stock': 300,
+    },
+  ];
 
   // Core Field Options (Visibility & Required toggles)
   final List<Map<String, dynamic>> _coreFields = [
@@ -63,11 +99,13 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     },
   ];
 
-  // Linked Items (Onboarded merchant products)
+  // Linked Items (Onboarded merchant products attached to the form)
   final List<Map<String, dynamic>> _linkedItems = [
     {
       'id': 'item-1',
+      'productId': 'p0000000-0000-0000-0000-000000000001',
       'name': 'Grazer Herbal Tea',
+      'sku': 'GHT-001',
       'type': 'Main',
       'qty': 1,
       'price': 23500.0,
@@ -86,7 +124,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     },
   ];
 
-  // Broadcast & Template Storage
+  // Broadcast Storage
   final List<Map<String, dynamic>> _broadcasts = [
     {
       'id': 'bcast-1',
@@ -123,6 +161,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   int get currentStep => _currentStep;
   String get quantityDisplayMode => _quantityDisplayMode;
   String get selectedProductCategory => _selectedProductCategory;
+  List<Map<String, dynamic>> get availableProducts => List.unmodifiable(_availableProducts);
   List<Map<String, dynamic>> get coreFields => List.unmodifiable(_coreFields);
   List<Map<String, dynamic>> get offerPackages => List.unmodifiable(_offerPackages);
   List<Map<String, dynamic>> get linkedItems => List.unmodifiable(_linkedItems);
@@ -161,7 +200,32 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   }
 
   // ===========================================================================
-  // OFFER PACKAGE METHODS (Preserves User Edits Across Rebuilds!)
+  // LINKED ITEMS (PRODUCT CATALOG ATTACHMENT & SEARCH)
+  // ===========================================================================
+  void addLinkedItem(Map<String, dynamic> item) {
+    _linkedItems.add(Map<String, dynamic>.from(item));
+    notifyListeners();
+  }
+
+  void removeLinkedItem(int index) {
+    if (index >= 0 && index < _linkedItems.length) {
+      _linkedItems.removeAt(index);
+      if (_linkedItems.isNotEmpty && !_linkedItems.any((i) => i['isDefault'] == true)) {
+        _linkedItems[0]['isDefault'] = true;
+      }
+      notifyListeners();
+    }
+  }
+
+  void setDefaultLinkedItem(int index) {
+    for (int i = 0; i < _linkedItems.length; i++) {
+      _linkedItems[i]['isDefault'] = (i == index);
+    }
+    notifyListeners();
+  }
+
+  // ===========================================================================
+  // OFFER PACKAGE METHODS
   // ===========================================================================
   void addOfferPackage(Map<String, dynamic> pkg) {
     _offerPackages.add(Map<String, dynamic>.from(pkg));
@@ -204,9 +268,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ===========================================================================
-  // ADDITIONAL QUESTIONS METHODS
-  // ===========================================================================
+  // Additional Questions Methods
   void addAdditionalQuestion(Map<String, dynamic> q) {
     _additionalQuestions.add(Map<String, dynamic>.from(q));
     notifyListeners();
@@ -240,6 +302,30 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   void addSmsTemplate(Map<String, dynamic> tpl) {
     _smsTemplates.add(tpl);
     notifyListeners();
+  }
+
+  /// 🛢️ Fetch Pre-Onboarded Products from Supabase `products` Table
+  Future<void> fetchAvailableProductsFromSupabase() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('products')
+          .select('id, name, sku, category, base_price, stock_quantity')
+          .eq('is_active', true);
+
+      if (response.isNotEmpty) {
+        _availableProducts = response.map((p) => {
+          'id': p['id'],
+          'name': p['name'],
+          'sku': p['sku'] ?? 'SKU-000',
+          'category': p['category'] ?? 'General',
+          'price': (p['base_price'] as num).toDouble(),
+          'stock': p['stock_quantity'] ?? 100,
+        }).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Supabase Product Search Sync Warning (Using local catalog): $e');
+    }
   }
 
   /// 🛢️ Save Campaign Lead Form to Supabase Database (`lead_forms` table)

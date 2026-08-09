@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages Table & Modals, Linked Items, Custom Questions, Appearance), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Searchable Product Picker for Linked Items, Custom Questions, Appearance), and Step 3: Upsells.
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -38,6 +38,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
 
   // Step 3: Upsell Controller
   final _upsellTitleController = TextEditingController(text: 'Add 1 Extra Bottle of Detox Tea for 50% Off!');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CampaignFormBuilderProvider>().fetchAvailableProductsFromSupabase();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +243,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Highlight Table & Modal Form for Offer Packages!)
+  // STEP 2: BUILDER (Offer Packages & Searchable Linked Product Catalog!)
   // ===========================================================================
   Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Column(
@@ -442,35 +450,69 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Linked Items (Screenshot 5 Table)
+                  // Linked Items (Searchable Pre-Onboarded Product Picker!)
                   _buildSectionCard(
                     'Linked items',
                     'Add items through the picker, set quantity, and review price/qty in one table.',
                     cardBg,
                     isDark,
                     action: ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('+ Add item'),
+                      onPressed: () => _showAddLinkedItemModalDialog(context, provider: provider),
+                      icon: const Icon(Icons.search_rounded, size: 16),
+                      label: const Text('+ Attach Product Item'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10)),
                     ),
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('ITEM')),
-                        DataColumn(label: Text('TYPE')),
-                        DataColumn(label: Text('QTY')),
-                        DataColumn(label: Text('PRICE')),
-                        DataColumn(label: Text('DEFAULT')),
-                        DataColumn(label: Text('ACTIONS')),
-                      ],
-                      rows: provider.linkedItems.map((item) => DataRow(cells: [
-                        DataCell(Text(item['name'], style: GoogleFonts.inter(fontWeight: FontWeight.bold))),
-                        DataCell(Text(item['type'])),
-                        DataCell(Text('${item['qty']}')),
-                        DataCell(Text('₦${item['price']}')),
-                        DataCell(Radio<bool>(value: true, groupValue: item['isDefault'] as bool, onChanged: (v) {})),
-                        DataCell(IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red), onPressed: () {})),
-                      ])).toList(),
-                    ),
+                    child: provider.linkedItems.isEmpty
+                        ? Container(
+                            padding: const EdgeInsets.all(24),
+                            alignment: Alignment.center,
+                            child: Text('No product items attached yet. Click "+ Attach Product Item" to search onboarded catalog.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
+                          )
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowColor: WidgetStateProperty.all(isDark ? const Color(0xFF09140E) : const Color(0xFFF1F5F9)),
+                              columns: const [
+                                DataColumn(label: Text('ITEM NAME')),
+                                DataColumn(label: Text('SKU')),
+                                DataColumn(label: Text('TYPE')),
+                                DataColumn(label: Text('QTY')),
+                                DataColumn(label: Text('PRICE (₦)')),
+                                DataColumn(label: Text('DEFAULT ITEM')),
+                                DataColumn(label: Text('ACTIONS')),
+                              ],
+                              rows: provider.linkedItems.asMap().entries.map((entry) {
+                                final idx = entry.key;
+                                final item = entry.value;
+                                final isDefault = item['isDefault'] == true;
+
+                                return DataRow(
+                                  color: isDefault ? WidgetStateProperty.all(const Color(0xFF3B82F6).withValues(alpha: 0.08)) : null,
+                                  cells: [
+                                    DataCell(Text(item['name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                                    DataCell(Text(item['sku'] ?? 'SKU-001', style: GoogleFonts.inter(fontSize: 11, color: textMuted))),
+                                    DataCell(Chip(
+                                      label: Text(item['type'] ?? 'Main', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                                      backgroundColor: item['type'] == 'Main' ? Colors.blue : Colors.purple,
+                                    )),
+                                    DataCell(Text('${item['qty'] ?? 1}', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
+                                    DataCell(Text('₦${(item['price'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
+                                    DataCell(Radio<bool>(
+                                      value: true,
+                                      groupValue: isDefault,
+                                      activeColor: const Color(0xFF3B82F6),
+                                      onChanged: (v) => provider.setDefaultLinkedItem(idx),
+                                    )),
+                                    DataCell(IconButton(
+                                      icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                                      tooltip: 'Remove Item',
+                                      onPressed: () => provider.removeLinkedItem(idx),
+                                    )),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 20),
 
@@ -512,7 +554,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ),
             const SizedBox(width: 20),
 
-            // Right Column: Appearance Customization Drawer (Screenshot 3 Right Column)
+            // Right Column: Appearance Customization Drawer
             Expanded(
               flex: 2,
               child: Container(
@@ -613,7 +655,162 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL (Interactive & Clean UX!)
+  // MODAL DIALOG: SEARCHABLE ONBOARDED PRODUCT PICKER (Linked Items)
+  // ===========================================================================
+  void _showAddLinkedItemModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
+    String searchQuery = '';
+    Map<String, dynamic>? selectedProduct = provider.availableProducts.isNotEmpty ? provider.availableProducts.first : null;
+    int selectedQty = 1;
+    String itemType = 'Main';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final filteredProducts = provider.availableProducts.where((p) {
+            final name = (p['name'] ?? '').toString().toLowerCase();
+            final sku = (p['sku'] ?? '').toString().toLowerCase();
+            final q = searchQuery.toLowerCase();
+            return name.contains(q) || sku.contains(q);
+          }).toList();
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.inventory_2_rounded, color: Color(0xFF3B82F6), size: 22),
+                const SizedBox(width: 8),
+                Text('Attach Onboarded Product Item', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            content: SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('SEARCH ONBOARDED PRODUCTS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      onChanged: (val) {
+                        setModalState(() => searchQuery = val);
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Type product name or SKU to search...',
+                        prefixIcon: Icon(Icons.search_rounded, size: 18),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    Text('SELECT PRODUCT ITEM *', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 160,
+                      decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(8)),
+                      child: filteredProducts.isEmpty
+                          ? const Center(child: Text('No products match search query.'))
+                          : ListView.builder(
+                              itemCount: filteredProducts.length,
+                              itemBuilder: (context, idx) {
+                                final p = filteredProducts[idx];
+                                final isSelected = selectedProduct?['id'] == p['id'];
+                                return ListTile(
+                                  dense: true,
+                                  selected: isSelected,
+                                  selectedTileColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                                  leading: Icon(isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked, color: isSelected ? const Color(0xFF3B82F6) : Colors.grey, size: 18),
+                                  title: Text(p['name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
+                                  subtitle: Text('SKU: ${p['sku']} | Category: ${p['category']}', style: const TextStyle(fontSize: 11)),
+                                  trailing: Text('₦${(p['price'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                  onTap: () {
+                                    setModalState(() => selectedProduct = p);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('ITEM TYPE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              DropdownButtonFormField<String>(
+                                initialValue: itemType,
+                                decoration: const InputDecoration(border: OutlineInputBorder()),
+                                items: const [
+                                  DropdownMenuItem(value: 'Main', child: Text('Main Product')),
+                                  DropdownMenuItem(value: 'Addon', child: Text('Addon / Upsell')),
+                                ],
+                                onChanged: (v) {
+                                  if (v != null) setModalState(() => itemType = v);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('BASE QUANTITY', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              DropdownButtonFormField<int>(
+                                initialValue: selectedQty,
+                                decoration: const InputDecoration(border: OutlineInputBorder()),
+                                items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q unit(s)'))).toList(),
+                                onChanged: (v) {
+                                  if (v != null) setModalState(() => selectedQty = v);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton.icon(
+                onPressed: selectedProduct == null
+                    ? null
+                    : () {
+                        provider.addLinkedItem({
+                          'id': 'item-${DateTime.now().millisecondsSinceEpoch}',
+                          'productId': selectedProduct!['id'],
+                          'name': selectedProduct!['name'],
+                          'sku': selectedProduct!['sku'],
+                          'type': itemType,
+                          'qty': selectedQty,
+                          'price': selectedProduct!['price'],
+                          'isDefault': provider.linkedItems.isEmpty,
+                        });
+                        Navigator.pop(ctx);
+                      },
+                icon: const Icon(Icons.add_link_rounded, size: 16),
+                label: const Text('Attach Item to Form ✓'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL
   // ===========================================================================
   void _showOfferPackageModalDialog(
     BuildContext context, {
