@@ -261,6 +261,46 @@
 
         document.getElementById('novasuite-checkout-form').addEventListener('submit', async function (e) {
             e.preventDefault();
+
+            // Reset previous red validation highlights
+            const allFormInputs = this.querySelectorAll('input, select, textarea');
+            allFormInputs.forEach(function (el) {
+                el.style.border = '1px solid #cbd5e1';
+                el.style.boxShadow = '';
+            });
+
+            // Validate all required fields
+            const requiredInputs = Array.from(this.querySelectorAll('[required]'));
+            let firstInvalidInput = null;
+
+            for (let i = 0; i < requiredInputs.length; i++) {
+                const el = requiredInputs[i];
+                const val = el.value ? el.value.trim() : '';
+                if (!val || (el.type === 'checkbox' && !el.checked)) {
+                    if (!firstInvalidInput) firstInvalidInput = el;
+                    el.style.border = '2px solid #ef4444';
+                    el.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+
+                    const clearHighlight = function () {
+                        el.style.border = '1px solid #cbd5e1';
+                        el.style.boxShadow = '';
+                        el.removeEventListener('input', clearHighlight);
+                        el.removeEventListener('change', clearHighlight);
+                    };
+                    el.addEventListener('input', clearHighlight);
+                    el.addEventListener('change', clearHighlight);
+                }
+            }
+
+            // If missing required fields, smooth scroll back and focus cursor
+            if (firstInvalidInput) {
+                firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(function () {
+                    firstInvalidInput.focus();
+                }, 300);
+                return;
+            }
+
             const btn = document.getElementById('novasuite-submit-btn');
             btn.disabled = true;
             btn.innerText = 'Processing Order...';

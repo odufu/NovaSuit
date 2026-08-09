@@ -289,6 +289,13 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     }
   }
 
+  void updateCoreFieldLabel(int index, String newLabel) {
+    if (index >= 0 && index < _coreFields.length) {
+      _coreFields[index]['label'] = newLabel;
+      notifyListeners();
+    }
+  }
+
   // Linked Items Methods
   void addLinkedItem(Map<String, dynamic> item) {
     _linkedItems.add(Map<String, dynamic>.from(item));

@@ -981,51 +981,86 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
         const SizedBox(height: 20),
 
-        // Core Field Options Container
+        // Core Default Fields Container (9 Built-in Questions)
         _buildSectionCard(
-          'Core field options',
-          'Configure visibility, labels, and required state for built-in checkout fields.',
+          'Default Core Questions (Full Name, Email, Phone, Address Line 1 & 2, Country, State/Province, City, Postal Code)',
+          'Toggle any default question ON/OFF to show or hide it on your form (e.g. Country, Address Line 2, Email). Mark fields as MANDATORY or OPTIONAL.',
           cardBg,
           isDark,
-          child: Column(
-            children: provider.coreFields.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final field = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  children: [
-                    Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: [
+                DataColumn(
+                    label: Text('DEFAULT QUESTION',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: textMuted))),
+                DataColumn(
+                    label: Text('SHOW ON FORM?',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: textMuted))),
+                DataColumn(
+                    label: Text('MANDATORY?',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: textMuted))),
+              ],
+              rows: provider.coreFields.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final field = entry.value;
+                final isVis = field['visible'] == true;
+                final isReq = field['required'] == true;
+
+                return DataRow(cells: [
+                  DataCell(
+                    SizedBox(
+                      width: 220,
                       child: TextFormField(
-                        initialValue: field['label'],
-                        decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8)),
+                        initialValue: field['label'] ?? '',
+                        style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: textColor),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          suffixIcon: Tooltip(
+                            message: 'Field key: ${field['key']}',
+                            child: const Icon(Icons.info_outline, size: 14),
+                          ),
+                        ),
+                        onChanged: (val) =>
+                            provider.updateCoreFieldLabel(idx, val),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Row(
-                      children: [
-                        Switch(
-                          value: field['required'] as bool,
-                          onChanged: (val) =>
-                              provider.toggleCoreFieldRequired(idx),
-                        ),
-                        Text('Req', style: GoogleFonts.inter(fontSize: 11)),
-                        const SizedBox(width: 8),
-                        Switch(
-                          value: field['visible'] as bool,
-                          onChanged: (val) =>
-                              provider.toggleCoreFieldVisible(idx),
-                        ),
-                        Text('Vis', style: GoogleFonts.inter(fontSize: 11)),
-                      ],
+                  ),
+                  DataCell(
+                    Switch(
+                      value: isVis,
+                      activeColor: const Color(0xFF10B981),
+                      onChanged: (val) =>
+                          provider.toggleCoreFieldVisible(idx),
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
+                  ),
+                  DataCell(
+                    Switch(
+                      value: isReq,
+                      activeColor: const Color(0xFF10B981),
+                      onChanged: isVis
+                          ? (val) => provider.toggleCoreFieldRequired(idx)
+                          : null,
+                    ),
+                  ),
+                ]);
+              }).toList(),
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -2168,11 +2203,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  // EMBED CODE GENERATOR & THANK-YOU REDIRECT DIALOG
-  // Generates complete HTML/JS embed code with:
-  // - Address Location Cascade (Country -> State -> City/LGA)
-  // - Form Inputs FIRST -> Package Choices SECOND -> Submit Button LAST
-  // - NO Form Title at the top
   void _showEmbedCodeModalDialog(BuildContext context,
       {required CampaignFormBuilderProvider provider}) {
     final redirectUrl = _redirectUrlController.text.isNotEmpty
@@ -2181,6 +2211,21 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final btnBg = _buttonBgController.text;
     final btnText = _buttonTextController.text;
     final btnLabel = _submitButtonTextController.text;
+
+    final getCoreField = (String key) => provider.coreFields.firstWhere(
+          (f) => f['key'] == key,
+          orElse: () => {'key': key, 'label': key, 'visible': true, 'required': false},
+        );
+
+    final fName = getCoreField('full_name');
+    final fEmail = getCoreField('email');
+    final fPhone = getCoreField('phone');
+    final fAddr1 = getCoreField('address1');
+    final fAddr2 = getCoreField('address2');
+    final fCountry = getCoreField('country');
+    final fState = getCoreField('state');
+    final fCity = getCoreField('city');
+    final fPostal = getCoreField('postal_code');
 
     final embedCodeSnippet = '''
 <!-- NOVASUITE EMBEDDABLE CHECKOUT FORM -->
@@ -2191,53 +2236,83 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     <input type="hidden" name="company_id" value="c0000000-0000-0000-0000-000000000001" />
     <input type="hidden" name="redirect_url" value="$redirectUrl" />
 
-    <!-- SECTION 1: FORM INPUTS FIRST -->
+    <!-- SECTION 1: CORE DYNAMIC FORM INPUTS -->
+    ${fName['visible'] == true ? '''
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">FULL NAME *</label>
-      <input type="text" name="customer_name" required placeholder="Enter full name" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fName['label'] ?? 'FULL NAME').toString().toUpperCase()} ${fName['required'] == true ? '*' : ''}</label>
+      <input type="text" name="customer_name" ${fName['required'] == true ? 'required' : ''} placeholder="Enter full name" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
     </div>
+    ''' : ''}
 
+    ${fPhone['visible'] == true ? '''
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">PHONE NUMBER (FOR DELIVERY RIDER) *</label>
-      <input type="tel" name="customer_phone" required placeholder="08012345678" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fPhone['label'] ?? 'PHONE NUMBER').toString().toUpperCase()} ${fPhone['required'] == true ? '*' : ''}</label>
+      <input type="tel" name="customer_phone" ${fPhone['required'] == true ? 'required' : ''} placeholder="08012345678" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
     </div>
+    ''' : ''}
 
-    <div style="display: flex; gap: 10px; margin-bottom: 14px;">
-      <div style="flex: 1;">
-        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">COUNTRY *</label>
-        <select id="novasuite-country" name="country" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+    ${fEmail['visible'] == true ? '''
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fEmail['label'] ?? 'EMAIL ADDRESS').toString().toUpperCase()} ${fEmail['required'] == true ? '*' : ''}</label>
+      <input type="email" name="customer_email" ${fEmail['required'] == true ? 'required' : ''} placeholder="name@example.com" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+    </div>
+    ''' : ''}
+
+    ${fAddr1['visible'] == true ? '''
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fAddr1['label'] ?? 'ADDRESS LINE 1').toString().toUpperCase()} ${fAddr1['required'] == true ? '*' : ''}</label>
+      <input type="text" name="address1" ${fAddr1['required'] == true ? 'required' : ''} placeholder="Street address or house number" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+    </div>
+    ''' : ''}
+
+    ${fAddr2['visible'] == true ? '''
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fAddr2['label'] ?? 'ADDRESS LINE 2').toString().toUpperCase()} ${fAddr2['required'] == true ? '*' : ''}</label>
+      <input type="text" name="address2" ${fAddr2['required'] == true ? 'required' : ''} placeholder="Apartment, suite, unit (optional)" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+    </div>
+    ''' : ''}
+
+    <!-- LOCATION CASCADE: COUNTRY, STATE, CITY -->
+    <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+      ${fCountry['visible'] == true ? '''
+      <div style="flex: 1; min-width: 140px;">
+        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fCountry['label'] ?? 'COUNTRY').toString().toUpperCase()} ${fCountry['required'] == true ? '*' : ''}</label>
+        <select id="novasuite-country" name="country" ${fCountry['required'] == true ? 'required' : ''} style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
           <option value="Nigeria">Nigeria</option>
           <option value="Ghana">Ghana</option>
           <option value="Kenya">Kenya</option>
         </select>
       </div>
+      ''' : ''}
 
-      <div style="flex: 1;">
-        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY STATE *</label>
-        <select id="novasuite-state" name="delivery_state" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+      ${fState['visible'] == true ? '''
+      <div style="flex: 1; min-width: 140px;">
+        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fState['label'] ?? 'STATE / PROVINCE').toString().toUpperCase()} ${fState['required'] == true ? '*' : ''}</label>
+        <select id="novasuite-state" name="delivery_state" ${fState['required'] == true ? 'required' : ''} style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
           <option value="Lagos">Lagos</option>
+          <option value="Benue">Benue</option>
           <option value="Abuja (FCT)">Abuja (FCT)</option>
-          <option value="Rivers (Port Harcourt)">Rivers (Port Harcourt)</option>
-          <option value="Oyo (Ibadan)">Oyo (Ibadan)</option>
-          <option value="Kano">Kano</option>
         </select>
       </div>
+      ''' : ''}
+
+      ${fCity['visible'] == true ? '''
+      <div style="flex: 1; min-width: 140px;">
+        <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fCity['label'] ?? 'CITY / TOWN').toString().toUpperCase()} ${fCity['required'] == true ? '*' : ''}</label>
+        <select id="novasuite-city" name="delivery_city" ${fCity['required'] == true ? 'required' : ''} style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+          <option value="Ikeja">Ikeja</option>
+          <option value="Otukpo">Otukpo</option>
+        </select>
+      </div>
+      ''' : ''}
     </div>
 
+    ${fPostal['visible'] == true ? '''
     <div style="margin-bottom: 14px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">CITY / LGA *</label>
-      <select id="novasuite-city" name="delivery_city" required style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
-        <option value="Ikeja">Ikeja</option>
-        <option value="Victoria Island / Eti-Osa">Victoria Island / Eti-Osa</option>
-        <option value="Lekki / Ajah">Lekki / Ajah</option>
-        <option value="Surulere">Surulere</option>
-      </select>
+      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">${(fPostal['label'] ?? 'POSTAL CODE').toString().toUpperCase()} ${fPostal['required'] == true ? '*' : ''}</label>
+      <input type="text" name="postal_code" ${fPostal['required'] == true ? 'required' : ''} placeholder="Postal / ZIP code" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
     </div>
-
-    <div style="margin-bottom: 16px;">
-      <label style="display: block; font-size: 11px; font-weight: bold; color: ${_placeholderColorController.text}; margin-bottom: 4px;">DELIVERY ADDRESS *</label>
-      <textarea name="delivery_address" required rows="2" placeholder="House number, street name, landmark" style="width: 100%; padding: 10px; background: ${_inputBgController.text}; color: ${_inputTextColorController.text}; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"></textarea>
-    </div>
+    ''' : ''}
 
     <!-- SECTION 2: OFFER PACKAGES UNDER FORM INPUTS -->
     <div style="margin-bottom: 20px;">
@@ -2250,11 +2325,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       <div style="padding: 12px; background: ${_inputBgController.text}; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
         <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
           <input type="radio" name="offer_package_id" value="pkg-2" /> 2 Grazer Detox Tea — ₦37,000 (Save ₦10,000)
-        </label>
-      </div>
-      <div style="padding: 12px; background: ${_inputBgController.text}; border: 1px solid #cbd5e1; border-radius: 8px;">
-        <label style="font-weight: bold; font-size: 13px; color: ${_inputTextColorController.text};">
-          <input type="radio" name="offer_package_id" value="pkg-5" /> Buy 5 Grazer Tea + 1 Respira Detox Free 🎁 — ₦85,000
         </label>
       </div>
     </div>
@@ -2277,73 +2347,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
       "Rivers (Port Harcourt)": ["Port Harcourt City", "Obio-Akpor", "Eleme", "Ikwerre", "Bonny Island", "Oyigbo", "Degema"],
       "Oyo (Ibadan)": ["Ibadan North", "Ibadan Southwest", "Ibadan Southeast", "Ibadan Northwest", "Oyo East", "Ogbomoso"],
       "Kano": ["Kano Municipal", "Fagge", "Dala", "Gwale", "Tarauni", "Nassarawa"],
-      "Benue": ["Makurdi", "Otukpo", "Gboko", "Ogobia", "Ugboju", "Oju", "Katsina-Ala", "Vandeikya", "Okpoga (Okpokwu)", "Adoka", "Utonkon (Ado)", "Obagaji (Agatu)", "Gwer East (Aliade)", "Gwer West (Naka)", "Ukum (Sankera)", "Buruku", "Tarka (Wannune)", "Ushongo"],
-      "Kaduna": ["Kaduna North", "Kaduna South", "Zaria", "Kafanchan (Jema'a)", "Chikun", "Igabi", "Sabon Gari", "Saminaka (Lere)", "Kachia", "Giwa"],
-      "Edo": ["Benin City (Oredo)", "Ikpoba-Okha", "Egor", "Uromi (Esan Northeast)", "Ekpoma (Esan West)", "Auchi (Etsako West)", "Okada (Ovia Northeast)", "Abudu (Orhionmwon)"],
-      "Anambra": ["Awka South", "Awka North", "Onitsha North", "Onitsha South", "Nnewi North", "Nnewi South", "Ekwulobia (Aguata)", "Ihiala", "Ogbaru", "Otuocha (Anambra East)"],
-      "Ogun": ["Abeokuta South", "Abeokuta North", "Ifo", "Ota / Ado-Odo", "Ijebu Ode", "Sagamu", "Ilaro (Yewa South)", "Mowe / Ibafo", "Ijebu Igbo (Ijebu North)"],
-      "Osun": ["Osogbo", "Ede North", "Ede South", "Ife Central (Ile-Ife)", "Ife East", "Ilesa East", "Ilesa West", "Ikirun (Ifelodun)", "Iwo", "Ejigbo"],
-      "Ondo": ["Akure South", "Akure North", "Ondo West (Ondo Town)", "Ondo East", "Owo", "Ikare (Akoko Northwest)", "Okitipupa", "Igbokoda (Ilaje)"],
-      "Enugu": ["Enugu North", "Enugu South", "Enugu East", "Nsukka", "Udi", "Oji River", "Awgu", "Nkanu West"],
-      "Delta": ["Warri South", "Warri North", "Warri Southwest", "Asaba / Oshimili South", "Uvwie / Effurun", "Ughelli North", "Ughelli South", "Sapele", "Agbor (Ika South)", "Oghara (Ethiope West)"],
-      "Imo": ["Owerri Municipal", "Owerri North", "Owerri West", "Orlu", "Okigwe", "Mbaise (Aboh/Ahiazu)", "Oguta", "Mbaitoli"],
-      "Kwara": ["Ilorin West", "Ilorin East", "Ilorin South", "Offa", "Omu-Aran (Irepodun)", "Lafiagi (Edu)", "Kaiama"],
-      "Kogi": ["Lokoja", "Okene", "Kabba (Kabba/Bunu)", "Idah", "Anyigba (Dekina)", "Ajaokuta", "Koton Karfe (Kogi LGA)"],
-      "Nasarawa": ["Lafia", "Karu (Mararaba / Nyanya axis)", "Keffi", "Akwanga", "Nasarawa Town", "Toto"],
-      "Niger": ["Minna (Chanchaga)", "Bida", "Suleja", "Kontagora", "Lapai", "Mokwa"],
-      "Abia": ["Aba North", "Aba South", "Umuahia North", "Umuahia South", "Ohafia", "Arochukwu", "Osisioma"],
-      "Cross River": ["Calabar Municipal", "Calabar South", "Ikom", "Ogoja", "Ugep (Yakurr)", "Obudu", "Akamkpa"],
-      "Akwa Ibom": ["Uyo", "Eket", "Ikot Ekpene", "Oron", "Ibeno", "Abak", "Etinan"],
-      "Plateau": ["Jos North", "Jos South", "Jos East", "Bukuru", "Pankshin", "Shendam", "Mangu", "Langtang North"],
-      "Ekiti": ["Ado-Ekiti", "Ikere-Ekiti", "Ijero-Ekiti", "Ikole-Ekiti", "Oye-Ekiti"],
-      "Ebonyi": ["Abakaliki", "Afikpo North", "Afikpo South", "Onueke (Ezza South)", "Ishiagu (Ivo)"],
-      "Bayelsa": ["Yenagoa", "Sagbama", "Brass", "Ogbia", "Ekeremor", "Southern Ijaw"],
-      "Bauchi": ["Bauchi Central", "Azare (Katagum)", "Misau", "Jama'are", "Toro"],
-      "Borno": ["Maiduguri Municipal", "Jere", "Biu", "Bama"],
-      "Adamawa": ["Yola North", "Yola South", "Jimeta", "Mubi North", "Mubi South", "Numan"],
-      "Gombe": ["Gombe Town", "Dukku", "Kaltungo", "Yamaltu/Deba"],
-      "Taraba": ["Jalingo", "Wukari", "Bali", "Sardauna (Gembu)", "Takum"],
-      "Yobe": ["Damaturu", "Potiskum", "Gashua (Bade)", "Nguru"],
-      "Jigawa": ["Dutse", "Hadejia", "Birnin Kudu", "Gumel", "Kazaure"],
-      "Katsina": ["Katsina Town", "Daura", "Funtua", "Malumfashi", "Kankia"],
-      "Kebbi": ["Birnin Kebbi", "Argungu", "Yauri", "Zuru"],
-      "Sokoto": ["Sokoto North", "Sokoto South", "Wamako", "Tambuwal", "Goronyo"],
-      "Zamfara": ["Gusau", "Kaura Namoda", "Talata Mafara", "Tsafe"]
-    },
-    "Ghana": {
-      "Greater Accra": ["Accra Central", "Tema", "East Legon", "Madina", "Spintex"],
-      "Ashanti (Kumasi)": ["Kumasi Central", "Adum", "Bantama", "Asokwa"],
-      "Western (Takoradi)": ["Sekondi", "Takoradi Central", "Tarkwa"],
-      "Northern (Tamale)": ["Tamale Central", "Sagnarigu"]
-    },
-    "Kenya": {
-      "Nairobi": ["Nairobi Central", "Westlands", "Kilimani", "Karen", "Kasarani"],
-      "Mombasa": ["Mombasa Island", "Nyali", "Bamburi", "Likoni"],
-      "Kisumu": ["Kisumu Central", "Milimani"],
-      "Nakuru": ["Nakuru Town", "Naivasha"]
-    },
-    "South Africa": {
-      "Gauteng (Johannesburg)": ["Sandton", "Rosebank", "Soweto", "Midrand", "Pretoria"],
-      "Western Cape (Cape Town)": ["Cape Town CBD", "Stellenbosch", "Bellville", "Camps Bay"],
-      "KwaZulu-Natal (Durban)": ["Durban Central", "Umhlanga", "Pinetown"]
-    },
-    "United Kingdom": {
-      "England (London)": ["Central London", "Westminster", "Camden", "Greenwich", "Croydon"],
-      "Scotland (Edinburgh)": ["City Centre", "Leith", "Morningside"],
-      "Wales (Cardiff)": ["Cardiff Central", "Cardiff Bay"],
-      "Northern Ireland": ["Belfast", "Derry"]
-    },
-    "United States": {
-      "California": ["Los Angeles", "San Francisco", "San Diego", "San Jose"],
-      "Texas": ["Houston", "Dallas", "Austin", "San Antonio"],
-      "New York": ["New York City", "Brooklyn", "Queens", "Buffalo"],
-      "Florida": ["Miami", "Orlando", "Tampa", "Jacksonville"],
-      "Georgia": ["Atlanta", "Savannah", "Augusta"]
-    },
-    "Canada": {
-      "Ontario (Toronto)": ["Toronto Downtown", "Mississauga", "Brampton", "Ottawa"],
-      "British Columbia (Vancouver)": ["Vancouver CBD", "Burnaby", "Richmond"],
-      "Quebec (Montreal)": ["Montreal Downtown", "Laval", "Gatineau"]
+      "Benue": ["Makurdi", "Otukpo", "Gboko", "Ogobia", "Ugboju", "Oju", "Katsina-Ala", "Vandeikya", "Okpoga (Okpokwu)", "Adoka", "Utonkon (Ado)", "Obagaji (Agatu)", "Gwer East (Aliade)", "Gwer West (Naka)", "Ukum (Sankera)", "Buruku", "Tarka (Wannune)", "Ushongo"]
     }
   };
 
@@ -2351,33 +2355,18 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   const stateSel = document.getElementById('novasuite-state');
   const citySel = document.getElementById('novasuite-city');
 
-  // HYBRID LOCATION API ENGINE (API-First + Instant Local Fallback)
-  async function fetchLiveStates(country) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 800);
-      const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ country: country }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (data && data.data && data.data.states && data.data.states.length > 0) {
-        return data.data.states.map(s => s.name);
-      }
-    } catch (e) {
-      // Network/AdBlocker fallback to preloaded local dictionary
-    }
-    const fallbackObj = locationCascadeData[country] || locationCascadeData['Nigeria'];
-    return Object.keys(fallbackObj);
-  }
-
   async function populateStates() {
-    const selectedCountry = countrySel.value;
+    if (!stateSel) return;
+    const selectedCountry = countrySel ? countrySel.value : 'Nigeria';
     stateSel.disabled = true;
-    const states = await fetchLiveStates(selectedCountry);
+    let states = [];
+    if (window.NigerianLocations && typeof window.NigerianLocations.getStates === 'function') {
+      states = window.NigerianLocations.getStates(selectedCountry);
+    }
+    if (!states || states.length === 0) {
+      const fallbackObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
+      states = Object.keys(fallbackObj);
+    }
     stateSel.disabled = false;
     stateSel.innerHTML = '';
     states.forEach(function(state) {
@@ -2390,10 +2379,17 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   function populateCities() {
-    const selectedCountry = countrySel.value;
+    if (!citySel || !stateSel) return;
+    const selectedCountry = countrySel ? countrySel.value : 'Nigeria';
     const selectedState = stateSel.value;
-    const statesObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
-    const citiesArr = statesObj[selectedState] || ["Central District", "Metropolitan Area", "Main City Zone"];
+    let citiesArr = [];
+    if (window.NigerianLocations && typeof window.NigerianLocations.getCitiesLgas === 'function') {
+      citiesArr = window.NigerianLocations.getCitiesLgas(selectedState);
+    }
+    if (!citiesArr || citiesArr.length === 0) {
+      const statesObj = locationCascadeData[selectedCountry] || locationCascadeData['Nigeria'];
+      citiesArr = statesObj[selectedState] || ["Central District", "Metropolitan Area", "Main City Zone"];
+    }
     citySel.innerHTML = '';
     citiesArr.forEach(function(city) {
       const opt = document.createElement('option');
@@ -2403,21 +2399,59 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     });
   }
 
-  if (countrySel && stateSel && citySel) {
-    countrySel.addEventListener('change', populateStates);
+  if (stateSel) {
+    if (countrySel) countrySel.addEventListener('change', populateStates);
     stateSel.addEventListener('change', populateCities);
     populateStates();
   }
 
   document.getElementById('novasuite-checkout-form').addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    // Reset previous red validation highlights
+    const allFormInputs = this.querySelectorAll('input, select, textarea');
+    allFormInputs.forEach(function(el) {
+      el.style.border = '1px solid #cbd5e1';
+      el.style.boxShadow = '';
+    });
+
+    // Validate all required fields
+    const requiredInputs = Array.from(this.querySelectorAll('[required]'));
+    let firstInvalidInput = null;
+
+    for (let i = 0; i < requiredInputs.length; i++) {
+      const el = requiredInputs[i];
+      const val = el.value ? el.value.trim() : '';
+      if (!val || (el.type === 'checkbox' && !el.checked)) {
+        if (!firstInvalidInput) firstInvalidInput = el;
+        el.style.border = '2px solid #ef4444';
+        el.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+
+        const clearHighlight = function() {
+          el.style.border = '1px solid #cbd5e1';
+          el.style.boxShadow = '';
+          el.removeEventListener('input', clearHighlight);
+          el.removeEventListener('change', clearHighlight);
+        };
+        el.addEventListener('input', clearHighlight);
+        el.addEventListener('change', clearHighlight);
+      }
+    }
+
+    // If missing required fields, smooth scroll back and focus cursor
+    if (firstInvalidInput) {
+      firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function() {
+        firstInvalidInput.focus();
+      }, 300);
+      return;
+    }
+
     const btn = document.getElementById('novasuite-submit-btn');
     btn.disabled = true;
     btn.innerText = 'Processing Order...';
 
     const formData = new FormData(this);
-    const payload = Object.fromEntries(formData.entries());
-
     try {
       const response = await fetch('https://eywkyijghfzhzfgffmsr.supabase.co/functions/v1/submit-order', {
         method: 'POST',
@@ -2425,14 +2459,12 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         body: JSON.stringify(payload)
       });
       const resData = await response.json();
-      if (response.ok && resData.redirect_url) {
-        window.location.href = resData.redirect_url;
+      if (resData && resData.redirectUrl) {
+        window.location.href = resData.redirectUrl;
       } else {
-        alert('Thank you! Your order has been placed successfully.');
         window.location.href = "$redirectUrl";
       }
     } catch (err) {
-      alert('Order placed successfully. Redirecting...');
       window.location.href = "$redirectUrl";
     }
   });
