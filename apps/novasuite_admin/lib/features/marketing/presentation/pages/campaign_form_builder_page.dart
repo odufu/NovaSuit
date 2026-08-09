@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages with Cross-Product Free Gifts, Searchable Product Picker, Custom Questions, Appearance), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, Interactive Color Pickers, Custom Questions, Appearance), and Step 3: Upsells.
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -243,7 +243,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Offer Packages & Cross-Product Free Gift Addons!)
+  // STEP 2: BUILDER (Offer Packages, Linked Items, Color Pickers & Appearance)
   // ===========================================================================
   Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Column(
@@ -564,7 +564,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ),
             const SizedBox(width: 20),
 
-            // Right Column: Appearance Customization Drawer
+            // Right Column: Appearance Customization Drawer (Interactive Color Pickers!)
             Expanded(
               flex: 2,
               child: Container(
@@ -576,15 +576,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     Text('Appearance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                     Text('Customize form colors, typography, and input shape.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
                     const SizedBox(height: 16),
-                    _buildInputGroup('BUTTON BACKGROUND', _buttonBgController, '#568500'),
+                    _buildColorPickerGroup('BUTTON BACKGROUND', _buttonBgController, defaultHex: '#568500'),
                     const SizedBox(height: 12),
-                    _buildInputGroup('BUTTON TEXT COLOR', _buttonTextController, '#ffffff'),
+                    _buildColorPickerGroup('BUTTON TEXT COLOR', _buttonTextController, defaultHex: '#ffffff'),
                     const SizedBox(height: 12),
-                    _buildInputGroup('PAGE BACKGROUND', _pageBgController, '#0f172a'),
+                    _buildColorPickerGroup('PAGE BACKGROUND', _pageBgController, defaultHex: '#0f172a'),
                     const SizedBox(height: 12),
-                    _buildInputGroup('CARD BACKGROUND', _cardBgController, '#fafafc'),
+                    _buildColorPickerGroup('CARD BACKGROUND', _cardBgController, defaultHex: '#fafafc'),
                     const SizedBox(height: 12),
-                    _buildInputGroup('HEADING COLOR', _headingColorController, '#0f172a'),
+                    _buildColorPickerGroup('HEADING COLOR', _headingColorController, defaultHex: '#0f172a'),
                     const SizedBox(height: 12),
                     _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
                     const SizedBox(height: 20),
@@ -665,7 +665,208 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL (Cross-Product Free Gifts!)
+  // INTERACTIVE COLOR PICKER FIELD GROUP (With Swatch Avatar & Modal Dialog)
+  // ===========================================================================
+  Widget _buildColorPickerGroup(String label, TextEditingController controller, {required String defaultHex}) {
+    final activeColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            // Color Swatch Avatar Box (Clicking triggers modal)
+            GestureDetector(
+              onTap: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
+              child: Tooltip(
+                message: 'Click to open Color Picker Palette',
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: activeColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.4), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(color: activeColor.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Hex Input Field
+            Expanded(
+              child: TextField(
+                controller: controller,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  hintText: '#568500',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Palette Trigger Button
+            IconButton(
+              icon: const Icon(Icons.palette_rounded, size: 20, color: Color(0xFF10B981)),
+              tooltip: 'Choose Color Palette',
+              onPressed: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ===========================================================================
+  // INTERACTIVE COLOR PICKER MODAL DIALOG
+  // ===========================================================================
+  void _showColorPickerDialog(
+    BuildContext context, {
+    required TextEditingController controller,
+    required String title,
+    required String defaultHex,
+  }) {
+    Color selectedColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
+
+    final List<Map<String, dynamic>> paletteSwatches = [
+      {'name': 'Emerald Green', 'hex': '#10B981', 'color': const Color(0xFF10B981)},
+      {'name': 'Olive Brand', 'hex': '#568500', 'color': const Color(0xFF568500)},
+      {'name': 'Midnight Slate', 'hex': '#0F172A', 'color': const Color(0xFF0F172A)},
+      {'name': 'Royal Blue', 'hex': '#3B82F6', 'color': const Color(0xFF3B82F6)},
+      {'name': 'Vibrant Purple', 'hex': '#8B5CF6', 'color': const Color(0xFF8B5CF6)},
+      {'name': 'Sunset Orange', 'hex': '#F97316', 'color': const Color(0xFFF97316)},
+      {'name': 'Crimson Red', 'hex': '#EF4444', 'color': const Color(0xFFEF4444)},
+      {'name': 'Deep Dark', 'hex': '#09140E', 'color': const Color(0xFF09140E)},
+      {'name': 'Pure White', 'hex': '#FFFFFF', 'color': const Color(0xFFFFFFFF)},
+      {'name': 'Soft Card Gray', 'hex': '#FAFAFC', 'color': const Color(0xFFFAFAFC)},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.color_lens_rounded, color: Color(0xFF10B981), size: 22),
+                const SizedBox(width: 8),
+                Text('Color Picker: $title', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+            content: SizedBox(
+              width: 360,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Active Color Live Preview Box
+                  Container(
+                    width: double.infinity,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: selectedColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(6)),
+                      child: Text(
+                        '${controller.text.toUpperCase()} | RGB(${selectedColor.r.toInt()}, ${selectedColor.g.toInt()}, ${selectedColor.b.toInt()})',
+                        style: GoogleFonts.robotoMono(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, crossAxisSpacing: 8, mainAxisSpacing: 8),
+                    itemCount: paletteSwatches.length,
+                    itemBuilder: (context, idx) {
+                      final item = paletteSwatches[idx];
+                      final swatchColor = item['color'] as Color;
+                      final hex = item['hex'] as String;
+                      final isSelected = controller.text.toLowerCase() == hex.toLowerCase();
+
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() {
+                            selectedColor = swatchColor;
+                            controller.text = hex;
+                          });
+                        },
+                        child: Tooltip(
+                          message: item['name'] as String,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: swatchColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3), width: isSelected ? 3 : 1),
+                              boxShadow: isSelected ? [BoxShadow(color: swatchColor.withValues(alpha: 0.4), blurRadius: 6)] : null,
+                            ),
+                            child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text('CUSTOM HEX COLOR CODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: controller,
+                    onChanged: (val) {
+                      setModalState(() {
+                        selectedColor = _parseColorFromHex(val, defaultHex: defaultHex);
+                      });
+                    },
+                    decoration: const InputDecoration(hintText: '#10B981', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {});
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+                child: const Text('Apply Color ✓'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Color _parseColorFromHex(String hexString, {required String defaultHex}) {
+    try {
+      final cleanHex = hexString.replaceAll('#', '').trim();
+      if (cleanHex.length == 6) {
+        return Color(int.parse('FF$cleanHex', radix: 16));
+      }
+    } catch (_) {}
+    final fallback = defaultHex.replaceAll('#', '').trim();
+    return Color(int.parse('FF$fallback', radix: 16));
+  }
+
+  // ===========================================================================
+  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL
   // ===========================================================================
   void _showOfferPackageModalDialog(
     BuildContext context, {
