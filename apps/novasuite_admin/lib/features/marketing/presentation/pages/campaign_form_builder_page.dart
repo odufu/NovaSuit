@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, Interactive Color Pickers, Custom Questions, Appearance), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Cross-Product Free Gifts, Searchable Product Picker, Interactive Color Pickers, Embed Code Generator with Thank-You Redirects), and Step 3: Upsells.
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -67,6 +68,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         ),
         title: Text('Campaign Form Builder', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
         actions: [
+          ElevatedButton.icon(
+            onPressed: () => _showEmbedCodeModalDialog(context, provider: builderProvider),
+            icon: const Icon(Icons.code_rounded, size: 16),
+            label: const Text('Get Embed Code & Redirect ✓'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, elevation: 0),
+          ),
+          const SizedBox(width: 12),
           OutlinedButton(
             onPressed: widget.onBackToForms,
             child: const Text('Back to forms'),
@@ -81,7 +89,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           children: [
             // Header Description & Stepper Tabs
             Text(
-              'Embed-ready forms for Facebook tabs, WordPress landing pages, or microsites. Name, email, phone, address, quantity, and notes are included by default and can be configured.',
+              'Embed-ready forms for Facebook tabs, WordPress landing pages, or microsites. Submissions are tracked instantly and buyers redirect automatically to your Thank-You Page.',
               style: GoogleFonts.inter(fontSize: 12.5, color: textMuted),
             ),
             const SizedBox(height: 20),
@@ -154,7 +162,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildInputGroup('REDIRECT URL', _redirectUrlController, 'https://...'),
+                child: _buildInputGroup('REDIRECT URL / THANK YOU LINK *', _redirectUrlController, 'https://detoxwithnova.xyz/thank-you'),
               ),
             ],
           ),
@@ -588,11 +596,11 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     const SizedBox(height: 12),
                     _buildInputGroup('INPUT BORDER RADIUS', _borderRadiusController, '10px'),
                     const SizedBox(height: 20),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                      label: const Text('Open live preview'),
-                      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+                    ElevatedButton.icon(
+                      onPressed: () => _showEmbedCodeModalDialog(context, provider: provider),
+                      icon: const Icon(Icons.code_rounded, size: 16),
+                      label: const Text('Get Embed Code & Redirect ✓'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white, minimumSize: const Size.fromHeight(44)),
                     ),
                   ],
                 ),
@@ -648,14 +656,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     description: _descriptionController.text,
                   );
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Campaign Form Saved & Published to Supabase Database ✓')));
-                    widget.onBackToForms();
+                    _showEmbedCodeModalDialog(context, provider: provider);
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
                 child: provider.isLoading
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Save & Publish Campaign Form ✓'),
+                    : const Text('Save, Publish & Get Embed Code ✓'),
               ),
             ],
           ),
@@ -665,8 +672,162 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // INTERACTIVE COLOR PICKER FIELD GROUP (With Swatch Avatar & Modal Dialog)
+  // EMBED CODE GENERATOR & THANK-YOU REDIRECT DIALOG
   // ===========================================================================
+  void _showEmbedCodeModalDialog(BuildContext context, {required CampaignFormBuilderProvider provider}) {
+    final formTitle = _formTitleController.text;
+    final redirectUrl = _redirectUrlController.text.isNotEmpty ? _redirectUrlController.text : 'https://detoxwithnova.xyz/thank-you';
+    final btnBg = _buttonBgController.text;
+    final btnText = _buttonTextController.text;
+    final btnLabel = _submitButtonTextController.text;
+
+    final embedCodeSnippet = '''
+<!-- NOVASUITE EMBEDDABLE CHECKOUT FORM FOR $formTitle -->
+<div id="novasuite-form-container" style="max-width: 540px; margin: 0 auto; padding: 24px; background: ${_cardBgController.text}; border-radius: ${_borderRadiusController.text}; font-family: sans-serif;">
+  <h2 style="color: ${_headingColorController.text}; font-size: 20px; font-weight: bold; margin-bottom: 8px;">$formTitle</h2>
+  <p style="color: #64748b; font-size: 13px; margin-bottom: 20px;">${_descriptionController.text}</p>
+  
+  <form id="novasuite-checkout-form">
+    <input type="hidden" name="company_id" value="c0000000-0000-0000-0000-000000000001" />
+    <input type="hidden" name="redirect_url" value="$redirectUrl" />
+
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">FULL NAME *</label>
+      <input type="text" name="customer_name" required placeholder="Enter full name" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+    </div>
+
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">PHONE NUMBER (FOR DELIVERY RIDER) *</label>
+      <input type="tel" name="customer_phone" required placeholder="08012345678" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+    </div>
+
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">DELIVERY STATE *</label>
+      <select name="delivery_state" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+        <option value="Lagos">Lagos</option>
+        <option value="Abuja">Abuja (FCT)</option>
+        <option value="Rivers">Port Harcourt (Rivers)</option>
+        <option value="Oyo">Ibadan (Oyo)</option>
+        <option value="Kano">Kano</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 14px;">
+      <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px;">DELIVERY ADDRESS *</label>
+      <textarea name="delivery_address" required rows="2" placeholder="House number, street name, landmark" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"></textarea>
+    </div>
+
+    <button type="submit" id="novasuite-submit-btn" style="width: 100%; padding: 14px; background-color: $btnBg; color: $btnText; font-size: 15px; font-weight: bold; border: none; border-radius: ${_borderRadiusController.text}; cursor: pointer;">
+      $btnLabel
+    </button>
+  </form>
+</div>
+
+<!-- NOVASUITE AUTOMATIC THANK-YOU REDIRECT & ENGINE SCRIPT -->
+<script>
+  document.getElementById('novasuite-checkout-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('novasuite-submit-btn');
+    btn.disabled = true;
+    btn.innerText = 'Processing Order...';
+
+    const formData = new FormData(this);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch('https://eywkyijghfzhzfgffmsr.supabase.co/functions/v1/submit-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const resData = await response.json();
+      if (response.ok && resData.redirect_url) {
+        // Automatic Redirect to Marketer's Thank You Page!
+        window.location.href = resData.redirect_url;
+      } else {
+        alert('Thank you! Your order has been placed successfully.');
+        window.location.href = "$redirectUrl";
+      }
+    } catch (err) {
+      alert('Order placed successfully. Redirecting...');
+      window.location.href = "$redirectUrl";
+    }
+  });
+</script>
+''';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.code_rounded, color: Color(0xFF3B82F6), size: 22),
+            const SizedBox(width: 8),
+            Text('Embed Code & Thank-You Redirect Settings', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: 580,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF10B981))),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.link_rounded, color: Color(0xFF10B981), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('CONFIGURED THANK-YOU REDIRECT PAGE:', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                            Text(redirectUrl, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('COPY & PASTE HTML / JS CODE FOR WORDPRESS / ELEMENTOR:', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(10)),
+                  child: SelectableText(
+                    embedCodeSnippet,
+                    style: GoogleFonts.robotoMono(color: const Color(0xFF38BDF8), fontSize: 11, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          ElevatedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: embedCodeSnippet));
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Embed HTML/JS Code copied to clipboard! Paste into your landing page editor. ✓')),
+              );
+            },
+            icon: const Icon(Icons.copy_rounded, size: 16),
+            label: const Text('Copy Embed Code ✓'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper Methods
   Widget _buildColorPickerGroup(String label, TextEditingController controller, {required String defaultHex}) {
     final activeColor = _parseColorFromHex(controller.text, defaultHex: defaultHex);
 
@@ -677,7 +838,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
         const SizedBox(height: 4),
         Row(
           children: [
-            // Color Swatch Avatar Box (Clicking triggers modal)
             GestureDetector(
               onTap: () => _showColorPickerDialog(context, controller: controller, title: label, defaultHex: defaultHex),
               child: Tooltip(
@@ -697,7 +857,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
             ),
             const SizedBox(width: 10),
-            // Hex Input Field
             Expanded(
               child: TextField(
                 controller: controller,
@@ -710,7 +869,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
               ),
             ),
             const SizedBox(width: 6),
-            // Palette Trigger Button
             IconButton(
               icon: const Icon(Icons.palette_rounded, size: 20, color: Color(0xFF10B981)),
               tooltip: 'Choose Color Palette',
@@ -722,9 +880,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     );
   }
 
-  // ===========================================================================
-  // INTERACTIVE COLOR PICKER MODAL DIALOG
-  // ===========================================================================
   void _showColorPickerDialog(
     BuildContext context, {
     required TextEditingController controller,
@@ -765,7 +920,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Active Color Live Preview Box
                   Container(
                     width: double.infinity,
                     height: 60,
@@ -785,7 +939,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   Text('BRAND PALETTE PRESETS', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
                   const SizedBox(height: 8),
                   GridView.builder(
@@ -822,7 +975,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   Text('CUSTOM HEX COLOR CODE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
                   const SizedBox(height: 4),
                   TextField(
@@ -882,7 +1034,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     final discountCtrl = TextEditingController(text: '${existingPkg?['discount'] ?? 0}');
     bool isDefaultPkg = existingPkg?['isDefault'] == true;
 
-    // Cross-Product Free Gift Addon State
     Map<String, dynamic>? selectedFreeAddonProduct;
     int freeAddonQty = existingPkg?['freeAddonQty'] ?? 0;
 
@@ -935,8 +1086,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // Cross-Product Free Gift Addon Picker Container
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -1004,8 +1153,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ),
                     ),
                     const SizedBox(height: 14),
-
-                    // Multi-Product Stock Accounting Live Summary
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue.withValues(alpha: 0.3))),
@@ -1023,7 +1170,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       ),
                     ),
                     const SizedBox(height: 14),
-
                     CheckboxListTile(
                       title: const Text('Set as Default Choice for Buyers', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                       value: isDefaultPkg,

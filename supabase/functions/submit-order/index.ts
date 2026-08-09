@@ -1,7 +1,7 @@
 // ============================================================================
 // NOVASUITE SUPABASE EDGE FUNCTION: submit-order
-// High-Scale Webhook Ingestion, Form Submissions & Multi-Product Stock Accounting
-// Enforces Primary Item Stock (buy_qty + free_qty) & Cross-Product Free Gift Addon Stock (free_addon_qty)
+// High-Scale Webhook Ingestion, Form Submissions & Automatic Thank-You Redirect Processing
+// Enforces Stock Accounting, Form Attributions, and Redirect URL Tracking
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -35,6 +35,7 @@ interface OrderPayload {
   free_addon_qty?: number;
   quantity?: number;
   base_price?: number;
+  redirect_url?: string;
   pixel_id?: string;
   event_source_url?: string;
   utm_source?: string;
@@ -64,7 +65,20 @@ serve(async (req: Request) => {
       );
     }
 
-    // 1. Calculate Inventory Accounting Quantities
+    // 1. Resolve Thank-You Redirect URL from lead_forms table or payload
+    let targetRedirectUrl = payload.redirect_url || "https://detoxwithnova.xyz/thank-you";
+    if (payload.form_id) {
+      const { data: formData } = await supabaseClient
+        .from("lead_forms")
+        .select("redirect_url")
+        .eq("id", payload.form_id)
+        .single();
+      if (formData?.redirect_url) {
+        targetRedirectUrl = formData.redirect_url;
+      }
+    }
+
+    // 2. Calculate Inventory Accounting Quantities
     const buyQty = payload.buy_qty || payload.quantity || 1;
     const freeQty = payload.free_qty || 0;
     const primaryFulfilledQty = buyQty + freeQty;
@@ -80,7 +94,7 @@ serve(async (req: Request) => {
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
     const submissionCode = `CRM-SUB-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // 2. Insert Order Header Record
+    // 3. Insert Order Header Record
     const { data: newOrder, error: orderError } = await supabaseClient
       .from("orders")
       .insert({
@@ -108,7 +122,7 @@ serve(async (req: Request) => {
       console.error("Order Header Insertion Error:", orderError);
     }
 
-    // 3. Insert Multi-Product Line Items into public.order_items (Warehouse Packing List)
+    // 4. Insert Multi-Product Line Items into public.order_items (Warehouse Packing List)
     if (newOrder) {
       const orderItems = [
         {
@@ -139,7 +153,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // 4. Record Form Submission Record
+    // 5. Record Form Submission Record
     const { error: submissionError } = await supabaseClient
       .from("form_submissions")
       .insert({
@@ -165,6 +179,7 @@ serve(async (req: Request) => {
           ...(payload.additional_responses || {}),
           free_addon_product: freeAddonProductName,
           free_addon_qty: freeAddonQty,
+          redirect_url: targetRedirectUrl,
         },
       });
 
@@ -172,7 +187,7 @@ serve(async (req: Request) => {
       console.warn("Form Submission Record Warning:", submissionError);
     }
 
-    // 5. Atomic Round-Robin Lead Assignment Call
+    // 6. Atomic Round-Robin Lead Assignment Call
     if (newOrder) {
       await supabaseClient.rpc("assign_order_round_robin", {
         p_order_id: newOrder.id,
@@ -180,12 +195,18 @@ serve(async (req: Request) => {
       }).catch((err) => console.warn("Round Robin Assignment Warning:", err));
     }
 
+    // Build Final Thank-You Redirect URL with Conversion Attribution Query Params
+    const redirectUrlWithParams = targetRedirectUrl.includes("?")
+      ? `${targetRedirectUrl}&order_number=${orderNumber}&submission_code=${submissionCode}&amount=${totalAmount}`
+      : `${targetRedirectUrl}?order_number=${orderNumber}&submission_code=${submissionCode}&amount=${totalAmount}`;
+
     return new Response(
       JSON.stringify({
-        message: "Order successfully submitted with multi-product stock accounting.",
+        message: "Order successfully submitted with automatic thank-you page redirect.",
         order_id: newOrder?.id || null,
         order_number: orderNumber,
         submission_code: submissionCode,
+        redirect_url: redirectUrlWithParams,
         primary_stock_deducted: primaryFulfilledQty,
         free_addon_gift_stock_deducted: freeAddonQty,
         total_physical_units_deducted: totalPhysicalUnits,
