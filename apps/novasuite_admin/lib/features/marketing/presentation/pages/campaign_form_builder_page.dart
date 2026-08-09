@@ -602,12 +602,25 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             children: [
               OutlinedButton(onPressed: () => provider.setStep(1), child: const Text('Back to builder')),
               ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Campaign Form Saved & Generated Successfully!')));
-                  widget.onBackToForms();
+                onPressed: () async {
+                  await provider.saveLeadFormToSupabase(
+                    companyId: 'c0000000-0000-0000-0000-000000000001',
+                    title: _formTitleController.text,
+                    marketerEmail: _digitalMarketerController.text,
+                    redirectUrl: _redirectUrlController.text,
+                    successMessage: _successMessageController.text,
+                    submitButtonText: _submitButtonTextController.text,
+                    description: _descriptionController.text,
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Campaign Form Saved & Published to Supabase Database ✓')));
+                    widget.onBackToForms();
+                  }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
-                child: const Text('Save & Publish Campaign Form ✓'),
+                child: provider.isLoading
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Save & Publish Campaign Form ✓'),
               ),
             ],
           ),
