@@ -16,8 +16,8 @@
 
         <form id="novasuite-checkout-form">
             <input type="hidden" name="company_id" value="c0000000-0000-0000-0000-000000000001" />
-            <input type="hidden" name="form_id" value="f0000000-0000-0000-0000-000000000001" />
-            <input type="hidden" name="redirect_url" value="https://detoxwithnova.xyz/thank-you-grazer/" />
+            <input type="hidden" name="form_id" value="e1a16b40-0fa2-4e1e-8646-7fc6efdfbe9e" />
+            <input type="hidden" name="redirect_url" value="https://detoxwithnova.xyz/ura-clear-detox-tea" />
 
             <!-- SECTION 1: CORE DYNAMIC FORM INPUTS -->
             <div style="margin-bottom: 14px;">
@@ -104,17 +104,17 @@
                     style="display: block; font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">SELECT
                     YOUR OFFER PACKAGE *</label>
                 <div
-                    style="padding: 12px; background: #ffffff; border: 2px solid #10b981; border-radius: 8px; margin-bottom: 8px;">
+                    style="padding: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
                     <label
                         style="font-weight: bold; font-size: 13px; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <input type="radio" name="offer_package_id" value="pkg-1" checked /> 1 Grazer Herbal — ₦23,500
+                        <input type="radio" name="offer_package_id" value="pkg-1" /> 1 Alpha Man — ₦23,500
                     </label>
                 </div>
                 <div
                     style="padding: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
                     <label
                         style="font-weight: bold; font-size: 13px; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <input type="radio" name="offer_package_id" value="pkg-2" /> 2 Grazer Herbal — ₦37,000 (Save
+                        <input type="radio" name="offer_package_id" value="pkg-2" /> 2 Alpha Man — ₦37,000 (Save
                         ₦10,000)
                     </label>
                 </div>
@@ -122,24 +122,24 @@
                     style="padding: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
                     <label
                         style="font-weight: bold; font-size: 13px; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <input type="radio" name="offer_package_id" value="pkg-3" /> 3 Grazer Herbal — ₦47,000 (Save
+                        <input type="radio" name="offer_package_id" value="pkg-3" /> 3 Alpha Man — ₦47,000 (Save
                         ₦23,500)
                     </label>
                 </div>
                 <div
-                    style="padding: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
+                    style="padding: 12px; background: #ffffff; border: 2px solid #10b981; border-radius: 8px; margin-bottom: 8px;">
                     <label
                         style="font-weight: bold; font-size: 13px; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <input type="radio" name="offer_package_id" value="pkg-4" /> 4 Grazer Herbal + 1 Free — ₦70,000
-                        (Save ₦23,500)
+                        <input type="radio" name="offer_package_id" value="pkg-4" checked /> 4 Alpha Man + 1 Free —
+                        ₦70,000 (Save ₦23,500)
                     </label>
                 </div>
                 <div
                     style="padding: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px;">
                     <label
                         style="font-weight: bold; font-size: 13px; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <input type="radio" name="offer_package_id" value="pkg-1786294395221" /> 5 Grazer Herbal —
-                        ₦25,000
+                        <input type="radio" name="offer_package_id" value="pkg-5" /> 5 Alpha Man + 1 Respira Detox Free
+                        — ₦85,000 (Save ₦15,000) 🎁 Free 1x Respira Clear Detox
                     </label>
                 </div>
             </div>
@@ -147,7 +147,7 @@
             <!-- SECTION 3: SUBMIT BUTTON -->
             <button type="submit" id="novasuite-submit-btn"
                 style="width: 100%; padding: 14px; background-color: #568500; color: #ffffff; font-size: 15px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer;">
-                Buy Grazer
+                Get Yours Now
             </button>
         </form>
     </div>
@@ -335,8 +335,8 @@
             const payload = {
                 company_id: formData.get('company_id') || 'c0000000-0000-0000-0000-000000000001',
                 form_id: formData.get('form_id') || '',
-                product_id: formData.get('product_id') || 'p0000000-0000-0000-0000-000000000001',
-                redirect_url: formData.get('redirect_url') || 'https://detoxwithnova.xyz/thank-you-grazer/',
+                product_id: formData.get('product_id') || '90000000-0000-4000-8000-000000000001',
+                redirect_url: formData.get('redirect_url') || 'https://detoxwithnova.xyz/ura-clear-detox-tea',
                 customer_name: formData.get('customer_name') || '',
                 customer_phone: formData.get('customer_phone') || '',
                 customer_email: formData.get('customer_email') || '',
@@ -347,19 +347,16 @@
             };
 
             try {
-                const response = await fetch('https://eywkyijghfzhzfgffmsr.supabase.co/functions/v1/submit-order', {
+                const response = await fetch('https://oygtaeriljuelhshfvkv.supabase.co/functions/v1/submit-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const resData = await response.json();
-                if (resData && resData.redirectUrl) {
-                    window.location.href = resData.redirectUrl;
-                } else {
-                    window.location.href = "https://detoxwithnova.xyz/thank-you-grazer/";
-                }
+                const redirectTarget = resData?.redirect_url || resData?.redirectUrl || "https://detoxwithnova.xyz/ura-clear-detox-tea";
+                window.location.href = redirectTarget;
             } catch (err) {
-                window.location.href = "https://detoxwithnova.xyz/thank-you-grazer/";
+                window.location.href = "https://detoxwithnova.xyz/ura-clear-detox-tea";
             }
         });
     </script>

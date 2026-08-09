@@ -13,27 +13,30 @@ ON CONFLICT (id) DO UPDATE SET
   subdomain = EXCLUDED.subdomain,
   branding = EXCLUDED.branding;
 
+-- Drop restrictive legacy role check constraint to allow expanded role taxonomy
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check;
+
 -- Seed E-Commerce Company Users (NovaCare)
 INSERT INTO public.users (id, company_id, email, first_name, last_name, role)
 VALUES
-  ('u0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'superadmin@novacare.com', 'Alexander', 'Pierce', 'super_admin'),
-  ('u0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000001', 'hodsales@novacare.com', 'Grace', 'Danielle', 'hod'),
-  ('u0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001', 'supervisor@novacare.com', 'David', 'Adeleke', 'supervisor'),
-  ('u0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000001', 'salesrep@novacare.com', 'Blessing', 'Okoro', 'sales_call_rep'),
-  ('u0000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000001', 'marketer@novacare.com', 'Tunde', 'Ednut', 'digital_marketer'),
-  ('u0000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000001', 'finance@novacare.com', 'Chidinma', 'Eze', 'finance_manager')
-ON CONFLICT (id) DO UPDATE SET 
+  ('10000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'superadmin@novacare.com', 'Alexander', 'Pierce', 'super_admin'),
+  ('10000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000001', 'hodsales@novacare.com', 'Grace', 'Danielle', 'hod'),
+  ('10000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001', 'supervisor@novacare.com', 'David', 'Adeleke', 'supervisor'),
+  ('10000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000001', 'salesrep@novacare.com', 'Blessing', 'Okoro', 'sales_call_rep'),
+  ('10000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000001', 'marketer@novacare.com', 'Tunde', 'Ednut', 'digital_marketer'),
+  ('10000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000001', 'finance@novacare.com', 'Chidinma', 'Eze', 'finance_manager')
+ON CONFLICT (email) DO UPDATE SET 
   email = EXCLUDED.email,
   role = EXCLUDED.role;
 
 -- Seed Logistics Company Users (Nova Express)
 INSERT INTO public.users (id, company_id, email, first_name, last_name, role)
 VALUES
-  ('u0000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000002', 'admin@novaexpress.com', 'Victor', 'Oladipo', 'logistics_super_admin'),
-  ('u0000000-0000-0000-0000-000000000008', 'c0000000-0000-0000-0000-000000000002', 'cdcmanager@novaexpress.com', 'Emmanuel', 'Okafor', 'circuit_center_manager'),
-  ('u0000000-0000-0000-0000-000000000009', 'c0000000-0000-0000-0000-000000000002', 'warehouse@novaexpress.com', 'Samuel', 'Inyang', 'inventory_manager'),
-  ('u0000000-0000-0000-0000-000000000010', 'c0000000-0000-0000-0000-000000000002', 'dispatcher@novaexpress.com', 'Suleiman', 'Bello', 'logistics_call_rep'),
-  ('u0000000-0000-0000-0000-000000000011', 'c0000000-0000-0000-0000-000000000002', 'rider@novaexpress.com', 'Sunday', 'Bamidele', 'delivery_agent')
-ON CONFLICT (id) DO UPDATE SET 
+  ('10000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000002', 'admin@novaexpress.com', 'Victor', 'Oladipo', 'logistics_super_admin'),
+  ('10000000-0000-0000-0000-000000000008', 'c0000000-0000-0000-0000-000000000002', 'cdcmanager@novaexpress.com', 'Emmanuel', 'Okafor', 'circuit_center_manager'),
+  ('10000000-0000-0000-0000-000000000009', 'c0000000-0000-0000-0000-000000000002', 'warehouse@novaexpress.com', 'Samuel', 'Inyang', 'inventory_manager'),
+  ('10000000-0000-0000-0000-000000000010', 'c0000000-0000-0000-0000-000000000002', 'dispatcher@novaexpress.com', 'Suleiman', 'Bello', 'logistics_call_rep'),
+  ('10000000-0000-0000-0000-000000000011', 'c0000000-0000-0000-0000-000000000002', 'rider@novaexpress.com', 'Sunday', 'Bamidele', 'delivery_agent')
+ON CONFLICT (email) DO UPDATE SET 
   email = EXCLUDED.email,
   role = EXCLUDED.role;

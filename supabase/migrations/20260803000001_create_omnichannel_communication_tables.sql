@@ -27,7 +27,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS public.conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
-    customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
+    customer_id UUID,
     order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
     customer_name VARCHAR(255),
     customer_phone VARCHAR(50),
@@ -69,10 +69,11 @@ CREATE TABLE IF NOT EXISTS public.call_logs (
     duration_seconds INT NOT NULL DEFAULT 0,
     recording_url TEXT,
     disposition VARCHAR(100) NOT NULL DEFAULT 'answered', -- 'answered', 'busy', 'no_answer', 'failed'
-    notes TEXT,
-    started_at TIMESTAMPTZ DEFAULT NOW(),
     ended_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.call_logs ADD COLUMN IF NOT EXISTS sales_rep_id UUID REFERENCES public.users(id);
+
 
 -- 5. WhatsApp Templates Table
 CREATE TABLE IF NOT EXISTS public.whatsapp_templates (

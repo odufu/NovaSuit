@@ -16,7 +16,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   // Onboarded Available Products Catalog (Fetched from Supabase DB with default seeds)
   List<Map<String, dynamic>> _availableProducts = [
     {
-      'id': 'p0000000-0000-0000-0000-000000000001',
+      'id': '90000000-0000-4000-8000-000000000001',
       'name': 'Grazer Herbal Tea',
       'sku': 'GHT-001',
       'category': 'Grazer Herbal Tea',
@@ -24,7 +24,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       'stock': 500,
     },
     {
-      'id': 'p0000000-0000-0000-0000-000000000002',
+      'id': '90000000-0000-4000-8000-000000000002',
       'name': 'Vitality Detox Booster',
       'sku': 'VDB-002',
       'category': 'Vitality Booster',
@@ -481,8 +481,8 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
             .eq('is_active', true);
       }
 
-      if (response != null && (response as List).isNotEmpty) {
-        final fetchedProds = (response as List).map((p) => {
+      if (response != null && response is List && response.isNotEmpty) {
+        final fetchedProds = response.map((p) => {
           'id': p['id'],
           'name': p['name'],
           'sku': p['sku'] ?? 'SKU-000',
@@ -537,6 +537,8 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     try {
       final client = Supabase.instance.client;
 
+      bool isUuid(String? s) => s != null && RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false).hasMatch(s);
+
       // Check if existing lead form with title exists to acquire primary key UUID
       final existingRes = await client
           .from('lead_forms')
@@ -548,17 +550,17 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
 
       final formPayload = {
         if (existingId != null) 'id': existingId,
-        'company_id': companyId.isNotEmpty ? companyId : 'c0000000-0000-0000-0000-000000000001',
-        'product_id': attachedProductId,
+        'company_id': isUuid(companyId) ? companyId : 'c0000000-0000-0000-0000-000000000001',
+        'product_id': isUuid(attachedProductId) ? attachedProductId : null,
         'title': cleanTitle,
-        'digital_marketer_email': marketerEmail,
-        'redirect_url': redirectUrl,
+        'digital_marketer_email': marketerEmail.trim().isNotEmpty ? marketerEmail.trim() : 'marketer@novacare.com',
+        'redirect_url': redirectUrl.trim().isNotEmpty ? redirectUrl.trim() : 'https://detoxwithnova.xyz/thank-you',
         'success_message': successMessage,
         'submit_button_text': submitButtonText,
         'quantity_display_mode': _quantityDisplayMode,
         'preset_country': 'Nigeria',
         'description': description,
-        'product_category': _selectedProductCategory,
+        'product_category': _selectedProductCategory.trim().isNotEmpty ? _selectedProductCategory.trim() : 'Grazer Herbal Tea',
         'core_fields': _coreFields,
         'offer_packages': _offerPackages,
         'linked_items': _linkedItems,

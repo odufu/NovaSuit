@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS public.products (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Ensure category and stock_quantity columns exist if table was created in an earlier migration
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Herbal Wellness';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock_quantity INT NOT NULL DEFAULT 100;
+
 -- Index for Fast Product Search
 CREATE INDEX IF NOT EXISTS idx_products_company ON public.products(company_id);
 CREATE INDEX IF NOT EXISTS idx_products_sku ON public.products(sku);
@@ -38,7 +42,7 @@ CREATE POLICY public_read_products ON public.products
 INSERT INTO public.products (id, company_id, name, sku, category, base_price, stock_quantity, description)
 VALUES
   (
-    'p0000000-0000-0000-0000-000000000001',
+    '90000000-0000-0000-0000-000000000001',
     'c0000000-0000-0000-0000-000000000001',
     'Grazer Herbal Tea',
     'GHT-001',
@@ -48,7 +52,7 @@ VALUES
     'Organic herbal detox tea for colon cleansing and digestive health.'
   ),
   (
-    'p0000000-0000-0000-0000-000000000002',
+    '90000000-0000-0000-0000-000000000002',
     'c0000000-0000-0000-0000-000000000001',
     'Vitality Detox Booster',
     'VDB-002',
@@ -58,7 +62,7 @@ VALUES
     'High-potency herbal extract liquid booster for instant stamina.'
   ),
   (
-    'p0000000-0000-0000-0000-000000000003',
+    '90000000-0000-0000-0000-000000000003',
     'c0000000-0000-0000-0000-000000000001',
     'SkinCare Glow Capsule',
     'SGC-003',
@@ -68,7 +72,7 @@ VALUES
     'Natural anti-oxidant capsules for radiant skin tone.'
   ),
   (
-    'p0000000-0000-0000-0000-000000000004',
+    '90000000-0000-0000-0000-000000000004',
     'c0000000-0000-0000-0000-000000000001',
     'Flat Belly Tea Cleanse',
     'FBT-004',

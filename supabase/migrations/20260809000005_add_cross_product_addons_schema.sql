@@ -7,7 +7,7 @@
 INSERT INTO public.products (id, company_id, name, sku, category, base_price, stock_quantity, description)
 VALUES
   (
-    'p0000000-0000-0000-0000-000000000005',
+    '90000000-0000-0000-0000-000000000005',
     'c0000000-0000-0000-0000-000000000001',
     'Respira Clear Detox',
     'RCD-005',

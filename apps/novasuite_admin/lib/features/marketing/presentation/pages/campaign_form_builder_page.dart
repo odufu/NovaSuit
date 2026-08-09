@@ -1556,6 +1556,20 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     required bool isDesktop,
     required bool isMobile,
   }) {
+    final categoriesSet = provider.availableProducts
+        .map((p) => (p['category'] ?? 'General').toString())
+        .where((c) => c.trim().isNotEmpty)
+        .toSet();
+    categoriesSet.add('Grazer Herbal Tea');
+    categoriesSet.add('Vitality Booster');
+    if (provider.selectedProductCategory.trim().isNotEmpty) {
+      categoriesSet.add(provider.selectedProductCategory.trim());
+    }
+    final categoriesList = categoriesSet.toList();
+    final selectedCategory = categoriesList.contains(provider.selectedProductCategory)
+        ? provider.selectedProductCategory
+        : categoriesList.first;
+
     final leftContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1578,13 +1592,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 color: textMuted)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          initialValue: provider.selectedProductCategory,
+                          key: Key('product-category-mobile-$selectedCategory'),
+                          initialValue: selectedCategory,
                           dropdownColor: cardBg,
                           style:
                               GoogleFonts.inter(color: textColor, fontSize: 13),
                           decoration: const InputDecoration(
                               border: OutlineInputBorder()),
-                          items: ['Grazer Herbal Tea', 'Vitality Booster']
+                          items: categoriesList
                               .map((c) => DropdownMenuItem(
                                     value: c,
                                     child: Text(c,
@@ -1618,13 +1633,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   color: textMuted)),
                           const SizedBox(height: 6),
                           DropdownButtonFormField<String>(
-                            initialValue: provider.selectedProductCategory,
+                            key: Key('product-category-desktop-$selectedCategory'),
+                            initialValue: selectedCategory,
                             dropdownColor: cardBg,
                             style: GoogleFonts.inter(
                                 color: textColor, fontSize: 13),
                             decoration: const InputDecoration(
                                 border: OutlineInputBorder()),
-                            items: ['Grazer Herbal Tea', 'Vitality Booster']
+                            items: categoriesList
                                 .map((c) => DropdownMenuItem(
                                       value: c,
                                       child: Text(c,
@@ -2846,93 +2862,135 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                             fontSize: 11,
                             color: placeholderColor)),
                     const SizedBox(height: 8),
-                    Column(
-                      children: provider.offerPackages.map((pkg) {
-                        final isSelected = selectedOfferPkg?['id'] == pkg['id'];
-                        final label = pkg['label'] ?? '';
-                        final amount = (pkg['amount'] ?? 0.0) as double;
-                        final discount = (pkg['discount'] ?? 0.0) as double;
-                        final freeAddonName =
-                            pkg['freeAddonProductName'] as String?;
-                        final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
-
-                        return GestureDetector(
-                          onTap: () {
-                            setModalState(() => selectedOfferPkg = pkg);
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color(0xFF10B981)
-                                      .withValues(alpha: 0.1)
-                                  : inputBgColor,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: isSelected
-                                      ? const Color(0xFF10B981)
-                                      : Colors.grey.withValues(alpha: 0.3),
-                                  width: isSelected ? 2 : 1),
+                    if (provider.quantityDisplayMode == 'Dropdown selector') ...[
+                      Builder(builder: (context) {
+                        final selId = selectedOfferPkg?['id']?.toString();
+                        final hasPkg = selId != null && provider.offerPackages.any((p) => p['id']?.toString() == selId);
+                        final initialOfferVal = hasPkg ? selId : (provider.offerPackages.isNotEmpty ? provider.offerPackages.first['id']?.toString() : null);
+                        return DropdownButtonFormField<String>(
+                          key: Key('offer-pkg-dropdown-${selectedOfferPkg?['id']}'),
+                          initialValue: initialOfferVal,
+                        dropdownColor: dropdownMenuBg,
+                        style: GoogleFonts.getFont(_fontFamily, color: dropdownItemTextColor, fontSize: 13),
+                        decoration: InputDecoration(
+                          fillColor: inputBgColor,
+                          filled: true,
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                        items: provider.offerPackages.map((pkg) {
+                          final label = pkg['label'] ?? '';
+                          final amount = (pkg['amount'] ?? 0.0) as double;
+                          final priceStr = '₦${amount.toStringAsFixed(0)}';
+                          return DropdownMenuItem<String>(
+                            value: pkg['id']?.toString(),
+                            child: Text(
+                              '$label — $priceStr',
+                              style: GoogleFonts.getFont(_fontFamily, color: dropdownItemTextColor, fontSize: 13),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                    isSelected
-                                        ? Icons.radio_button_checked
-                                        : Icons.radio_button_unchecked,
-                                    size: 20,
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setModalState(() {
+                              selectedOfferPkg = provider.offerPackages.firstWhere(
+                                (p) => p['id']?.toString() == val,
+                                orElse: () => provider.offerPackages.first,
+                              );
+                            });
+                          }
+                        },
+                      );
+                    }),
+                    ] else ...[
+                      Column(
+                        children: provider.offerPackages.map((pkg) {
+                          final isSelected = selectedOfferPkg?['id'] == pkg['id'];
+                          final label = pkg['label'] ?? '';
+                          final amount = (pkg['amount'] ?? 0.0) as double;
+                          final discount = (pkg['discount'] ?? 0.0) as double;
+                          final freeAddonName =
+                              pkg['freeAddonProductName'] as String?;
+                          final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() => selectedOfferPkg = pkg);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF10B981)
+                                        .withValues(alpha: 0.1)
+                                    : inputBgColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
                                     color: isSelected
                                         ? const Color(0xFF10B981)
-                                        : Colors.grey),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(label,
-                                          style: GoogleFonts.getFont(
-                                              _fontFamily,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              color: inputTextColor)),
-                                      if (freeAddonName != null &&
-                                          freeAddonQty > 0)
-                                        Text(
-                                            '🎁 Includes FREE ${freeAddonQty}x $freeAddonName',
+                                        : Colors.grey.withValues(alpha: 0.3),
+                                    width: isSelected ? 2 : 1),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                      isSelected
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked,
+                                      size: 20,
+                                      color: isSelected
+                                          ? const Color(0xFF10B981)
+                                          : Colors.grey),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(label,
                                             style: GoogleFonts.getFont(
                                                 _fontFamily,
-                                                fontSize: 11,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.purple)),
+                                                fontSize: 13,
+                                                color: inputTextColor)),
+                                        if (freeAddonName != null &&
+                                            freeAddonQty > 0)
+                                          Text(
+                                              '🎁 Includes FREE ${freeAddonQty}x $freeAddonName',
+                                              style: GoogleFonts.getFont(
+                                                  _fontFamily,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.purple)),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text('₦${amount.toStringAsFixed(0)}',
+                                          style: GoogleFonts.getFont(_fontFamily,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: const Color(0xFF10B981))),
+                                      if (discount > 0)
+                                        Text(
+                                            'Save ₦${discount.toStringAsFixed(0)}',
+                                            style: GoogleFonts.getFont(
+                                                _fontFamily,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.orange)),
                                     ],
                                   ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text('₦${amount.toStringAsFixed(0)}',
-                                        style: GoogleFonts.getFont(_fontFamily,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                            color: const Color(0xFF10B981))),
-                                    if (discount > 0)
-                                      Text(
-                                          'Save ₦${discount.toStringAsFixed(0)}',
-                                          style: GoogleFonts.getFont(
-                                              _fontFamily,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.orange)),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                     const SizedBox(height: 20),
 
                     // 3. SECTION 3: SUBMIT BUTTON (FOLLOWED BY OFFER PACKAGES)
@@ -3411,7 +3469,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     const payload = {
       company_id: formData.get('company_id') || 'c0000000-0000-0000-0000-000000000001',
       form_id: formData.get('form_id') || '',
-      product_id: formData.get('product_id') || 'p0000000-0000-0000-0000-000000000001',
+      product_id: formData.get('product_id') || '90000000-0000-4000-8000-000000000001',
       redirect_url: formData.get('redirect_url') || '$redirectUrl',
       customer_name: formData.get('customer_name') || '',
       customer_phone: formData.get('customer_phone') || '',
@@ -3423,17 +3481,14 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
     };
 
     try {
-      const response = await fetch('https://eywkyijghfzhzfgffmsr.supabase.co/functions/v1/submit-order', {
+      const response = await fetch('https://oygtaeriljuelhshfvkv.supabase.co/functions/v1/submit-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const resData = await response.json();
-      if (resData && resData.redirectUrl) {
-        window.location.href = resData.redirectUrl;
-      } else {
-        window.location.href = "$redirectUrl";
-      }
+      const redirectTarget = resData?.redirect_url || resData?.redirectUrl || "$redirectUrl";
+      window.location.href = redirectTarget;
     } catch (err) {
       window.location.href = "$redirectUrl";
     }
@@ -4722,18 +4777,23 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(subtitle,
-                      style:
-                          GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(subtitle,
+                        style:
+                            GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
               ),
-              if (action != null) action,
+              if (action != null) ...[
+                const SizedBox(width: 12),
+                action,
+              ],
             ],
           ),
           const SizedBox(height: 16),
