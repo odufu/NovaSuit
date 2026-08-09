@@ -391,11 +391,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   initialValue: provider.quantityDisplayMode,
+                  dropdownColor: cardBg,
+                  style: GoogleFonts.inter(color: textColor, fontSize: 13),
                   decoration: const InputDecoration(border: OutlineInputBorder()),
-                  items: const [
-                    DropdownMenuItem(value: 'Radio buttons', child: Text('Radio buttons')),
-                    DropdownMenuItem(value: 'Dropdown selector', child: Text('Dropdown selector')),
-                  ],
+                  items: ['Radio buttons', 'Dropdown selector'].map((m) => DropdownMenuItem(
+                    value: m,
+                    child: Text(m, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                  )).toList(),
                   onChanged: (val) {
                     if (val != null) provider.setQuantityDisplayMode(val);
                   },
@@ -417,11 +419,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
                         initialValue: provider.quantityDisplayMode,
+                        dropdownColor: cardBg,
+                        style: GoogleFonts.inter(color: textColor, fontSize: 13),
                         decoration: const InputDecoration(border: OutlineInputBorder()),
-                        items: const [
-                          DropdownMenuItem(value: 'Radio buttons', child: Text('Radio buttons')),
-                          DropdownMenuItem(value: 'Dropdown selector', child: Text('Dropdown selector')),
-                        ],
+                        items: ['Radio buttons', 'Dropdown selector'].map((m) => DropdownMenuItem(
+                          value: m,
+                          child: Text(m, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                        )).toList(),
                         onChanged: (val) {
                           if (val != null) provider.setQuantityDisplayMode(val);
                         },
@@ -519,11 +523,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           initialValue: provider.selectedProductCategory,
+                          dropdownColor: cardBg,
+                          style: GoogleFonts.inter(color: textColor, fontSize: 13),
                           decoration: const InputDecoration(border: OutlineInputBorder()),
-                          items: const [
-                            DropdownMenuItem(value: 'Grazer Herbal Tea', child: Text('Grazer Herbal Tea')),
-                            DropdownMenuItem(value: 'Vitality Booster', child: Text('Vitality Booster')),
-                          ],
+                          items: ['Grazer Herbal Tea', 'Vitality Booster'].map((c) => DropdownMenuItem(
+                            value: c,
+                            child: Text(c, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                          )).toList(),
                           onChanged: (val) {
                             if (val != null) provider.setProductCategory(val);
                           },
@@ -546,11 +552,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                           const SizedBox(height: 6),
                           DropdownButtonFormField<String>(
                             initialValue: provider.selectedProductCategory,
+                            dropdownColor: cardBg,
+                            style: GoogleFonts.inter(color: textColor, fontSize: 13),
                             decoration: const InputDecoration(border: OutlineInputBorder()),
-                            items: const [
-                              DropdownMenuItem(value: 'Grazer Herbal Tea', child: Text('Grazer Herbal Tea')),
-                              DropdownMenuItem(value: 'Vitality Booster', child: Text('Vitality Booster')),
-                            ],
+                            items: ['Grazer Herbal Tea', 'Vitality Booster'].map((c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(c, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                            )).toList(),
                             onChanged: (val) {
                               if (val != null) provider.setProductCategory(val);
                             },
@@ -844,13 +852,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           const SizedBox(height: 4),
           DropdownButtonFormField<String>(
             initialValue: _selectedLayoutTemplate,
+            dropdownColor: cardBg,
+            style: GoogleFonts.inter(color: textColor, fontSize: 13),
             decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-            items: const [
-              DropdownMenuItem(value: 'High-Converting E-Commerce', child: Text('High-Converting E-Commerce')),
-              DropdownMenuItem(value: 'Minimalist Clean', child: Text('Minimalist Clean')),
-              DropdownMenuItem(value: 'Luxury Glassmorphism', child: Text('Luxury Dark Glassmorphism')),
-              DropdownMenuItem(value: 'Compact Express Checkout', child: Text('Compact Express Checkout')),
-            ],
+            items: ['High-Converting E-Commerce', 'Minimalist Clean', 'Luxury Glassmorphism', 'Compact Express Checkout'].map((t) => DropdownMenuItem(
+              value: t,
+              child: Text(t, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+            )).toList(),
             onChanged: (val) {
               if (val != null) _applyLayoutTemplatePreset(val);
             },
@@ -861,16 +869,13 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
           const SizedBox(height: 4),
           DropdownButtonFormField<String>(
             initialValue: _fontFamily,
+            dropdownColor: cardBg,
+            style: GoogleFonts.inter(color: textColor, fontSize: 13),
             decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-            items: const [
-              DropdownMenuItem(value: 'Inter', child: Text('Inter (Clean Modern)')),
-              DropdownMenuItem(value: 'Outfit', child: Text('Outfit (Sleek Geometric)')),
-              DropdownMenuItem(value: 'Roboto', child: Text('Roboto (Standard Sans)')),
-              DropdownMenuItem(value: 'Poppins', child: Text('Poppins (Bold Friendly)')),
-              DropdownMenuItem(value: 'Montserrat', child: Text('Montserrat (Modern Display)')),
-              DropdownMenuItem(value: 'Plus Jakarta Sans', child: Text('Plus Jakarta Sans (Corporate)')),
-              DropdownMenuItem(value: 'Playfair Display', child: Text('Playfair Display (Luxury Serif)')),
-            ],
+            items: ['Inter', 'Outfit', 'Roboto', 'Poppins', 'Montserrat', 'Plus Jakarta Sans', 'Playfair Display'].map((f) => DropdownMenuItem(
+              value: f,
+              child: Text(f, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+            )).toList(),
             onChanged: (val) {
               if (val != null) setState(() => _fontFamily = val);
             },
@@ -1114,6 +1119,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: selectedCountry,
+                                dropdownColor: inputBgColor,
                                 decoration: InputDecoration(
                                   fillColor: inputBgColor,
                                   filled: true,
@@ -1121,7 +1127,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 ),
                                 style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12),
-                                items: AddressLocationService.countries.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                                items: AddressLocationService.countries.map((c) => DropdownMenuItem(
+                                  value: c,
+                                  child: Text(c, style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12)),
+                                )).toList(),
                                 onChanged: (v) {
                                   if (v != null) {
                                     setModalState(() {
@@ -1146,6 +1155,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: selectedState,
+                                dropdownColor: inputBgColor,
                                 decoration: InputDecoration(
                                   fillColor: inputBgColor,
                                   filled: true,
@@ -1153,7 +1163,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 ),
                                 style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12),
-                                items: availableStates.map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis))).toList(),
+                                items: availableStates.map((s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text(s, overflow: TextOverflow.ellipsis, style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 12)),
+                                )).toList(),
                                 onChanged: (v) {
                                   if (v != null) {
                                     setModalState(() {
@@ -1175,6 +1188,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
                       initialValue: availableCitiesLgas.contains(selectedCityLga) ? selectedCityLga : availableCitiesLgas.first,
+                      dropdownColor: inputBgColor,
                       decoration: InputDecoration(
                         fillColor: inputBgColor,
                         filled: true,
@@ -1182,7 +1196,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
                       style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13),
-                      items: availableCitiesLgas.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                      items: availableCitiesLgas.map((c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(c, style: GoogleFonts.getFont(_fontFamily, color: inputTextColor, fontSize: 13)),
+                      )).toList(),
                       onChanged: (v) {
                         if (v != null) setModalState(() => selectedCityLga = v);
                       },
@@ -1794,13 +1811,15 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 flex: 2,
                                 child: DropdownButtonFormField<String>(
                                   initialValue: selectedFreeAddonProduct?['id'],
+                                  dropdownColor: const Color(0xFF0F172A),
+                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
                                   decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                                  hint: const Text('Select Free Gift Product...'),
+                                  hint: Text('Select Free Gift Product...', style: GoogleFonts.inter(color: Colors.grey, fontSize: 12)),
                                   items: [
-                                    const DropdownMenuItem<String>(value: null, child: Text('None (No cross-product free gift)')),
+                                    DropdownMenuItem<String>(value: null, child: Text('None (No cross-product free gift)', style: GoogleFonts.inter(color: Colors.white, fontSize: 12))),
                                     ...provider.availableProducts.map((p) => DropdownMenuItem<String>(
                                           value: p['id'] as String,
-                                          child: Text('${p['name']} [${p['sku']}]'),
+                                          child: Text('${p['name']} [${p['sku']}]', style: GoogleFonts.inter(color: Colors.white, fontSize: 12)),
                                         )),
                                   ],
                                   onChanged: (val) {
@@ -1821,8 +1840,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 Expanded(
                                   child: DropdownButtonFormField<int>(
                                     initialValue: freeAddonQty > 0 ? freeAddonQty : 1,
+                                    dropdownColor: const Color(0xFF0F172A),
+                                    style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
                                     decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                                    items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q Free'))).toList(),
+                                    items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q Free', style: GoogleFonts.inter(color: Colors.white, fontSize: 12)))).toList(),
                                     onChanged: (v) {
                                       if (v != null) setModalState(() => freeAddonQty = v);
                                     },
@@ -1997,10 +2018,12 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               const SizedBox(height: 4),
                               DropdownButtonFormField<String>(
                                 initialValue: itemType,
+                                dropdownColor: const Color(0xFF0F172A),
+                                style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
                                 decoration: const InputDecoration(border: OutlineInputBorder()),
-                                items: const [
-                                  DropdownMenuItem(value: 'Main', child: Text('Main Product')),
-                                  DropdownMenuItem(value: 'Addon', child: Text('Addon / Upsell')),
+                                items: [
+                                  DropdownMenuItem(value: 'Main', child: Text('Main Product', style: GoogleFonts.inter(color: Colors.white, fontSize: 13))),
+                                  DropdownMenuItem(value: 'Addon', child: Text('Addon / Upsell', style: GoogleFonts.inter(color: Colors.white, fontSize: 13))),
                                 ],
                                 onChanged: (v) {
                                   if (v != null) setModalState(() => itemType = v);
@@ -2018,8 +2041,10 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               const SizedBox(height: 4),
                               DropdownButtonFormField<int>(
                                 initialValue: selectedQty,
+                                dropdownColor: const Color(0xFF0F172A),
+                                style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
                                 decoration: const InputDecoration(border: OutlineInputBorder()),
-                                items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q unit(s)'))).toList(),
+                                items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q unit(s)', style: GoogleFonts.inter(color: Colors.white, fontSize: 13)))).toList(),
                                 onChanged: (v) {
                                   if (v != null) setModalState(() => selectedQty = v);
                                 },
@@ -2416,12 +2441,13 @@ class _AdditionalQuestionCardItemState extends State<_AdditionalQuestionCardItem
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
                       initialValue: widget.question['type'] ?? 'Text',
+                      dropdownColor: widget.isDark ? const Color(0xFF09140E) : Colors.white,
+                      style: GoogleFonts.inter(color: widget.isDark ? Colors.white : const Color(0xFF0F172A), fontSize: 13),
                       decoration: const InputDecoration(border: OutlineInputBorder()),
-                      items: const [
-                        DropdownMenuItem(value: 'Text', child: Text('Text')),
-                        DropdownMenuItem(value: 'Phone', child: Text('Phone')),
-                        DropdownMenuItem(value: 'Dropdown', child: Text('Dropdown')),
-                      ],
+                      items: ['Text', 'Phone', 'Dropdown'].map((t) => DropdownMenuItem(
+                        value: t,
+                        child: Text(t, style: GoogleFonts.inter(color: widget.isDark ? Colors.white : const Color(0xFF0F172A), fontSize: 13)),
+                      )).toList(),
                       onChanged: (v) {
                         if (v != null) widget.provider.updateAdditionalQuestion(widget.index, 'type', v);
                       },

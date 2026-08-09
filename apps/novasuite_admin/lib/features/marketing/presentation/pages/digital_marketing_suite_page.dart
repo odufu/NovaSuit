@@ -272,11 +272,12 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
                   const SizedBox(height: 4),
                   DropdownButton<String>(
                     value: _selectedStatus,
-                    items: const [
-                      DropdownMenuItem(value: 'All statuses', child: Text('All statuses')),
-                      DropdownMenuItem(value: 'Converted', child: Text('Converted')),
-                      DropdownMenuItem(value: 'Pending', child: Text('Pending')),
-                    ],
+                    dropdownColor: cardBg,
+                    style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                    items: ['All statuses', 'Converted', 'Pending'].map((s) => DropdownMenuItem(
+                      value: s,
+                      child: Text(s, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                    )).toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => _selectedStatus = val);
                     },
@@ -293,10 +294,12 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
                   const SizedBox(height: 4),
                   DropdownButton<String>(
                     value: _selectedFormFilter,
-                    items: const [
-                      DropdownMenuItem(value: 'All forms', child: Text('All forms')),
-                      DropdownMenuItem(value: 'Grazer Tea Joel', child: Text('Grazer Tea Joel')),
-                    ],
+                    dropdownColor: cardBg,
+                    style: GoogleFonts.inter(color: textColor, fontSize: 13),
+                    items: ['All forms', 'Grazer Tea Joel'].map((f) => DropdownMenuItem(
+                      value: f,
+                      child: Text(f, style: GoogleFonts.inter(color: textColor, fontSize: 13)),
+                    )).toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => _selectedFormFilter = val);
                     },
