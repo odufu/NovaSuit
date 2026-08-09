@@ -459,8 +459,8 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('MARKETING SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(3, 0, navProvider.marketingSubNavIndex, Icons.auto_graph_rounded, 'Ad Performance', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 1, navProvider.marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 0, navProvider.marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 1, navProvider.marketingSubNavIndex, Icons.format_list_bulleted_rounded, 'My Leads', isCollapsed: isCollapsed),
                   _featureDirectNavItem(3, 2, navProvider.marketingSubNavIndex, Icons.build_circle_rounded, 'Form Builder Wizard', isCollapsed: isCollapsed),
                   _featureDirectNavItem(3, 3, navProvider.marketingSubNavIndex, Icons.assignment_turned_in_rounded, 'Submissions Log', isCollapsed: isCollapsed),
                   _featureDirectNavItem(3, 4, navProvider.marketingSubNavIndex, Icons.campaign_rounded, 'SMS & Broadcasts', isCollapsed: isCollapsed),
@@ -486,8 +486,8 @@ class _AdminMainShellState extends State<AdminMainShell> {
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Text('MARKETING SUITE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     ),
-                  _featureDirectNavItem(3, 0, navProvider.marketingSubNavIndex, Icons.auto_graph_rounded, 'Ad Performance', isCollapsed: isCollapsed),
-                  _featureDirectNavItem(3, 1, navProvider.marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 0, navProvider.marketingSubNavIndex, Icons.dynamic_form_rounded, 'Lead Forms', isCollapsed: isCollapsed),
+                  _featureDirectNavItem(3, 1, navProvider.marketingSubNavIndex, Icons.format_list_bulleted_rounded, 'My Leads', isCollapsed: isCollapsed),
                   _featureDirectNavItem(3, 2, navProvider.marketingSubNavIndex, Icons.build_circle_rounded, 'Form Builder Wizard', isCollapsed: isCollapsed),
                   _featureDirectNavItem(3, 3, navProvider.marketingSubNavIndex, Icons.assignment_turned_in_rounded, 'Submissions Log', isCollapsed: isCollapsed),
                   _featureDirectNavItem(3, 4, navProvider.marketingSubNavIndex, Icons.campaign_rounded, 'SMS & Broadcasts', isCollapsed: isCollapsed),
@@ -1046,6 +1046,25 @@ class _AdminMainShellState extends State<AdminMainShell> {
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
     final borderColor = isDark ? const Color(0xFF1E3E33) : const Color(0xFFE2E8F0);
 
+    final builderProvider = Provider.of<CampaignFormBuilderProvider>(context);
+    final totalLeads = builderProvider.submissions.length;
+    final convertedSubmissions = builderProvider.submissions.where((s) => s['status'].toString().toLowerCase() == 'converted').length;
+    final activeFormsCount = builderProvider.leadForms.where((f) => f['status'] == 'Published').length;
+    final totalRevenue = builderProvider.submissions
+        .where((s) => s['status'].toString().toLowerCase() == 'converted')
+        .fold<double>(0.0, (sum, s) => sum + ((s['amount'] as num?)?.toDouble() ?? 0.0));
+    final convRateStr = totalLeads > 0 ? '${((convertedSubmissions / totalLeads) * 100).toStringAsFixed(1)}%' : '0%';
+    final adSpendVal = totalMarketerBudget > 0 ? totalMarketerBudget : 3500000.0;
+    final cplVal = totalLeads > 0 ? adSpendVal / totalLeads : 0.0;
+    final roasMultiplier = adSpendVal > 0 && totalRevenue > 0 ? (totalRevenue / adSpendVal).toStringAsFixed(2) : '3.80';
+    
+    String topFormTitle = 'None';
+    if (builderProvider.leadForms.isNotEmpty) {
+      final sortedForms = List<Map<String, dynamic>>.from(builderProvider.leadForms)
+        ..sort((a, b) => ((b['submissionsCount'] ?? 0) as int).compareTo((a['submissionsCount'] ?? 0) as int));
+      topFormTitle = sortedForms.first['title']?.toString() ?? 'Lead Form';
+    }
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 14 : 20),
       child: Column(
@@ -1116,19 +1135,23 @@ class _AdminMainShellState extends State<AdminMainShell> {
           // Department-Tailored KPI Cards Grid
           if (role == UserRole.digitalMarketer) ...[
             if (isMobile) ...[
-              _statCard('SPEND (Ad Spend)', '$currency 3,500,000', '142 Lead Submissions', Icons.ads_click, Colors.blue),
+              _statCard('AD SPEND & CPL', '$currency ${adSpendVal.toStringAsFixed(0)}', 'CPL: $currency ${cplVal.toStringAsFixed(0)} / lead', Icons.ads_click, Colors.blue),
               const SizedBox(height: 12),
-              _statCard('GENERATED LEADS', '142 Leads', '84.5% Delivery Rate', Icons.shopping_bag_outlined, Colors.orange),
+              _statCard('TOTAL LEADS GENERATED', '$totalLeads Leads', '$convertedSubmissions Converted ($convRateStr Conv. Rate)', Icons.shopping_bag_outlined, Colors.orange),
               const SizedBox(height: 12),
-              _statCard('DELIVERED REVENUE', '$currency 14,850,000', '4.24x ROAS Multiplier', Icons.auto_graph, Colors.green),
+              _statCard('ACTIVE LEAD FORMS', '$activeFormsCount Form(s)', 'Top: $topFormTitle', Icons.dynamic_form_rounded, Colors.purple),
+              const SizedBox(height: 12),
+              _statCard('DELIVERED REVENUE & ROAS', '$currency ${totalRevenue.toStringAsFixed(0)}', '${roasMultiplier}x ROAS Multiplier', Icons.auto_graph, Colors.green),
             ] else ...[
               Row(
                 children: [
-                  Expanded(child: _statCard('SPEND (Ad Spend)', '$currency 3,500,000', '142 Lead Submissions', Icons.ads_click, Colors.blue)),
+                  Expanded(child: _statCard('AD SPEND & CPL', '$currency ${adSpendVal.toStringAsFixed(0)}', 'CPL: $currency ${cplVal.toStringAsFixed(0)} / lead', Icons.ads_click, Colors.blue)),
                   const SizedBox(width: 12),
-                  Expanded(child: _statCard('GENERATED LEADS', '142 Leads', '84.5% Delivery Rate', Icons.shopping_bag_outlined, Colors.orange)),
+                  Expanded(child: _statCard('TOTAL LEADS GENERATED', '$totalLeads Leads', '$convertedSubmissions Converted ($convRateStr Conv. Rate)', Icons.shopping_bag_outlined, Colors.orange)),
                   const SizedBox(width: 12),
-                  Expanded(child: _statCard('DELIVERED REVENUE', '$currency 14,850,000', '4.24x ROAS Multiplier', Icons.auto_graph, Colors.green)),
+                  Expanded(child: _statCard('ACTIVE LEAD FORMS', '$activeFormsCount Form(s)', 'Top: $topFormTitle', Icons.dynamic_form_rounded, Colors.purple)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _statCard('DELIVERED REVENUE & ROAS', '$currency ${totalRevenue.toStringAsFixed(0)}', '${roasMultiplier}x ROAS Multiplier', Icons.auto_graph, Colors.green)),
                 ],
               ),
             ],

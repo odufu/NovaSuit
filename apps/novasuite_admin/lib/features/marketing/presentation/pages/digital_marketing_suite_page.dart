@@ -224,7 +224,7 @@ class _DigitalMarketingSuitePageState extends State<DigitalMarketingSuitePage> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Campaigns & Live Leads', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: textColor)),
+        Text('My Leads', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: textColor)),
         Text('Realtime lead exchange between landing page checkout forms and your dashboard.', style: GoogleFonts.inter(fontSize: 13, color: textMuted)),
         const SizedBox(height: 24),
 
