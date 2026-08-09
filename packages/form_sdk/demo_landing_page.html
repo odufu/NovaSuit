@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaCare Health — Slim Tea Detox Order Form</title>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #F8FAFC; margin: 0; padding: 40px 20px; color: #0F172A; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 32px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
+        h2 { margin-top: 0; color: #09140E; font-size: 22px; }
+        .price-badge { background: #ECFDF5; color: #047857; font-weight: bold; padding: 6px 12px; border-radius: 8px; display: inline-block; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #334155; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        input:focus { border-color: #10B981; outline: none; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+        button { width: 100%; background: #10B981; color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #059669; }
+        .guarantee { text-align: center; margin-top: 16px; font-size: 12px; color: #64748B; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🍵 NovaCare Slim Tea Detox (Pay on Delivery)</h2>
+        <div class="price-badge">Special Promo Offer: ₦35,000 (Free Delivery)</div>
+
+        <!-- NovaSuite Fail-Safe Protected Order Form -->
+        <form class="novasuite-order-form" data-tenant="novacare">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="customer_name" placeholder="e.g. Adeyemi Benson" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number (WhatsApp Active) *</label>
+                <input type="tel" id="phone" name="customer_phone" placeholder="e.g. 08012345678" required>
+            </div>
+
+            <div class="form-group">
+                <label for="state">Delivery State *</label>
+                <select id="state" name="delivery_state" required>
+                    <option value="Lagos">Lagos</option>
+                    <option value="FCT Abuja">FCT Abuja</option>
+                    <option value="Rivers">Rivers (Port Harcourt)</option>
+                    <option value="Oyo">Oyo (Ibadan)</option>
+                    <option value="Ogun">Ogun</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Full Delivery Address *</label>
+                <textarea id="address" name="delivery_address" rows="3" placeholder="Street number, building, bus stop, city" required></textarea>
+            </div>
+
+            <input type="hidden" name="product_id" value="slim-tea-detox">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="total_amount" value="35000">
+
+            <button type="submit">Submit Order & Request Delivery ➔</button>
+        </form>
+
+        <div class="guarantee">🔒 Guaranteed 100% Secure Order Capture | NovaSuite Fail-Safe Protection</div>
+    </div>
+
+    <!-- Embedded NovaSuite Fail-Safe FormGuard Script -->
+    <script src="form-guard.js"></script>
+</body>
+</html>
