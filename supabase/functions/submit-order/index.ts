@@ -1,7 +1,7 @@
 // ============================================================================
 // NOVASUITE SUPABASE EDGE FUNCTION: submit-order
-// High-Scale Webhook Order Ingestion, Form Submissions Recording & Atomic Assignment
-// Enforces Total Inventory Deduction Rule (total_fulfilled_quantity = buy_qty + free_qty)
+// High-Scale Webhook Ingestion, Form Submissions & Multi-Product Stock Accounting
+// Enforces Primary Item Stock (buy_qty + free_qty) & Cross-Product Free Gift Addon Stock (free_addon_qty)
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -15,6 +15,7 @@ const corsHeaders = {
 interface OrderPayload {
   company_id: string;
   product_id: string;
+  product_name?: string;
   marketer_id?: string;
   marketer_email?: string;
   campaign_id?: string;
@@ -29,6 +30,9 @@ interface OrderPayload {
   offer_package_id?: string;
   buy_qty?: number;
   free_qty?: number;
+  free_addon_product_id?: string;
+  free_addon_product_name?: string;
+  free_addon_qty?: number;
   quantity?: number;
   base_price?: number;
   pixel_id?: string;
@@ -60,23 +64,29 @@ serve(async (req: Request) => {
       );
     }
 
-    // Physical Inventory Deduction Rule: total_fulfilled_quantity = buy_qty + free_qty
+    // 1. Calculate Inventory Accounting Quantities
     const buyQty = payload.buy_qty || payload.quantity || 1;
     const freeQty = payload.free_qty || 0;
-    const totalFulfilledQuantity = buyQty + freeQty;
+    const primaryFulfilledQty = buyQty + freeQty;
+
+    const freeAddonProductId = payload.free_addon_product_id || null;
+    const freeAddonProductName = payload.free_addon_product_name || null;
+    const freeAddonQty = payload.free_addon_qty || 0;
+
+    const totalPhysicalUnits = primaryFulfilledQty + freeAddonQty;
 
     const basePrice = payload.base_price || 25000;
     const totalAmount = basePrice * buyQty;
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
     const submissionCode = `CRM-SUB-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // 1. Insert Order Record (Recording total_fulfilled_quantity for warehouse pickers)
+    // 2. Insert Order Header Record
     const { data: newOrder, error: orderError } = await supabaseClient
       .from("orders")
       .insert({
         order_number: orderNumber,
         company_id: payload.company_id,
-        product_id: payload.product_id || "prod-herbal-tea",
+        product_id: payload.product_id || "p0000000-0000-0000-0000-000000000001",
         marketer_id: payload.marketer_id || null,
         campaign_id: payload.campaign_id || null,
         form_id: payload.form_id || null,
@@ -86,7 +96,7 @@ serve(async (req: Request) => {
         delivery_state: payload.delivery_state,
         delivery_city: payload.delivery_city || null,
         delivery_address: payload.delivery_address,
-        quantity: totalFulfilledQuantity, // Physical inventory deducted from warehouse stock!
+        quantity: primaryFulfilledQty,
         base_price: basePrice,
         total_amount: totalAmount,
         status: "new",
@@ -94,7 +104,42 @@ serve(async (req: Request) => {
       .select()
       .single();
 
-    // 2. Insert Form Submission Record
+    if (orderError) {
+      console.error("Order Header Insertion Error:", orderError);
+    }
+
+    // 3. Insert Multi-Product Line Items into public.order_items (Warehouse Packing List)
+    if (newOrder) {
+      const orderItems = [
+        {
+          order_id: newOrder.id,
+          product_id: payload.product_id || "p0000000-0000-0000-0000-000000000001",
+          product_name: payload.product_name || "Grazer Herbal Tea",
+          item_type: "Main",
+          quantity: primaryFulfilledQty,
+          unit_price: basePrice,
+          total_price: totalAmount,
+        },
+      ];
+
+      if (freeAddonProductId && freeAddonQty > 0) {
+        orderItems.push({
+          order_id: newOrder.id,
+          product_id: freeAddonProductId,
+          product_name: freeAddonProductName || "Free Addon Gift",
+          item_type: "CrossProductFreeGift",
+          quantity: freeAddonQty,
+          unit_price: 0,
+          total_price: 0,
+        });
+      }
+
+      await supabaseClient.from("order_items").insert(orderItems).catch((err) => {
+        console.warn("Order Line Items Warning:", err);
+      });
+    }
+
+    // 4. Record Form Submission Record
     const { error: submissionError } = await supabaseClient
       .from("form_submissions")
       .insert({
@@ -108,7 +153,7 @@ serve(async (req: Request) => {
         delivery_city: payload.delivery_city || null,
         delivery_address: payload.delivery_address,
         offer_package_id: payload.offer_package_id || null,
-        selected_quantity: totalFulfilledQuantity, // Accounted physical stock!
+        selected_quantity: primaryFulfilledQty,
         amount: totalAmount,
         status: "Converted",
         order_id: newOrder?.id || null,
@@ -116,28 +161,34 @@ serve(async (req: Request) => {
         utm_campaign: payload.utm_campaign || "organic",
         utm_medium: payload.utm_medium || "cpc",
         ad_id: payload.ad_id || null,
-        additional_responses: payload.additional_responses || {},
+        additional_responses: {
+          ...(payload.additional_responses || {}),
+          free_addon_product: freeAddonProductName,
+          free_addon_qty: freeAddonQty,
+        },
       });
 
     if (submissionError) {
       console.warn("Form Submission Record Warning:", submissionError);
     }
 
-    // 3. Atomic Round-Robin Lead Assignment Call
+    // 5. Atomic Round-Robin Lead Assignment Call
     if (newOrder) {
       await supabaseClient.rpc("assign_order_round_robin", {
         p_order_id: newOrder.id,
-        p_product_id: payload.product_id || "prod-herbal-tea",
+        p_product_id: payload.product_id || "p0000000-0000-0000-0000-000000000001",
       }).catch((err) => console.warn("Round Robin Assignment Warning:", err));
     }
 
     return new Response(
       JSON.stringify({
-        message: "Order successfully submitted with physical stock deduction (buy_qty + free_qty).",
+        message: "Order successfully submitted with multi-product stock accounting.",
         order_id: newOrder?.id || null,
         order_number: orderNumber,
         submission_code: submissionCode,
-        total_physical_units_deducted: totalFulfilledQuantity,
+        primary_stock_deducted: primaryFulfilledQty,
+        free_addon_gift_stock_deducted: freeAddonQty,
+        total_physical_units_deducted: totalPhysicalUnits,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 201 }
     );

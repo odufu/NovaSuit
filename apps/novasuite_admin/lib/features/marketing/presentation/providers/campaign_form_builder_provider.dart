@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Provider managing state for Campaign Form Builder, Offer Packages, Linked Items, Product Catalog Search, Custom Questions, and Supabase DB Sync.
+/// Provider managing state for Campaign Form Builder, Offer Packages (with Cross-Product Free Gift Addons), Linked Items, Product Catalog Search, Custom Questions, Marketing Broadcasts, Email/SMS Templates, and Supabase DB Sync.
 class CampaignFormBuilderProvider extends ChangeNotifier {
   int _currentStep = 0;
   bool _isLoading = false;
@@ -44,9 +44,17 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       'price': 28000.0,
       'stock': 300,
     },
+    {
+      'id': 'p0000000-0000-0000-0000-000000000005',
+      'name': 'Respira Clear Detox',
+      'sku': 'RCD-005',
+      'category': 'Respiratory Health',
+      'price': 15000.0,
+      'stock': 400,
+    },
   ];
 
-  // Core Field Options (Visibility & Required toggles)
+  // Core Field Options
   final List<Map<String, dynamic>> _coreFields = [
     {'key': 'full_name', 'label': 'Full Name', 'required': true, 'visible': true},
     {'key': 'email', 'label': 'Email', 'required': false, 'visible': true},
@@ -59,13 +67,16 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     {'key': 'postal_code', 'label': 'Postal Code', 'required': false, 'visible': false},
   ];
 
-  // Offer Packages (Dynamic package choices for buyers)
+  // Offer Packages (Supports Same-Item Free Qty & Cross-Product Free Gift Addon Items!)
   final List<Map<String, dynamic>> _offerPackages = [
     {
       'id': 'pkg-1',
       'label': '1 Grazer Detox Tea',
       'buyQty': 1,
       'freeQty': 0,
+      'freeAddonProductId': null,
+      'freeAddonProductName': null,
+      'freeAddonQty': 0,
       'amount': 23500.0,
       'discount': 0.0,
       'isDefault': true,
@@ -75,6 +86,9 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       'label': '2 Grazer Detox Tea',
       'buyQty': 2,
       'freeQty': 0,
+      'freeAddonProductId': null,
+      'freeAddonProductName': null,
+      'freeAddonQty': 0,
       'amount': 37000.0,
       'discount': 10000.0,
       'isDefault': false,
@@ -84,6 +98,9 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       'label': '3 Grazer Detox Tea',
       'buyQty': 3,
       'freeQty': 0,
+      'freeAddonProductId': null,
+      'freeAddonProductName': null,
+      'freeAddonQty': 0,
       'amount': 47000.0,
       'discount': 23500.0,
       'isDefault': false,
@@ -93,13 +110,28 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
       'label': '4 Grazer Detox Tea + 1 Free',
       'buyQty': 4,
       'freeQty': 1,
+      'freeAddonProductId': null,
+      'freeAddonProductName': null,
+      'freeAddonQty': 0,
       'amount': 70000.0,
       'discount': 23500.0,
       'isDefault': false,
     },
+    {
+      'id': 'pkg-5',
+      'label': 'Buy 5 Grazer Tea + 1 Respira Detox Free',
+      'buyQty': 5,
+      'freeQty': 0,
+      'freeAddonProductId': 'p0000000-0000-0000-0000-000000000005',
+      'freeAddonProductName': 'Respira Clear Detox',
+      'freeAddonQty': 1,
+      'amount': 85000.0,
+      'discount': 15000.0,
+      'isDefault': false,
+    },
   ];
 
-  // Linked Items (Onboarded merchant products attached to the form)
+  // Linked Items
   final List<Map<String, dynamic>> _linkedItems = [
     {
       'id': 'item-1',
@@ -199,9 +231,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     }
   }
 
-  // ===========================================================================
-  // LINKED ITEMS (PRODUCT CATALOG ATTACHMENT & SEARCH)
-  // ===========================================================================
+  // Linked Items Methods
   void addLinkedItem(Map<String, dynamic> item) {
     _linkedItems.add(Map<String, dynamic>.from(item));
     notifyListeners();
@@ -224,9 +254,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ===========================================================================
-  // OFFER PACKAGE METHODS
-  // ===========================================================================
+  // Offer Package Methods (Cross-Product Free Gift Addon Support)
   void addOfferPackage(Map<String, dynamic> pkg) {
     _offerPackages.add(Map<String, dynamic>.from(pkg));
     notifyListeners();

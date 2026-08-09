@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:novasuite_core/novasuite_core.dart';
 import '../providers/campaign_form_builder_provider.dart';
 
-/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages, Searchable Product Picker for Linked Items, Custom Questions, Appearance), and Step 3: Upsells.
+/// Campaign Form Builder supporting Step 1: Basics, Step 2: Builder (Offer Packages with Cross-Product Free Gifts, Searchable Product Picker, Custom Questions, Appearance), and Step 3: Upsells.
 class CampaignFormBuilderPage extends StatefulWidget {
   final TenantTheme activeTheme;
   final VoidCallback onBackToForms;
@@ -243,7 +243,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
   }
 
   // ===========================================================================
-  // STEP 2: BUILDER (Offer Packages & Searchable Linked Product Catalog!)
+  // STEP 2: BUILDER (Offer Packages & Cross-Product Free Gift Addons!)
   // ===========================================================================
   Widget _buildStep2Builder(bool isDark, Color cardBg, Color textColor, Color textMuted, Color primaryColor, CampaignFormBuilderProvider provider) {
     return Column(
@@ -343,7 +343,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Offer Packages Highlighted Table & Modal Dialog Trigger!
+                  // Offer Packages DataTable (Supports Cross-Product Free Gifts!)
                   _buildSectionCard(
                     'Offer packages',
                     'Show package choices instead of listing the base item directly on the hosted form.',
@@ -368,7 +368,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                               columns: const [
                                 DataColumn(label: Text('PACKAGE LABEL')),
                                 DataColumn(label: Text('BUY QTY')),
-                                DataColumn(label: Text('FREE QTY')),
+                                DataColumn(label: Text('FREE GIFT / ADDON')),
                                 DataColumn(label: Text('TOTAL DEDUCTED STOCK')),
                                 DataColumn(label: Text('AMOUNT (₦)')),
                                 DataColumn(label: Text('SAVINGS')),
@@ -381,7 +381,9 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                 final isDefault = pkg['isDefault'] == true;
                                 final buyQty = (pkg['buyQty'] ?? 1) as int;
                                 final freeQty = (pkg['freeQty'] ?? 0) as int;
-                                final totalStock = buyQty + freeQty;
+                                final freeAddonName = pkg['freeAddonProductName'] as String?;
+                                final freeAddonQty = (pkg['freeAddonQty'] ?? 0) as int;
+                                final totalStockUnits = buyQty + freeQty + freeAddonQty;
                                 final discountVal = (pkg['discount'] ?? 0.0) as double;
 
                                 return DataRow(
@@ -401,11 +403,19 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                                       ],
                                     )),
                                     DataCell(Text('$buyQty', style: GoogleFonts.inter(fontWeight: FontWeight.w600))),
-                                    DataCell(Text('$freeQty', style: GoogleFonts.inter(color: textMuted))),
+                                    DataCell(
+                                      freeAddonName != null && freeAddonQty > 0
+                                          ? Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                                              child: Text('🎁 ${freeAddonQty}x $freeAddonName (FREE)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
+                                            )
+                                          : Text(freeQty > 0 ? '${freeQty}x Same Product (Free)' : '—', style: GoogleFonts.inter(color: textMuted)),
+                                    ),
                                     DataCell(Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                                      child: Text('$totalStock units ($buyQty + $freeQty free)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
+                                      child: Text('$totalStockUnits units ($buyQty + ${freeQty + freeAddonQty} free)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
                                     )),
                                     DataCell(Text('₦${(pkg['amount'] ?? 0.0).toStringAsFixed(0)}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor))),
                                     DataCell(
@@ -516,7 +526,7 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Additional Questions Container (Screenshot 5)
+                  // Additional Questions Container
                   _buildSectionCard(
                     'Additional questions',
                     'Optional custom fields for pickup store, delivery instructions, or financing choices.',
@@ -650,6 +660,222 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL (Cross-Product Free Gifts!)
+  // ===========================================================================
+  void _showOfferPackageModalDialog(
+    BuildContext context, {
+    required CampaignFormBuilderProvider provider,
+    int? editIndex,
+    Map<String, dynamic>? existingPkg,
+  }) {
+    final isEditing = editIndex != null && existingPkg != null;
+    final labelCtrl = TextEditingController(text: existingPkg?['label'] ?? '');
+    final buyQtyCtrl = TextEditingController(text: '${existingPkg?['buyQty'] ?? 1}');
+    final freeQtyCtrl = TextEditingController(text: '${existingPkg?['freeQty'] ?? 0}');
+    final amountCtrl = TextEditingController(text: '${existingPkg?['amount'] ?? 25000}');
+    final discountCtrl = TextEditingController(text: '${existingPkg?['discount'] ?? 0}');
+    bool isDefaultPkg = existingPkg?['isDefault'] == true;
+
+    // Cross-Product Free Gift Addon State
+    Map<String, dynamic>? selectedFreeAddonProduct;
+    int freeAddonQty = existingPkg?['freeAddonQty'] ?? 0;
+
+    if (existingPkg?['freeAddonProductId'] != null) {
+      selectedFreeAddonProduct = provider.availableProducts.firstWhere(
+        (p) => p['id'] == existingPkg!['freeAddonProductId'],
+        orElse: () => provider.availableProducts.first,
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final buyQty = int.tryParse(buyQtyCtrl.text) ?? 1;
+          final sameFreeQty = int.tryParse(freeQtyCtrl.text) ?? 0;
+          final totalDeductedStock = buyQty + sameFreeQty + freeAddonQty;
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.card_giftcard_rounded, color: Color(0xFF10B981), size: 22),
+                const SizedBox(width: 8),
+                Text(isEditing ? 'Edit Offer Package' : 'Create New Offer Package', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            content: SizedBox(
+              width: 520,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildModalTextField('PACKAGE LABEL', labelCtrl, 'e.g. Buy 5 Grazer Tea + 1 Respira Detox Free'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildModalTextField('PRIMARY BUY QUANTITY', buyQtyCtrl, '1')),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildModalTextField('SAME-ITEM FREE QUANTITY', freeQtyCtrl, '0')),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildModalTextField('FIXED PACKAGE AMOUNT (₦)', amountCtrl, '25000')),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildModalTextField('DISCOUNT / SAVINGS (₦)', discountCtrl, '0')),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Cross-Product Free Gift Addon Picker Container
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.card_giftcard_rounded, color: Colors.purple, size: 18),
+                              const SizedBox(width: 6),
+                              Text('CROSS-PRODUCT FREE GIFT ADDON (OPTIONAL)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.purple)),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text('Reward buyers with a free gift item from a different product line (e.g. Buy 5 Tea, Get 1 Respira Free).', style: GoogleFonts.inter(fontSize: 11, color: Colors.grey)),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: selectedFreeAddonProduct?['id'],
+                                  decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                                  hint: const Text('Select Free Gift Product...'),
+                                  items: [
+                                    const DropdownMenuItem<String>(value: null, child: Text('None (No cross-product free gift)')),
+                                    ...provider.availableProducts.map((p) => DropdownMenuItem<String>(
+                                          value: p['id'] as String,
+                                          child: Text('${p['name']} [${p['sku']}]'),
+                                        )),
+                                  ],
+                                  onChanged: (val) {
+                                    setModalState(() {
+                                      if (val == null) {
+                                        selectedFreeAddonProduct = null;
+                                        freeAddonQty = 0;
+                                      } else {
+                                        selectedFreeAddonProduct = provider.availableProducts.firstWhere((p) => p['id'] == val);
+                                        if (freeAddonQty == 0) freeAddonQty = 1;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                              if (selectedFreeAddonProduct != null) ...[
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: DropdownButtonFormField<int>(
+                                    initialValue: freeAddonQty > 0 ? freeAddonQty : 1,
+                                    decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                                    items: [1, 2, 3, 4, 5].map((q) => DropdownMenuItem(value: q, child: Text('$q Free'))).toList(),
+                                    onChanged: (v) {
+                                      if (v != null) setModalState(() => freeAddonQty = v);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Multi-Product Stock Accounting Live Summary
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue.withValues(alpha: 0.3))),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.inventory_rounded, color: Colors.blue, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'TOTAL STOCK ACCOUNTING DEDUCTION: $totalDeductedStock Units (${buyQty}x Primary + ${sameFreeQty}x Same Free ${selectedFreeAddonProduct != null ? "+ ${freeAddonQty}x ${selectedFreeAddonProduct!['name']}" : ""})',
+                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    CheckboxListTile(
+                      title: const Text('Set as Default Choice for Buyers', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      value: isDefaultPkg,
+                      activeColor: const Color(0xFF10B981),
+                      onChanged: (val) {
+                        setModalState(() => isDefaultPkg = val ?? false);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final pkgData = {
+                    'id': existingPkg?['id'] ?? 'pkg-${DateTime.now().millisecondsSinceEpoch}',
+                    'label': labelCtrl.text.isNotEmpty ? labelCtrl.text : 'New Offer Package',
+                    'buyQty': int.tryParse(buyQtyCtrl.text) ?? 1,
+                    'freeQty': int.tryParse(freeQtyCtrl.text) ?? 0,
+                    'freeAddonProductId': selectedFreeAddonProduct?['id'],
+                    'freeAddonProductName': selectedFreeAddonProduct?['name'],
+                    'freeAddonQty': selectedFreeAddonProduct != null ? freeAddonQty : 0,
+                    'amount': double.tryParse(amountCtrl.text) ?? 25000.0,
+                    'discount': double.tryParse(discountCtrl.text) ?? 0.0,
+                    'isDefault': isDefaultPkg,
+                  };
+
+                  if (isEditing) {
+                    provider.updateOfferPackage(editIndex, 'label', pkgData['label']);
+                    provider.updateOfferPackage(editIndex, 'buyQty', pkgData['buyQty']);
+                    provider.updateOfferPackage(editIndex, 'freeQty', pkgData['freeQty']);
+                    provider.updateOfferPackage(editIndex, 'freeAddonProductId', pkgData['freeAddonProductId']);
+                    provider.updateOfferPackage(editIndex, 'freeAddonProductName', pkgData['freeAddonProductName']);
+                    provider.updateOfferPackage(editIndex, 'freeAddonQty', pkgData['freeAddonQty']);
+                    provider.updateOfferPackage(editIndex, 'amount', pkgData['amount']);
+                    provider.updateOfferPackage(editIndex, 'discount', pkgData['discount']);
+                    if (isDefaultPkg) provider.setDefaultPackage(editIndex);
+                  } else {
+                    provider.addOfferPackage(pkgData);
+                    if (isDefaultPkg) provider.setDefaultPackage(provider.offerPackages.length - 1);
+                  }
+
+                  Navigator.pop(ctx);
+                },
+                icon: const Icon(Icons.check_rounded, size: 16),
+                label: Text(isEditing ? 'Save Changes' : 'Create Package'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -801,112 +1027,6 @@ class _CampaignFormBuilderPageState extends State<CampaignFormBuilderPage> {
                 icon: const Icon(Icons.add_link_rounded, size: 16),
                 label: const Text('Attach Item to Form ✓'),
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6), foregroundColor: Colors.white),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // MODAL DIALOG: CREATE / EDIT OFFER PACKAGE MODAL
-  // ===========================================================================
-  void _showOfferPackageModalDialog(
-    BuildContext context, {
-    required CampaignFormBuilderProvider provider,
-    int? editIndex,
-    Map<String, dynamic>? existingPkg,
-  }) {
-    final isEditing = editIndex != null && existingPkg != null;
-    final labelCtrl = TextEditingController(text: existingPkg?['label'] ?? '');
-    final buyQtyCtrl = TextEditingController(text: '${existingPkg?['buyQty'] ?? 1}');
-    final freeQtyCtrl = TextEditingController(text: '${existingPkg?['freeQty'] ?? 0}');
-    final amountCtrl = TextEditingController(text: '${existingPkg?['amount'] ?? 25000}');
-    final discountCtrl = TextEditingController(text: '${existingPkg?['discount'] ?? 0}');
-    bool isDefaultPkg = existingPkg?['isDefault'] == true;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Row(
-              children: [
-                const Icon(Icons.card_giftcard_rounded, color: Color(0xFF10B981), size: 22),
-                const SizedBox(width: 8),
-                Text(isEditing ? 'Edit Offer Package' : 'Create New Offer Package', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
-              ],
-            ),
-            content: SizedBox(
-              width: 480,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildModalTextField('PACKAGE LABEL', labelCtrl, 'e.g. 2 Grazer Detox Tea'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _buildModalTextField('BUY QUANTITY', buyQtyCtrl, '1')),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildModalTextField('FREE QUANTITY', freeQtyCtrl, '0')),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _buildModalTextField('FIXED PACKAGE AMOUNT (₦)', amountCtrl, '25000')),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildModalTextField('DISCOUNT / SAVINGS (₦)', discountCtrl, '0')),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    CheckboxListTile(
-                      title: const Text('Set as Default Choice for Buyers', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      value: isDefaultPkg,
-                      activeColor: const Color(0xFF10B981),
-                      onChanged: (val) {
-                        setModalState(() => isDefaultPkg = val ?? false);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final pkgData = {
-                    'id': existingPkg?['id'] ?? 'pkg-${DateTime.now().millisecondsSinceEpoch}',
-                    'label': labelCtrl.text.isNotEmpty ? labelCtrl.text : 'New Offer Package',
-                    'buyQty': int.tryParse(buyQtyCtrl.text) ?? 1,
-                    'freeQty': int.tryParse(freeQtyCtrl.text) ?? 0,
-                    'amount': double.tryParse(amountCtrl.text) ?? 25000.0,
-                    'discount': double.tryParse(discountCtrl.text) ?? 0.0,
-                    'isDefault': isDefaultPkg,
-                  };
-
-                  if (isEditing) {
-                    provider.updateOfferPackage(editIndex, 'label', pkgData['label']);
-                    provider.updateOfferPackage(editIndex, 'buyQty', pkgData['buyQty']);
-                    provider.updateOfferPackage(editIndex, 'freeQty', pkgData['freeQty']);
-                    provider.updateOfferPackage(editIndex, 'amount', pkgData['amount']);
-                    provider.updateOfferPackage(editIndex, 'discount', pkgData['discount']);
-                    if (isDefaultPkg) provider.setDefaultPackage(editIndex);
-                  } else {
-                    provider.addOfferPackage(pkgData);
-                    if (isDefaultPkg) provider.setDefaultPackage(provider.offerPackages.length - 1);
-                  }
-
-                  Navigator.pop(ctx);
-                },
-                icon: const Icon(Icons.check_rounded, size: 16),
-                label: Text(isEditing ? 'Save Changes' : 'Create Package'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
               ),
             ],
           );
