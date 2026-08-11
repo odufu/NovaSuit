@@ -141,8 +141,9 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   RealtimeChannel? _realtimeChannel;
   bool _isRealtimeSubscribed = false;
 
-  // Realtime Submissions List (Fetched dynamically from Supabase DB)
+  // Realtime Submissions & Orders List (Fetched dynamically from Supabase DB)
   List<Map<String, dynamic>> _submissions = [];
+  List<Map<String, dynamic>> _orders = [];
 
   // Getters
   int get currentStep => _currentStep;
@@ -150,6 +151,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
   String get selectedProductCategory => _selectedProductCategory;
   List<Map<String, dynamic>> get leadForms => List.unmodifiable(_leadForms);
   List<Map<String, dynamic>> get submissions => List.unmodifiable(_submissions);
+  List<Map<String, dynamic>> get orders => List.unmodifiable(_orders);
   List<Map<String, dynamic>> get availableProducts => List.unmodifiable(_availableProducts);
   List<Map<String, dynamic>> get coreFields => List.unmodifiable(_coreFields);
   List<Map<String, dynamic>> get offerPackages => List.unmodifiable(_offerPackages);
@@ -651,6 +653,123 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     }
   }
 
+  /// 🛢️ Fetch All Orders from Supabase Database (`orders` table)
+  Future<void> fetchOrdersFromSupabase() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('orders')
+          .select('*, products(name, category), sales_rep:users!sales_rep_id(first_name, last_name, email), marketer:users!marketer_id(first_name, last_name, email)')
+          .order('created_at', ascending: false);
+
+      if (response.isNotEmpty) {
+        _orders = response.map((item) {
+          final productInfo = item['products'] as Map<String, dynamic>?;
+          final salesRepInfo = item['sales_rep'] as Map<String, dynamic>?;
+          final marketerInfo = item['marketer'] as Map<String, dynamic>?;
+
+          String statusLabel = 'New';
+          final rawStatus = item['status'].toString().toLowerCase();
+          switch (rawStatus) {
+            case 'not_ready':
+              statusLabel = 'Not ready';
+              break;
+            case 'duplicate':
+              statusLabel = 'Duplicate';
+              break;
+            case 'delivered':
+              statusLabel = 'Delivered';
+              break;
+            case 'call_back':
+              statusLabel = 'Call Back';
+              break;
+            case 'agent_notified':
+              statusLabel = 'Agent Notified';
+              break;
+            case 'cancelled':
+              statusLabel = 'Cancelled';
+              break;
+            case 'confirmed':
+              statusLabel = 'Confirmed';
+              break;
+            case 'in_transit':
+              statusLabel = 'In Transit';
+              break;
+            case 'contacting':
+              statusLabel = 'Contacting';
+              break;
+            default:
+              statusLabel = rawStatus.isNotEmpty 
+                  ? '${rawStatus[0].toUpperCase()}${rawStatus.substring(1)}'
+                  : 'New';
+          }
+
+          String closerName = 'Udoka Obed';
+          if (salesRepInfo != null && salesRepInfo['first_name'] != null) {
+            closerName = '${salesRepInfo['first_name']} ${salesRepInfo['last_name'] ?? ''}'.trim();
+          }
+
+          final createdAtStr = item['created_at'] != null 
+              ? item['created_at'].toString().replaceAll('T', ' ').split('.').first 
+              : 'Just now';
+
+          return {
+            'dbId': item['id'],
+            'id': item['order_number'] ?? 'ORD-${item['id'].toString().substring(0, 5).toUpperCase()}',
+            'customerName': item['customer_name'] ?? 'Anonymous Lead',
+            'customerPhone': item['customer_phone'] ?? 'N/A',
+            'created': createdAtStr,
+            'status': statusLabel,
+            'rawStatus': rawStatus,
+            'category': (productInfo?['category'] ?? productInfo?['name'] ?? _selectedProductCategory).toString().toUpperCase(),
+            'formType': 'Campaign Form',
+            'closer': closerName,
+            'closerId': item['sales_rep_id'],
+            'marketerId': item['marketer_id'],
+            'marketerEmail': marketerInfo?['email'],
+            'branch': item['delivery_state'] ?? 'Abuja',
+            'brand': 'Nova Care',
+            'value': (item['total_amount'] as num?)?.toDouble() ?? 23500.0,
+            'delivery': item['delivery_state'] != null ? 'ETA in ${item['delivery_state']}' : 'Delivery Pending',
+            'lastUpdated': item['updated_at'] != null 
+                ? item['updated_at'].toString().replaceAll('T', ' ').split('.').first 
+                : 'Just now',
+          };
+        }).toList();
+
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Supabase Orders Fetch Exception: $e');
+    }
+  }
+
+  /// 🛢️ Update Order Status in Supabase `orders` Table
+  Future<bool> updateOrderStatusInSupabase(String orderDbId, String newStatusLabel) async {
+    String rawStatus = newStatusLabel.toLowerCase().replaceAll(' ', '_');
+    try {
+      // Optimistically update local state
+      final idx = _orders.indexWhere((o) => o['dbId'] == orderDbId || o['id'] == orderDbId);
+      if (idx >= 0) {
+        _orders[idx]['status'] = newStatusLabel;
+        _orders[idx]['rawStatus'] = rawStatus;
+        notifyListeners();
+      }
+
+      await Supabase.instance.client
+          .from('orders')
+          .update({
+            'status': rawStatus,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', orderDbId);
+
+      return true;
+    } catch (e) {
+      debugPrint('Supabase Order Status Update Exception: $e');
+      return false;
+    }
+  }
+
   void _updateFormSubmissionCounts() {
     for (int i = 0; i < _leadForms.length; i++) {
       final fId = _leadForms[i]['id'];
@@ -665,7 +784,7 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
     }
   }
 
-  /// 📡 Subscribe to Supabase Realtime Channels for Instant Forms & Lead Submissions Exchange
+  /// 📡 Subscribe to Supabase Realtime Channels for Instant Forms, Submissions & Orders Exchange
   void subscribeToRealtimeSubmissionsAndForms() {
     if (_isRealtimeSubscribed) return;
     _isRealtimeSubscribed = true;
@@ -726,6 +845,17 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
           } else {
             fetchSubmissionsFromSupabase();
           }
+        },
+      );
+
+      // 3. Realtime Listener on orders table (Instant Order Pipeline Exchange)
+      _realtimeChannel!.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'orders',
+        callback: (payload) {
+          debugPrint('📡 Realtime orders broadcast event: ${payload.eventType}');
+          fetchOrdersFromSupabase();
         },
       );
 

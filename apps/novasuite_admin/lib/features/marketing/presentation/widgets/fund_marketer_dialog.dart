@@ -16,7 +16,8 @@ class FundMarketerDialog extends StatefulWidget {
 
 class _FundMarketerDialogState extends State<FundMarketerDialog> {
   final _amountController = TextEditingController(text: '500000');
-  final _notesController = TextEditingController(text: 'Weekly Ad Campaign Budget Allocation');
+  final _notesController =
+      TextEditingController(text: 'Weekly Ad Campaign Budget Allocation');
   late ValueNotifier<String> _selectedMarketer;
 
   @override
@@ -48,7 +49,8 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
               color: Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.account_balance_wallet, color: Colors.blue.shade700, size: 24),
+            child: Icon(Icons.account_balance_wallet,
+                color: Colors.blue.shade700, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -57,7 +59,8 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
               children: [
                 Text(
                   'AGM Ad Budget Allocation',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 const Text(
                   'Credit ad funding to a Digital Marketer account',
@@ -75,7 +78,8 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Select Marketer Account
-            const Text('Digital Marketer Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Digital Marketer Account',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 6),
             ValueListenableBuilder<String>(
               valueListenable: _selectedMarketer,
@@ -85,11 +89,16 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.grey.shade50,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'marketer.david@novacare.com', child: Text('👤 David Marketer (FB & TikTok Ads)')),
-                    DropdownMenuItem(value: 'marketer.alex@novacare.com', child: Text('👤 Alex Marketer (Google Ads)')),
+                    DropdownMenuItem(
+                        value: 'marketer.david@novacare.com',
+                        child: Text('👤 David Marketer (FB & TikTok Ads)')),
+                    DropdownMenuItem(
+                        value: 'marketer.alex@novacare.com',
+                        child: Text('👤 Alex Marketer (Google Ads)')),
                   ],
                   onChanged: (val) {
                     if (val != null) _selectedMarketer.value = val;
@@ -100,7 +109,9 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
             const SizedBox(height: 16),
 
             // Amount to Fund
-            Text('Funding Amount ($currency)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            Text('Funding Amount ($currency)',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 6),
             TextField(
               controller: _amountController,
@@ -110,13 +121,15 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
                 hintText: '0.00',
                 filled: true,
                 fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
             const SizedBox(height: 16),
 
             // Notes
-            const Text('Allocation Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Allocation Notes',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 6),
             TextField(
               controller: _notesController,
@@ -125,7 +138,8 @@ class _FundMarketerDialogState extends State<FundMarketerDialog> {
                 hintText: 'Campaign authorization notes...',
                 filled: true,
                 fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ],

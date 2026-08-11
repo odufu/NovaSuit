@@ -8,6 +8,7 @@ class AppNavigationProvider extends ChangeNotifier {
   int _salesSubNavIndex = 0;
   int _supervisorSubNavIndex = 0;
   int _inventorySubNavIndex = 0;
+  int _essSubNavIndex = 0;
   bool _isDarkMode = true;
   bool _isSidebarCollapsed = false;
   TenantTheme _activeTheme = TenantTheme.defaultNovaCare();
@@ -17,6 +18,7 @@ class AppNavigationProvider extends ChangeNotifier {
   int get salesSubNavIndex => _salesSubNavIndex;
   int get supervisorSubNavIndex => _supervisorSubNavIndex;
   int get inventorySubNavIndex => _inventorySubNavIndex;
+  int get essSubNavIndex => _essSubNavIndex;
   bool get isDarkMode => _isDarkMode;
   bool get isSidebarCollapsed => _isSidebarCollapsed;
   TenantTheme get activeTheme => _activeTheme;
@@ -24,6 +26,13 @@ class AppNavigationProvider extends ChangeNotifier {
   void setNavIndex(int index) {
     if (_currentNavIndex != index) {
       _currentNavIndex = index;
+      notifyListeners();
+    }
+  }
+
+  void setEssSubNavIndex(int index) {
+    if (_essSubNavIndex != index) {
+      _essSubNavIndex = index;
       notifyListeners();
     }
   }
@@ -62,6 +71,7 @@ class AppNavigationProvider extends ChangeNotifier {
     if (targetIndex == 2) _supervisorSubNavIndex = subIndex;
     if (targetIndex == 3) _marketingSubNavIndex = subIndex;
     if (targetIndex == 8) _inventorySubNavIndex = subIndex;
+    if (targetIndex == 10) _essSubNavIndex = subIndex;
     notifyListeners();
   }
 
