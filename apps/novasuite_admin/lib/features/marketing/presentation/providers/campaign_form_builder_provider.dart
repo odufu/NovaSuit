@@ -639,6 +639,8 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
                 ? 'Novacare Ltd-CRM-ORD-${item['order_id'].toString().substring(0, 5).toUpperCase()}' 
                 : 'Pending Order',
             'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+            'utmSource': item['utm_source'] ?? 'direct',
+            'rawCreatedAt': item['created_at'],
           };
         }).toList();
         _updateFormSubmissionCounts();
@@ -715,6 +717,8 @@ class CampaignFormBuilderProvider extends ChangeNotifier {
               'submittedAt': 'Just now',
               'orderRef': item['order_id'] != null ? 'Novacare Ltd-CRM-ORD-${item['order_id'].toString().substring(0, 5).toUpperCase()}' : 'Live Conversion',
               'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+              'utmSource': item['utm_source'] ?? 'direct',
+              'rawCreatedAt': item['created_at'] ?? DateTime.now().toIso8601String(),
             };
             _submissions.insert(0, newSub);
             _updateFormSubmissionCounts();

@@ -1056,7 +1056,6 @@ class _AdminMainShellState extends State<AdminMainShell> {
     final convRateStr = totalLeads > 0 ? '${((convertedSubmissions / totalLeads) * 100).toStringAsFixed(1)}%' : '0%';
     final adSpendVal = totalMarketerBudget > 0 ? totalMarketerBudget : 3500000.0;
     final cplVal = totalLeads > 0 ? adSpendVal / totalLeads : 0.0;
-    final roasMultiplier = adSpendVal > 0 && totalRevenue > 0 ? (totalRevenue / adSpendVal).toStringAsFixed(2) : '3.80';
     
     String topFormTitle = 'None';
     if (builderProvider.leadForms.isNotEmpty) {
@@ -1141,7 +1140,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
               const SizedBox(height: 12),
               _statCard('ACTIVE LEAD FORMS', '$activeFormsCount Form(s)', 'Top: $topFormTitle', Icons.dynamic_form_rounded, Colors.purple),
               const SizedBox(height: 12),
-              _statCard('DELIVERED REVENUE & ROAS', '$currency ${totalRevenue.toStringAsFixed(0)}', '${roasMultiplier}x ROAS Multiplier', Icons.auto_graph, Colors.green),
+              _statCard('FORM CONVERSION RATE', convRateStr, '$convertedSubmissions Converted ($totalLeads Total Leads)', Icons.analytics_rounded, Colors.green),
             ] else ...[
               Row(
                 children: [
@@ -1151,7 +1150,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
                   const SizedBox(width: 12),
                   Expanded(child: _statCard('ACTIVE LEAD FORMS', '$activeFormsCount Form(s)', 'Top: $topFormTitle', Icons.dynamic_form_rounded, Colors.purple)),
                   const SizedBox(width: 12),
-                  Expanded(child: _statCard('DELIVERED REVENUE & ROAS', '$currency ${totalRevenue.toStringAsFixed(0)}', '${roasMultiplier}x ROAS Multiplier', Icons.auto_graph, Colors.green)),
+                  Expanded(child: _statCard('FORM CONVERSION RATE', convRateStr, '$convertedSubmissions Converted ($totalLeads Total Leads)', Icons.analytics_rounded, Colors.green)),
                 ],
               ),
             ],
@@ -1262,9 +1261,250 @@ class _AdminMainShellState extends State<AdminMainShell> {
           const SizedBox(height: 24),
 
           // Analytics Tools Section: Trend Chart & Distribution Bars
-          _buildPerformanceTrendChart(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+          if (role == UserRole.digitalMarketer) ...[
+            _buildLiveMarketingLeadTrendChart(builderProvider, isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+            const SizedBox(height: 16),
+            _buildLiveMarketingDistributionSection(builderProvider, isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+          ] else ...[
+            _buildPerformanceTrendChart(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+            const SizedBox(height: 16),
+            _buildAnalyticsDistributionSection(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveMarketingLeadTrendChart(CampaignFormBuilderProvider provider, bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted, bool isMobile) {
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final submissions = provider.submissions;
+    final totalLeads = submissions.length;
+
+    final now = DateTime.now();
+    final List<int> dailyCounts = List.filled(7, 0);
+
+    for (final sub in submissions) {
+      final rawTs = sub['rawCreatedAt'] ?? sub['submittedAt'];
+      if (rawTs != null) {
+        DateTime? dt;
+        try {
+          dt = DateTime.tryParse(rawTs.toString());
+        } catch (_) {}
+        if (dt != null) {
+          final diffDays = now.difference(dt).inDays;
+          if (diffDays >= 0 && diffDays < 7) {
+            final dayIdx = (dt.weekday - 1) % 7;
+            dailyCounts[dayIdx]++;
+          }
+        }
+      }
+    }
+
+    final maxCount = dailyCounts.reduce((a, b) => a > b ? a : b);
+    final maxScale = maxCount > 0 ? maxCount.toDouble() : 1.0;
+
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('📈 Live Lead Generation & Ingestion Trends', style: GoogleFonts.outfit(fontSize: isMobile ? 13.5 : 16, fontWeight: FontWeight.bold, color: textPrimary), overflow: TextOverflow.ellipsis),
+                    Text('Real-time lead acquisition trajectory across active checkout forms', style: GoogleFonts.inter(fontSize: 10.5, color: textMuted), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('$totalLeads Live Leads', style: GoogleFonts.jetBrainsMono(fontSize: 10.5, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
-          _buildAnalyticsDistributionSection(isDark, widget.activeTheme, cardBg, borderColor, textPrimary, textMuted, isMobile),
+
+          SizedBox(
+            height: 150,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(7, (index) {
+                final count = dailyCounts[index];
+                final heightFactor = totalLeads > 0 ? (count / maxScale) : 0.15;
+                final barHeight = (110 * heightFactor).clamp(14.0, 110.0);
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text('$count', style: GoogleFonts.jetBrainsMono(fontSize: 9.5, color: count > 0 ? const Color(0xFF10B981) : textMuted, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: isMobile ? 18 : 28,
+                      height: barHeight,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            theme.primaryColor,
+                            count > 0 ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.3),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(days[index], style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary)),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveMarketingDistributionSection(CampaignFormBuilderProvider provider, bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted, bool isMobile) {
+    return Column(
+      children: [
+        if (isMobile) ...[
+          _buildFormPerformanceDistribution(provider, isDark, theme, cardBg, borderColor, textPrimary, textMuted),
+          const SizedBox(height: 12),
+          _buildUtmSourceDistribution(provider, isDark, theme, cardBg, borderColor, textPrimary, textMuted),
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildFormPerformanceDistribution(provider, isDark, theme, cardBg, borderColor, textPrimary, textMuted)),
+              const SizedBox(width: 14),
+              Expanded(child: _buildUtmSourceDistribution(provider, isDark, theme, cardBg, borderColor, textPrimary, textMuted)),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFormPerformanceDistribution(CampaignFormBuilderProvider provider, bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted) {
+    final forms = provider.leadForms;
+    final totalSubmissions = provider.submissions.length;
+    final colors = [const Color(0xFF10B981), Colors.blue, Colors.purple, Colors.amber, Colors.orange];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('🎯 Live Form Lead Performance Share', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary)),
+          const SizedBox(height: 4),
+          Text('Realtime lead volume attribution across active checkout forms', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+          const SizedBox(height: 14),
+
+          if (forms.isEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text('No lead forms created yet.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+              ),
+            )
+          ] else ...[
+            ...forms.take(4).toList().asMap().entries.map((entry) {
+              final idx = entry.key;
+              final form = entry.value;
+              final title = form['title']?.toString() ?? 'Form #${idx + 1}';
+              final count = (form['submissionsCount'] as num?)?.toInt() ?? 0;
+              final fraction = totalSubmissions > 0 ? (count / totalSubmissions) : 0.0;
+              final pctStr = totalSubmissions > 0 ? '${(fraction * 100).toStringAsFixed(0)}%' : '0%';
+              final color = colors[idx % colors.length];
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildProgressBar(title, fraction == 0 ? 0.05 : fraction, '$count Lead(s) ($pctStr)', color, textPrimary, textMuted),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUtmSourceDistribution(CampaignFormBuilderProvider provider, bool isDark, TenantTheme theme, Color cardBg, Color borderColor, Color textPrimary, Color textMuted) {
+    final submissions = provider.submissions;
+    final totalSubmissions = submissions.length;
+
+    final Map<String, int> utmCounts = {};
+    for (final sub in submissions) {
+      final src = (sub['utmSource'] ?? 'direct').toString().toLowerCase();
+      String label = 'Direct / Organic';
+      if (src.contains('facebook') || src.contains('fb') || src.contains('cpc')) label = 'Facebook Ads';
+      else if (src.contains('tiktok')) label = 'TikTok Ads';
+      else if (src.contains('google')) label = 'Google Search';
+      else if (src.contains('instagram') || src.contains('ig')) label = 'Instagram Ads';
+      else if (src != 'direct' && src != 'organic') label = src.toUpperCase();
+
+      utmCounts[label] = (utmCounts[label] ?? 0) + 1;
+    }
+
+    final colors = [Colors.blue, const Color(0xFF10B981), Colors.purple, Colors.amber, Colors.orange];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('📢 Traffic Acquisition & UTM Source Share', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary)),
+          const SizedBox(height: 4),
+          Text('Proportional lead source distribution from ad platforms', style: GoogleFonts.inter(fontSize: 11, color: textMuted)),
+          const SizedBox(height: 14),
+
+          if (utmCounts.isEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text('No traffic source data available yet.', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+              ),
+            )
+          ] else ...[
+            ...utmCounts.entries.take(4).toList().asMap().entries.map((entry) {
+              final idx = entry.key;
+              final sourceLabel = entry.value.key;
+              final count = entry.value.value;
+              final fraction = totalSubmissions > 0 ? (count / totalSubmissions) : 0.0;
+              final pctStr = totalSubmissions > 0 ? '${(fraction * 100).toStringAsFixed(0)}%' : '0%';
+              final color = colors[idx % colors.length];
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildProgressBar(sourceLabel, fraction == 0 ? 0.05 : fraction, '$count Lead(s) ($pctStr)', color, textPrimary, textMuted),
+              );
+            }),
+          ],
         ],
       ),
     );
